@@ -79,6 +79,7 @@ export interface MaterialData {
       | 'hexagonal'
       | 'nacl'
       | 'ice'
+      | 'kevlar'
       | 'silica'
       | 'teflon'
       | 'battery'

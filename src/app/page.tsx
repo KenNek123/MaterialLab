@@ -89,9 +89,12 @@ const STAGES: Array<{
 ];
 
 const CATEGORY_LABELS: Record<string, string> = {
-  all: 'Tất cả (15)',
+  all: `Tất cả (${MATERIALS.length})`,
+  metal: 'Kim loại & Hợp kim',
+  crystal: 'Gốm & Tinh thể',
+  nano: 'Vật liệu Nano',
+  molecular: 'Cấu trúc Phân tử',
   daily: 'Đời sống & Tự nhiên',
-  metal: 'Kim loại Thiết yếu',
   tech: 'Bán dẫn & Năng lượng',
   polymer: 'Polyme & Gốm Sứ',
 };
@@ -241,7 +244,7 @@ export default function HomePage() {
             type="button"
           >
             <Library size={18} />
-            <span>Vật liệu (15)</span>
+            <span>Vật liệu ({MATERIALS.length})</span>
           </button>
 
           <button

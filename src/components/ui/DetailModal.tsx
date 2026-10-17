@@ -64,6 +64,22 @@ export default function DetailModal() {
           badge: 'bg-cyan-500/20 text-cyan-300 border-cyan-400/40',
           glow: 'rgba(6, 182, 212, 0.4)',
         }
+      : material.category === 'crystal'
+      ? {
+          banner: 'from-sky-500/25 via-blue-600/15 to-indigo-700/25',
+          border: 'border-sky-400/60',
+          accent: 'text-sky-300',
+          badge: 'bg-sky-500/20 text-sky-300 border-sky-400/40',
+          glow: 'rgba(56, 189, 248, 0.4)',
+        }
+      : material.category === 'molecular'
+      ? {
+          banner: 'from-cyan-500/25 via-teal-600/15 to-blue-700/25',
+          border: 'border-cyan-400/60',
+          accent: 'text-cyan-300',
+          badge: 'bg-cyan-500/20 text-cyan-300 border-cyan-400/40',
+          glow: 'rgba(6, 182, 212, 0.4)',
+        }
       : material.category === 'polymer'
       ? {
           banner: 'from-emerald-500/25 via-teal-600/15 to-green-700/25',

@@ -129,8 +129,13 @@ export function generateCrystalStructure(
       result = generateQuartz(a, rx, ry, rz, molecularInfo);
       break;
     case 'mxene':
-    case 'ice':
       result = generateMXene(a, rx, ry, layerCount, molecularInfo);
+      break;
+    case 'ice':
+      result = generateIce(a, rx, ry, rz, molecularInfo);
+      break;
+    case 'kevlar':
+      result = generateKevlar(a, rx, ry, molecularInfo);
       break;
     case 'fcc':
       result = generateFCC(a, rx, ry, rz, molecularInfo);
@@ -1233,6 +1238,128 @@ function generateNitinolB2(
           });
         }
       }
+    }
+  }
+
+  return { atoms, bonds };
+}
+
+// ── 18. Băng Đá Tinh Thể (Hexagonal Ice Ih - H₂O Chuẩn Wikipedia) ───────────
+function generateIce(
+  a: number,
+  rx: number,
+  ry: number,
+  rz: number,
+  info: MaterialData['molecularInfo']
+): { atoms: AtomInstance[]; bonds: BondInstance[] } {
+  const atoms: AtomInstance[] = [];
+  const bonds: BondInstance[] = [];
+  const oType = info.atomTypes.find((t) => t.element === 'O') || info.atomTypes[0];
+  const hType = info.atomTypes.find((t) => t.element === 'H') || info.atomTypes[1] || oType;
+  const bondColor = info.bonds.color || '#74b9ff';
+
+  const c = a * 1.63; // Ice Ih c/a ratio
+  const hOffset = 0.32;
+
+  for (let ix = 0; ix < rx; ix++) {
+    for (let iy = 0; iy < ry; iy++) {
+      for (let iz = 0; iz < rz; iz++) {
+        const xBase = ix * a + (iy % 2) * (a * 0.5);
+        const zBase = iy * ((a * Math.sqrt(3)) / 2);
+        const yBase = iz * c;
+
+        const oSites = [
+          new THREE.Vector3(xBase, yBase, zBase),
+          new THREE.Vector3(xBase + a * 0.33, yBase + c * 0.25, zBase + (a * Math.sqrt(3)) / 6),
+          new THREE.Vector3(xBase + a * 0.33, yBase + c * 0.5, zBase + (a * Math.sqrt(3)) / 6),
+          new THREE.Vector3(xBase, yBase + c * 0.75, zBase),
+        ];
+
+        for (const oPos of oSites) {
+          atoms.push({ position: oPos, element: 'O', color: oType.color, radius: oType.radius });
+
+          const h1 = oPos.clone().add(new THREE.Vector3(hOffset * 0.82, hOffset * 0.57, 0));
+          const h2 = oPos.clone().add(new THREE.Vector3(-hOffset * 0.82, hOffset * 0.57, 0));
+          atoms.push({ position: h1, element: 'H', color: hType.color, radius: hType.radius });
+          atoms.push({ position: h2, element: 'H', color: hType.color, radius: hType.radius });
+
+          bonds.push({ start: oPos.clone(), end: h1.clone(), color: bondColor });
+          bonds.push({ start: oPos.clone(), end: h2.clone(), color: bondColor });
+        }
+      }
+    }
+  }
+
+  // Cầu liên kết Hydro liên phân tử O···H
+  const oAtoms = atoms.filter((at) => at.element === 'O');
+  const hBondCutoff = a * 0.75;
+  for (let i = 0; i < oAtoms.length; i++) {
+    for (let j = i + 1; j < oAtoms.length; j++) {
+      const d = oAtoms[i].position.distanceTo(oAtoms[j].position);
+      if (d > 0.4 && d < hBondCutoff) {
+        bonds.push({ start: oAtoms[i].position.clone(), end: oAtoms[j].position.clone(), color: '#93c5fd' });
+      }
+    }
+  }
+
+  return { atoms, bonds };
+}
+
+// ── 19. Sợi Siêu Bền Kevlar (Poly-para-phenylene terephthalamide) ────────────
+function generateKevlar(
+  _a: number,
+  rx: number,
+  ry: number,
+  info: MaterialData['molecularInfo']
+): { atoms: AtomInstance[]; bonds: BondInstance[] } {
+  const atoms: AtomInstance[] = [];
+  const bonds: BondInstance[] = [];
+  const cType = info.atomTypes.find((t) => t.element === 'C') || info.atomTypes[0];
+  const nType = info.atomTypes.find((t) => t.element === 'N') || info.atomTypes[1] || cType;
+  const oType = info.atomTypes.find((t) => t.element === 'O') || info.atomTypes[2] || cType;
+  const bondColor = info.bonds.color || '#fde047';
+
+  const numChains = Math.max(2, rx * ry);
+  const unitsPerChain = 3;
+
+  for (let ch = 0; ch < numChains; ch++) {
+    const xBase = (ch % rx - (rx - 1) / 2) * 3.2;
+    const zBase = (Math.floor(ch / rx) - (ry - 1) / 2) * 3.2;
+
+    let prevNode: THREE.Vector3 | null = null;
+
+    for (let u = 0; u < unitsPerChain; u++) {
+      const yCenter = (u - (unitsPerChain - 1) / 2) * 2.8;
+
+      // Vòng Benzen 6 Carbon
+      const ringAtoms: THREE.Vector3[] = [];
+      for (let i = 0; i < 6; i++) {
+        const theta = (i * Math.PI) / 3;
+        const pos = new THREE.Vector3(xBase + Math.cos(theta) * 0.7, yCenter + Math.sin(theta) * 0.7, zBase);
+        atoms.push({ position: pos, element: 'C', color: cType.color, radius: cType.radius });
+        ringAtoms.push(pos);
+      }
+
+      for (let i = 0; i < 6; i++) {
+        bonds.push({ start: ringAtoms[i].clone(), end: ringAtoms[(i + 1) % 6].clone(), color: bondColor });
+      }
+
+      // Nhóm cầu amide -NH- và -CO-
+      const nPos = new THREE.Vector3(xBase, yCenter + 1.1, zBase);
+      atoms.push({ position: nPos, element: 'N', color: nType.color, radius: nType.radius });
+      bonds.push({ start: ringAtoms[1].clone(), end: nPos.clone(), color: bondColor });
+
+      const cAmide = new THREE.Vector3(xBase, yCenter - 1.1, zBase);
+      const oPos = new THREE.Vector3(xBase + 0.5, yCenter - 1.3, zBase);
+      atoms.push({ position: cAmide, element: 'C', color: cType.color, radius: cType.radius });
+      atoms.push({ position: oPos, element: 'O', color: oType.color, radius: oType.radius });
+      bonds.push({ start: ringAtoms[4].clone(), end: cAmide.clone(), color: bondColor });
+      bonds.push({ start: cAmide.clone(), end: oPos.clone(), color: '#ef4444' });
+
+      if (prevNode) {
+        bonds.push({ start: prevNode.clone(), end: cAmide.clone(), color: bondColor });
+      }
+      prevNode = nPos;
     }
   }
 

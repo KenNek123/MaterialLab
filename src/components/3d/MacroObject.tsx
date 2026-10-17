@@ -53,7 +53,7 @@ export function MacroObject({ material, opacity, wireframeOpacity }: MacroObject
         return createCeramicBladeGeometry();
       case 'rubber-tyre':
         return createRubberTyreGeometry();
-      // Advanced Nano Materials
+      // Advanced Nano & Restored Materials
       case 'nanotube-coil':
       case 'nanotube':
         return createNanotubeCoilGeometry();
@@ -65,15 +65,32 @@ export function MacroObject({ material, opacity, wireframeOpacity }: MacroObject
         return createAerogelBlockGeometry();
       case 'nitinol-stent':
         return createNitinolStentGeometry();
-      // Backward compatibility aliases
+      case 'snowflake':
+        return createSnowflakeGeometry();
+      case 'racket':
       case 'graphene-sheet':
-        return createGraphitePencilGeometry();
+        return createRacketGeometry();
+      case 'lens':
+        return createLensGeometry();
+      case 'turbine-blade':
+        return createTurbineBladeGeometry();
+      // Backward compatibility aliases
       case 'gold-bar':
         return createGoldIngotGeometry();
       case 'silicon-wafer':
         return createSiliconChipGeometry();
-      case 'turbine-blade':
+      case 'fuselage':
         return createAluminumWingGeometry();
+      case 'diamond-ring':
+        return createDiamondGemGeometry();
+      case 'coil':
+        return createCopperCoilGeometry();
+      case 'crystal-cube':
+        return createSaltCubeGeometry();
+      case 'titanium-bracket':
+        return createTitaniumImplantGeometry();
+      case 'iron-core':
+        return createIronBeamGeometry();
       default:
         return createDiamondGemGeometry();
     }
@@ -1082,6 +1099,110 @@ function createNitinolStentGeometry(): THREE.BufferGeometry {
   // Ống trụ nền bảo đảm an toàn
   const fallback = new THREE.CylinderGeometry(stentRadius, stentRadius, 2.5, 32, 1, true);
   const merged = mergeGeometries(parts) || fallback;
+  merged.center();
+  return merged;
+}
+
+// ── 21. Băng Tuyết: Tinh Thể Bông Tuyết 6 Cánh (Snowflake) ──────────────────
+function createSnowflakeGeometry(): THREE.BufferGeometry {
+  const parts: THREE.BufferGeometry[] = [];
+
+  for (let i = 0; i < 6; i++) {
+    const angle = (i * Math.PI) / 3;
+
+    // Cánh chính
+    const arm = new THREE.BoxGeometry(0.12, 1.4, 0.05);
+    arm.rotateZ(angle);
+    arm.translate(Math.cos(angle + Math.PI / 2) * 0.7, Math.sin(angle + Math.PI / 2) * 0.7, 0);
+    parts.push(arm);
+
+    // Nhánh phụ 1
+    const branch1 = new THREE.BoxGeometry(0.08, 0.5, 0.04);
+    branch1.rotateZ(angle + Math.PI / 6);
+    branch1.translate(
+      Math.cos(angle + Math.PI / 2) * 0.5 + Math.cos(angle + Math.PI / 2 + Math.PI / 6) * 0.2,
+      Math.sin(angle + Math.PI / 2) * 0.5 + Math.sin(angle + Math.PI / 2 + Math.PI / 6) * 0.2,
+      0
+    );
+    parts.push(branch1);
+
+    // Nhánh phụ 2
+    const branch2 = new THREE.BoxGeometry(0.08, 0.5, 0.04);
+    branch2.rotateZ(angle - Math.PI / 6);
+    branch2.translate(
+      Math.cos(angle + Math.PI / 2) * 0.5 + Math.cos(angle + Math.PI / 2 - Math.PI / 6) * 0.2,
+      Math.sin(angle + Math.PI / 2) * 0.5 + Math.sin(angle + Math.PI / 2 - Math.PI / 6) * 0.2,
+      0
+    );
+    parts.push(branch2);
+  }
+
+  const center = new THREE.CylinderGeometry(0.24, 0.24, 0.06, 6);
+  parts.push(center);
+
+  const merged = mergeGeometries(parts) || center;
+  merged.center();
+  return merged;
+}
+
+// ── 22. Siêu Hợp Kim Inconel 718: Cánh Tuabin Tên Lửa Vũ Trụ ───────────────
+function createTurbineBladeGeometry(): THREE.BufferGeometry {
+  const parts: THREE.BufferGeometry[] = [];
+
+  // Đế gắn chân tuabin (Fir-tree Root / Base Block)
+  const base = new THREE.BoxGeometry(0.9, 0.4, 0.7);
+  base.translate(0, -1.2, 0);
+  parts.push(base);
+
+  // Thân cánh tuabin khí động học xoắn (Twisted Aerodynamic Airfoil Blade)
+  const numSlices = 10;
+  for (let i = 0; i < numSlices; i++) {
+    const t = i / (numSlices - 1);
+    const y = -0.9 + t * 2.2;
+    const twistAngle = -0.35 + t * 0.75;
+    const chord = 1.1 - t * 0.35;
+    const thickness = 0.16 - t * 0.08;
+
+    const slice = new THREE.BoxGeometry(chord, 0.25, thickness);
+    slice.rotateY(twistAngle);
+    slice.translate(0, y, 0);
+    parts.push(slice);
+  }
+
+  const merged = mergeGeometries(parts) || base;
+  merged.center();
+  return merged;
+}
+
+// ── 23. Thủy Tinh Silicat: Thấu Kính Hội Tụ Quang Học (Optical Convex Lens) ───
+function createLensGeometry(): THREE.BufferGeometry {
+  const lens = new THREE.SphereGeometry(1.25, 48, 48);
+  lens.scale(1, 0.32, 1);
+  lens.center();
+  return lens;
+}
+
+// ── 24. Khung Sợi Carbon & Kevlar: Vợt Thể Thao Siêu Nhẹ (Racket Frame) ─────
+function createRacketGeometry(): THREE.BufferGeometry {
+  const parts: THREE.BufferGeometry[] = [];
+
+  // Vành khung vợt oval
+  const headTorus = new THREE.TorusGeometry(0.95, 0.08, 16, 48);
+  headTorus.scale(0.85, 1.25, 1);
+  headTorus.translate(0, 0.55, 0);
+  parts.push(headTorus);
+
+  // Cán vợt
+  const shaft = new THREE.CylinderGeometry(0.07, 0.08, 1.3, 16);
+  shaft.translate(0, -0.85, 0);
+  parts.push(shaft);
+
+  // Đốc tay cầm
+  const grip = new THREE.CylinderGeometry(0.1, 0.1, 0.55, 16);
+  grip.translate(0, -1.2, 0);
+  parts.push(grip);
+
+  const merged = mergeGeometries(parts) || headTorus;
   merged.center();
   return merged;
 }
