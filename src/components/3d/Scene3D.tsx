@@ -457,7 +457,7 @@ function SnapshotManager() {
           ctx.font = `bold ${fontSizeTitle}px 'Montserrat', sans-serif`;
           ctx.fillStyle = '#38bdf8';
           ctx.textAlign = 'right';
-          ctx.fillText('DIGITAL MATERIALS LAB', canvas.width - padX, canvas.height - bannerHeight * 0.44);
+          ctx.fillText('DIGITAL MATTER LAB', canvas.width - padX, canvas.height - bannerHeight * 0.44);
 
           ctx.font = `${fontSizeSub}px 'Montserrat', sans-serif`;
           ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
@@ -467,8 +467,8 @@ function SnapshotManager() {
           const a = document.createElement('a');
           a.href = finalData;
           const fileName = isDual3DView
-            ? `DigitalMaterialsLab_SoSanh_${activeLayer}.png`
-            : `DigitalMaterialsLab_${selectedMaterial}_${activeLayer}.png`;
+            ? `DigitalMatterLab_SoSanh_${activeLayer}.png`
+            : `DigitalMatterLab_${selectedMaterial}_${activeLayer}.png`;
           a.download = fileName;
           document.body.appendChild(a);
           a.click();

@@ -224,7 +224,7 @@ export default function HomePage() {
             <Atom size={22} />
           </span>
           <div>
-            <h1>Digital Materials Lab</h1>
+            <h1>Digital Matter Lab</h1>
             <p>Nguyễn Văn Tài</p>
           </div>
         </div>

@@ -10,13 +10,13 @@ const montserrat = Montserrat({
 });
 
 export const metadata: Metadata = {
-  title: "Digital Materials Lab | Nguyễn Văn Tài",
-  description: "Phòng thí nghiệm vật liệu kỹ thuật số - Khám phá vật liệu từ vĩ mô đến cấp nguyên tử. Nguyễn Văn Tài.",
-  keywords: ["Digital Materials Lab", "material science", "3D", "molecular", "crystal structure", "WebGL", "Three.js"],
+  title: "Digital Matter Lab | Nguyễn Văn Tài",
+  description: "Phòng thí nghiệm số trực quan hóa vật chất & cấu trúc nguyên tử 3D. Nguyễn Văn Tài.",
+  keywords: ["Digital Matter Lab", "material science", "3D", "molecular", "crystal structure", "WebGL", "Three.js"],
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "Digital Materials Lab",
+    title: "Digital Matter Lab",
   },
 };
 
