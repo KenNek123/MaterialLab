@@ -1,0 +1,177 @@
+export interface ElementDetail {
+  symbol: string;
+  nameVi: string;
+  nameEn: string;
+  atomicNumber: number;
+  atomicMass: string;
+  electronConfig: string;
+  electronegativity: number;
+  atomicRadiusPm: number;
+  categoryVi: string;
+  color: string;
+  descriptionVi: string;
+}
+
+export const ELEMENT_REGISTRY: Record<string, ElementDetail> = {
+  C: {
+    symbol: 'C',
+    nameVi: 'Cacbon',
+    nameEn: 'Carbon',
+    atomicNumber: 6,
+    atomicMass: '12.011 u',
+    electronConfig: '[He] 2s² 2p²',
+    electronegativity: 2.55,
+    atomicRadiusPm: 70,
+    categoryVi: 'Phi kim đa thù hình',
+    color: '#64748b',
+    descriptionVi: 'Nguyên tố nền tảng của sự sống và vật liệu tiên tiến. Có khả năng lai hóa sp³ (kim cương siêu cứng) và sp² (graphene/ống nano dẫn điện siêu việt).',
+  },
+  Au: {
+    symbol: 'Au',
+    nameVi: 'Vàng',
+    nameEn: 'Gold',
+    atomicNumber: 79,
+    atomicMass: '196.967 u',
+    electronConfig: '[Xe] 4f¹⁴ 5d¹⁰ 6s¹',
+    electronegativity: 2.54,
+    atomicRadiusPm: 144,
+    categoryVi: 'Kim loại chuyển tiếp quý',
+    color: '#f59e0b',
+    descriptionVi: 'Kim loại quý có tính dẻo cao nhất và trơ hóa học tuyệt đối. Hiệu ứng tương đối tính làm cho vàng có màu ánh kim rực rỡ và dẫn điện cực tốt.',
+  },
+  Cu: {
+    symbol: 'Cu',
+    nameVi: 'Đồng',
+    nameEn: 'Copper',
+    atomicNumber: 29,
+    atomicMass: '63.546 u',
+    electronConfig: '[Ar] 3d¹⁰ 4s¹',
+    electronegativity: 1.90,
+    atomicRadiusPm: 128,
+    categoryVi: 'Kim loại dẫn điện cao',
+    color: '#f97316',
+    descriptionVi: 'Chất dẫn điện và nhiệt công nghiệp số 1. Cấu trúc mạng tinh thể FCC cho phép các electron tự do di chuyển với điện trở cực thấp.',
+  },
+  Si: {
+    symbol: 'Si',
+    nameVi: 'Silic',
+    nameEn: 'Silicon',
+    atomicNumber: 14,
+    atomicMass: '28.085 u',
+    electronConfig: '[Ne] 3s² 3p²',
+    electronegativity: 1.90,
+    atomicRadiusPm: 111,
+    categoryVi: 'Á kim bán dẫn',
+    color: '#38bdf8',
+    descriptionVi: 'Trái tim của cuộc cách mạng số. Tinh thể bán dẫn nhóm IV tạo nền tảng cho hàng tỷ bóng bán dẫn (transistor) trong chip vi xử lý hiện đại.',
+  },
+  Fe: {
+    symbol: 'Fe',
+    nameVi: 'Sắt',
+    nameEn: 'Iron',
+    atomicNumber: 26,
+    atomicMass: '55.845 u',
+    electronConfig: '[Ar] 3d⁶ 4s²',
+    electronegativity: 1.83,
+    atomicRadiusPm: 126,
+    categoryVi: 'Kim loại từ tính & Kết cấu',
+    color: '#94a3b8',
+    descriptionVi: 'Kim loại phổ biến nhất trong công nghiệp luyện kim. Có tính sắt từ mạnh và chuyển pha thù hình lập phương tâm khối (BCC) ở nhiệt độ phòng.',
+  },
+  Na: {
+    symbol: 'Na',
+    nameVi: 'Natri',
+    nameEn: 'Sodium',
+    atomicNumber: 11,
+    atomicMass: '22.990 u',
+    electronConfig: '[Ne] 3s¹',
+    electronegativity: 0.93,
+    atomicRadiusPm: 186,
+    categoryVi: 'Kim loại kiềm (Cation Na⁺)',
+    color: '#a855f7',
+    descriptionVi: 'Kim loại kiềm hoạt động mạnh. Trong tinh thể muối ăn NaCl, Na nhường 1 electron tạo cation Na⁺ kết hợp mạng bát diện với Cl⁻.',
+  },
+  Cl: {
+    symbol: 'Cl',
+    nameVi: 'Clo',
+    nameEn: 'Chlorine',
+    atomicNumber: 17,
+    atomicMass: '35.453 u',
+    electronConfig: '[Ne] 3s² 3p⁵',
+    electronegativity: 3.16,
+    atomicRadiusPm: 99,
+    categoryVi: 'Halogen (Anion Cl⁻)',
+    color: '#10b981',
+    descriptionVi: 'Halogen có độ âm điện lớn. Nhận 1 electron để đạt cấu hình khí hiếm bền vững, tạo thành anion Cl⁻ bao quanh bởi 6 ion Na⁺.',
+  },
+  Ti: {
+    symbol: 'Ti',
+    nameVi: 'Titan',
+    nameEn: 'Titanium',
+    atomicNumber: 22,
+    atomicMass: '47.867 u',
+    electronConfig: '[Ar] 3d² 4s²',
+    electronegativity: 1.54,
+    atomicRadiusPm: 147,
+    categoryVi: 'Kim loại vũ trụ siêu bền nhẹ',
+    color: '#cbd5e1',
+    descriptionVi: 'Tỷ số độ bền trên trọng lượng cao nhất trong các kim loại. Tự tạo lớp màng thụ động oxit TiO₂ chống ăn mòn nước biển và tương thích sinh học.',
+  },
+  H: {
+    symbol: 'H',
+    nameVi: 'Hydro',
+    nameEn: 'Hydrogen',
+    atomicNumber: 1,
+    atomicMass: '1.008 u',
+    electronConfig: '1s¹',
+    electronegativity: 2.20,
+    atomicRadiusPm: 37,
+    categoryVi: 'Phi kim nhẹ nhất vũ trụ',
+    color: '#e2e8f0',
+    descriptionVi: 'Nguyên tố đơn giản và dồi dào nhất vũ trụ. Trong nước đá Ih, liên kết hydro tạo mạng lục giác xốp làm nước đá nhẹ hơn nước lỏng.',
+  },
+  O: {
+    symbol: 'O',
+    nameVi: 'Oxy',
+    nameEn: 'Oxygen',
+    atomicNumber: 8,
+    atomicMass: '15.999 u',
+    electronConfig: '[He] 2s² 2p⁴',
+    electronegativity: 3.44,
+    atomicRadiusPm: 66,
+    categoryVi: 'Chất oxy hóa mạnh',
+    color: '#ef4444',
+    descriptionVi: 'Độ âm điện cao thứ hai. Tạo liên kết phân cực mạnh với Si trong thủy tinh SiO₂ và cầu nối hydro trong tinh thể băng H₂O.',
+  },
+  Al: {
+    symbol: 'Al',
+    nameVi: 'Nhôm',
+    nameEn: 'Aluminum',
+    atomicNumber: 13,
+    atomicMass: '26.982 u',
+    electronConfig: '[Ne] 3s² 3p¹',
+    electronegativity: 1.61,
+    atomicRadiusPm: 143,
+    categoryVi: 'Kim loại nhẹ hàng không',
+    color: '#e2e8f0',
+    descriptionVi: 'Khối lượng riêng thấp (2.7 g/cm³) và độ dẫn điện nhiệt cao. Tinh thể FCC tạo độ dẻo cao cho gia công vỏ máy bay và linh kiện điện tử.',
+  },
+};
+
+export function getElementInfo(symbol: string): ElementDetail {
+  return (
+    ELEMENT_REGISTRY[symbol] || {
+      symbol,
+      nameVi: `Nguyên tố ${symbol}`,
+      nameEn: `Element ${symbol}`,
+      atomicNumber: 0,
+      atomicMass: 'N/A',
+      electronConfig: 'N/A',
+      electronegativity: 0,
+      atomicRadiusPm: 100,
+      categoryVi: 'Nguyên tố hóa học',
+      color: '#38bdf8',
+      descriptionVi: `Nguyên tử ${symbol} tham gia cấu trúc tinh thể liên kết mạng vật liệu.`,
+    }
+  );
+}
