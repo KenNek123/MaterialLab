@@ -28,6 +28,7 @@ import DetailModal from '@/components/ui/DetailModal';
 import MaterialBadge from '@/components/ui/MaterialBadge';
 import RightInfoPanel from '@/components/ui/RightInfoPanel';
 import TourOverlay from '@/components/ui/TourOverlay';
+import MobileZoomControls from '@/components/ui/MobileZoomControls';
 import { ZOOM_DIST } from '@/components/3d/zoomState';
 import { MATERIALS, MATERIAL_CATEGORIES, MATERIAL_MAP } from '@/data/materials';
 import { sound } from '@/lib/soundFx';
@@ -568,6 +569,9 @@ export default function HomePage() {
           <span>Chọn 1 trong 3 cấp độ để khám phá</span>
         </div>
       </nav>
+
+      {/* Mobile & Tablet Floating Zoom Controls (+ / -) */}
+      <MobileZoomControls />
 
       {/* 2D Projection Mode Active Indicator */}
       {cameraAngle === 'top' && (
