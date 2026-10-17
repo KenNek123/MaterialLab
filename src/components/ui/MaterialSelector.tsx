@@ -6,7 +6,6 @@ import { useStore, StoreState } from '@/store/useStore';
 import { MATERIALS, MATERIAL_CATEGORIES } from '@/data/materials';
 import {
   ChevronLeft,
-  SlidersHorizontal,
   Search,
   GitCompare,
   Layers,

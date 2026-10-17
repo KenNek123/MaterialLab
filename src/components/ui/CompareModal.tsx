@@ -14,7 +14,6 @@ import {
   Sparkles,
   Award,
   Layers,
-  ChevronRight,
   Eye,
 } from 'lucide-react';
 import { sound } from '@/lib/soundFx';
@@ -246,7 +245,6 @@ export default function CompareModal() {
                   const Icon = m.icon;
                   const isAWinner = m.valA > m.valB;
                   const isBWinner = m.valB > m.valA;
-                  const isEqual = m.valA === m.valB;
 
                   return (
                     <div key={m.key} className="space-y-2">

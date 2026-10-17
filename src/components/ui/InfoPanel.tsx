@@ -6,7 +6,6 @@ import { useStore, StoreState } from '@/store/useStore';
 import { MATERIALS, MATERIAL_MAP } from '@/data/materials';
 import {
   Info,
-  Layers,
   ChevronLeft,
   ChevronRight,
   Shield,
@@ -21,6 +20,13 @@ export default function InfoPanel() {
   const setIsDetailOpen = useStore((s: StoreState) => s.setIsDetailOpen);
   const setShowSidebar = useStore((s: StoreState) => s.setShowSidebar);
   const activeLayer = useStore((s: StoreState) => s.activeLayer);
+  const isDual3DView = useStore((s: StoreState) => s.isDual3DView);
+  const compareMaterialA = useStore((s: StoreState) => s.compareMaterialA);
+  const compareMaterialB = useStore((s: StoreState) => s.compareMaterialB);
+  const swapCompareMaterials = useStore((s: StoreState) => s.swapCompareMaterials);
+
+  // Default collapsed on mobile for maximum spaciousness
+  const [isCollapsed, setIsCollapsed] = React.useState(false);
 
   const material = MATERIAL_MAP.get(selectedMaterial);
 
@@ -58,18 +64,10 @@ export default function InfoPanel() {
     },
   };
 
-  const isDual3DView = useStore((s: StoreState) => s.isDual3DView);
-  const compareMaterialA = useStore((s: StoreState) => s.compareMaterialA);
-  const compareMaterialB = useStore((s: StoreState) => s.compareMaterialB);
-  const swapCompareMaterials = useStore((s: StoreState) => s.swapCompareMaterials);
-
   const matA = MATERIAL_MAP.get(compareMaterialA);
   const matB = MATERIAL_MAP.get(compareMaterialB);
 
   const catStyle = categoryColorMap[material.category] || categoryColorMap.crystal;
-
-  // Default collapsed on mobile for maximum spaciousness
-  const [isCollapsed, setIsCollapsed] = React.useState(false);
 
   return (
     <motion.div
@@ -238,7 +236,7 @@ function MetricMini({
   colorClass,
   textClass,
 }: {
-  icon: any;
+  icon: React.ComponentType<{ size?: number; className?: string }>;
   label: string;
   value: number;
   colorClass: string;

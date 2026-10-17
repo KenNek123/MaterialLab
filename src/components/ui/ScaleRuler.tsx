@@ -2,21 +2,11 @@
 
 import React, { useMemo } from 'react';
 import { useStore, StoreState } from '@/store/useStore';
-import { MATERIAL_MAP } from '@/data/materials';
 import { Ruler } from 'lucide-react';
-import { sound } from '@/lib/soundFx';
 
 export default function ScaleRuler() {
-  const cameraDistance = useStore((s: StoreState) => s.cameraDistance);
   const activeLayer = useStore((s: StoreState) => s.activeLayer);
   const zoomProgress = useStore((s: StoreState) => s.zoomProgress);
-  const selectedMaterial = useStore((s: StoreState) => s.selectedMaterial);
-  const showLatticeCage = useStore((s: StoreState) => s.showLatticeCage);
-  const toggleLatticeCage = useStore((s: StoreState) => s.toggleLatticeCage);
-  const showMillerPlanes = useStore((s: StoreState) => s.showMillerPlanes);
-  const toggleMillerPlanes = useStore((s: StoreState) => s.toggleMillerPlanes);
-
-  const material = MATERIAL_MAP.get(selectedMaterial);
 
   // Calculate real-world physical scale estimate
   const scaleInfo = useMemo(() => {

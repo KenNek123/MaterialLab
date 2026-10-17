@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useRef, useCallback, useEffect, useState } from 'react';
+import React, { useRef, useCallback, useEffect } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls, Environment, ContactShadows, Float, Html } from '@react-three/drei';
+import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
 import { EffectComposer, Bloom } from '@react-three/postprocessing';
 import * as THREE from 'three';
 import { useStore, ZoomLayer, StoreState } from '@/store/useStore';
@@ -12,6 +13,15 @@ import { MicroUnitCell } from './MicroUnitCell';
 import { MolecularStructure } from './MolecularStructure';
 import { CrystallographyOverlays } from './CrystallographyOverlays';
 import { sound } from '@/lib/soundFx';
+
+interface ZoomTargetDetail {
+  distance: number;
+  immediate?: boolean;
+}
+
+interface CameraAngleDetail {
+  angle: 'iso' | 'top' | 'side';
+}
 
 import {
   ZOOM_DIST,
@@ -51,7 +61,7 @@ function LayerTransitionOverlay() {
 }
 
 // ── Zoom, Angle & Cinematic Tour Controller ──────────────────────────────────
-function ZoomController({ controlsRef }: { controlsRef: React.RefObject<any> }) {
+function ZoomController({ controlsRef }: { controlsRef: React.RefObject<OrbitControlsImpl | null> }) {
   const { camera } = useThree();
   const setActiveLayer = useStore((s: StoreState) => s.setActiveLayer);
   const setCameraDistance = useStore((s: StoreState) => s.setCameraDistance);
@@ -71,15 +81,17 @@ function ZoomController({ controlsRef }: { controlsRef: React.RefObject<any> }) 
   const tourTimeRef = useRef<number>(0);
 
   useEffect(() => {
-    const handleZoomTarget = (e: any) => {
-      if (e.detail && typeof e.detail.distance === 'number') {
-        targetDistRef.current = e.detail.distance;
-        isImmediateRef.current = !!e.detail.immediate;
+    const handleZoomTarget = (e: Event) => {
+      const customEvent = e as CustomEvent<ZoomTargetDetail>;
+      if (customEvent.detail && typeof customEvent.detail.distance === 'number') {
+        targetDistRef.current = customEvent.detail.distance;
+        isImmediateRef.current = !!customEvent.detail.immediate;
       }
     };
-    const handleCameraAngle = (e: any) => {
-      if (e.detail && e.detail.angle) {
-        const angle = e.detail.angle as 'iso' | 'top' | 'side';
+    const handleCameraAngle = (e: Event) => {
+      const customEvent = e as CustomEvent<CameraAngleDetail>;
+      if (customEvent.detail && customEvent.detail.angle) {
+        const angle = customEvent.detail.angle;
         setCameraAngle(angle);
         sound.playSnap();
         if (angle === 'top') {
@@ -425,7 +437,7 @@ function SnapshotManager() {
 
 // ── Scene Content ─────────────────────────────────────────────────────────────
 function SceneContent() {
-  const controlsRef = useRef<any>(null);
+  const controlsRef = useRef<OrbitControlsImpl | null>(null);
   const { camera } = useThree();
   const selectedMaterial = useStore((s: StoreState) => s.selectedMaterial);
   const setIsUserInteracting = useStore((s: StoreState) => s.setIsUserInteracting);
