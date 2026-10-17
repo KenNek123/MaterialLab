@@ -31,7 +31,8 @@ export function MicroUnitCell({ material }: MicroUnitCellProps) {
     structure.type === 'hexagonal' ||
     structure.type === 'graphene' ||
     structure.type === 'mxene' ||
-    structure.type === 'hcp';
+    structure.type === 'hcp' ||
+    structure.type === 'cnt';
 
   const color =
     material.category === 'metal'
@@ -40,6 +41,8 @@ export function MicroUnitCell({ material }: MicroUnitCellProps) {
       ? '#38bdf8'
       : material.category === 'polymer'
       ? '#10b981'
+      : material.category === 'nano'
+      ? '#a855f7'
       : '#38bdf8';
 
   // Outer cage geometry

@@ -293,6 +293,8 @@ function SingleMaterialDisplay({ material }: { material: NonNullable<ReturnType<
             ? '#38bdf8'
             : material.category === 'polymer'
             ? '#10b981'
+            : material.category === 'nano'
+            ? '#8b5cf6'
             : '#38bdf8'
         }
       />

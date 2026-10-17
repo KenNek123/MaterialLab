@@ -385,7 +385,7 @@ export function MolecularStructure({ material, opacity, scale }: MolecularStruct
       if (!atom || !atom.element) return;
 
       const elem = getElementInfo(atom.element);
-      if (!elem || elem.atomicNumber === 0) return;
+      if (!elem) return;
 
       sound.playAtomPing();
       setInspectedAtom({

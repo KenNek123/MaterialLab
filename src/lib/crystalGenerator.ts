@@ -101,6 +101,21 @@ export function generateCrystalStructure(
   let result: { atoms: AtomInstance[]; bonds: BondInstance[] };
 
   switch (structure.type) {
+    case 'cnt':
+      result = generateCarbonNanotube(a, rx, ry, molecularInfo);
+      break;
+    case 'buckyball':
+      result = generateBuckyballC60(a, molecularInfo);
+      break;
+    case 'perovskite':
+      result = generatePerovskite(a, rx, ry, rz, molecularInfo);
+      break;
+    case 'aerogel':
+      result = generateAerogel(a, rx, ry, rz, molecularInfo);
+      break;
+    case 'nitinol':
+      result = generateNitinolB2(a, rx, ry, rz, molecularInfo);
+      break;
     case 'diamond':
       result = generateDiamond(a, rx, ry, rz, molecularInfo);
       break;
@@ -920,6 +935,305 @@ function generateVulcanizedRubber(
     bonds.push({ start: pA.clone(), end: s1.clone(), color: '#facc15' });
     bonds.push({ start: s1.clone(), end: s2.clone(), color: '#eab308' });
     bonds.push({ start: s2.clone(), end: pB.clone(), color: '#facc15' });
+  }
+
+  return { atoms, bonds };
+}
+
+// ── 13. Ống Nano Carbon Đơn Vách (SWCNT Armchair (6,6) Chuẩn Wikipedia) ─────
+function generateCarbonNanotube(
+  _a: number,
+  rx: number,
+  _ry: number,
+  info: MaterialData['molecularInfo']
+): { atoms: AtomInstance[]; bonds: BondInstance[] } {
+  const atoms: AtomInstance[] = [];
+  const bonds: BondInstance[] = [];
+  const atomType = info.atomTypes[0];
+  const bondColor = info.bonds.color;
+
+  const n = 6;
+  const numAtomsPerRing = n * 2; // 12 atoms around circumference
+  const dCC = 1.42;
+  const radius = (n * Math.sqrt(3) * dCC) / (2 * Math.PI); // ≈ 2.35 Å
+  const numLayers = Math.max(10, rx * 5);
+
+  for (let l = 0; l < numLayers; l++) {
+    const yBase = (l - numLayers / 2) * (dCC * 0.866);
+    const isOdd = l % 2 === 1;
+
+    for (let i = 0; i < numAtomsPerRing; i++) {
+      const angleOffset = isOdd ? Math.PI / numAtomsPerRing : 0;
+      const theta = (i * 2 * Math.PI) / numAtomsPerRing + angleOffset;
+      const x = radius * Math.cos(theta);
+      const z = radius * Math.sin(theta);
+
+      atoms.push({
+        position: new THREE.Vector3(x, yBase, z),
+        element: atomType.element,
+        color: atomType.color,
+        radius: atomType.radius,
+      });
+    }
+  }
+
+  // Connect nearest neighbors (bond distance ≈ 1.42 Å)
+  const cutoff = dCC * 1.25;
+  for (let i = 0; i < atoms.length; i++) {
+    for (let j = i + 1; j < atoms.length; j++) {
+      const dist = atoms[i].position.distanceTo(atoms[j].position);
+      if (dist > 0.1 && dist < cutoff) {
+        bonds.push({
+          start: atoms[i].position.clone(),
+          end: atoms[j].position.clone(),
+          color: bondColor,
+        });
+      }
+    }
+  }
+
+  return { atoms, bonds };
+}
+
+// ── 14. Buckyball Fullerene C₆₀ (Khối 20 Mặt Cụt Chuẩn Wikipedia) ───────────
+function generateBuckyballC60(
+  _a: number,
+  info: MaterialData['molecularInfo']
+): { atoms: AtomInstance[]; bonds: BondInstance[] } {
+  const atoms: AtomInstance[] = [];
+  const bonds: BondInstance[] = [];
+  const atomType = info.atomTypes[0];
+  const bondColor = info.bonds.color;
+
+  const phi = (1 + Math.sqrt(5)) / 2; // Tỷ lệ vàng Golden Ratio ≈ 1.6180339887
+  const rawCoords: [number, number, number][] = [];
+  const signs = [-1, 1];
+
+  // Nhóm 1: Các hoán vị chẵn của (0, ±1, ±3phi) -> 12 đỉnh
+  for (const s1 of signs) {
+    for (const s2 of signs) {
+      rawCoords.push([0, s1 * 1, s2 * 3 * phi]);
+      rawCoords.push([s2 * 3 * phi, 0, s1 * 1]);
+      rawCoords.push([s1 * 1, s2 * 3 * phi, 0]);
+    }
+  }
+
+  // Nhóm 2: Các hoán vị chẵn của (±2, ±(1+2phi), ±phi) -> 24 đỉnh
+  for (const s1 of signs) {
+    for (const s2 of signs) {
+      for (const s3 of signs) {
+        rawCoords.push([s1 * 2, s2 * (1 + 2 * phi), s3 * phi]);
+        rawCoords.push([s3 * phi, s1 * 2, s2 * (1 + 2 * phi)]);
+        rawCoords.push([s2 * (1 + 2 * phi), s3 * phi, s1 * 2]);
+      }
+    }
+  }
+
+  // Nhóm 3: Các hoán vị chẵn của (±1, ±(2+phi), ±2phi) -> 24 đỉnh
+  for (const s1 of signs) {
+    for (const s2 of signs) {
+      for (const s3 of signs) {
+        rawCoords.push([s1 * 1, s2 * (2 + phi), s3 * 2 * phi]);
+        rawCoords.push([s3 * 2 * phi, s1 * 1, s2 * (2 + phi)]);
+        rawCoords.push([s2 * (2 + phi), s3 * 2 * phi, s1 * 1]);
+      }
+    }
+  }
+
+  // Bán kính phân tử C60 thực nghiệm theo crystallography = 3.54 Å
+  const baseNorm = Math.sqrt(1 + 9 * phi * phi);
+  const scale = 3.54 / baseNorm;
+
+  for (const c of rawCoords) {
+    atoms.push({
+      position: new THREE.Vector3(c[0] * scale, c[1] * scale, c[2] * scale),
+      element: atomType.element,
+      color: atomType.color,
+      radius: atomType.radius,
+    });
+  }
+
+  // Trong C60, mỗi nguyên tử liên kết với đúng 3 nguyên tử kề (khoảng cách 1.40 - 1.45 Å)
+  const cutoff = 1.62;
+  for (let i = 0; i < atoms.length; i++) {
+    for (let j = i + 1; j < atoms.length; j++) {
+      const dist = atoms[i].position.distanceTo(atoms[j].position);
+      if (dist > 0.1 && dist < cutoff) {
+        bonds.push({
+          start: atoms[i].position.clone(),
+          end: atoms[j].position.clone(),
+          color: bondColor,
+        });
+      }
+    }
+  }
+
+  return { atoms, bonds };
+}
+
+// ── 15. Tinh Thể Perovskite Quang Điện (Cubic Pm-3m - CH₃NH₃PbI₃) ─────────────
+function generatePerovskite(
+  a: number,
+  rx: number,
+  ry: number,
+  rz: number,
+  info: MaterialData['molecularInfo']
+): { atoms: AtomInstance[]; bonds: BondInstance[] } {
+  const atoms: AtomInstance[] = [];
+  const bonds: BondInstance[] = [];
+  const bType = info.atomTypes.find((t) => t.element === 'Pb') || info.atomTypes[0];
+  const xType = info.atomTypes.find((t) => t.element === 'I') || info.atomTypes[1] || bType;
+  const aType = info.atomTypes.find((t) => t.element === 'MA' || t.element === 'Cs' || t.element === 'Ca') || info.atomTypes[2] || bType;
+  const bondColor = info.bonds.color;
+
+  const half = a * 0.5;
+
+  for (let ix = 0; ix < rx; ix++) {
+    for (let iy = 0; iy < ry; iy++) {
+      for (let iz = 0; iz < rz; iz++) {
+        const ox = ix * a;
+        const oy = iy * a;
+        const oz = iz * a;
+
+        // Cation B (Pb²⁺) tại các góc (0,0,0)
+        const bPos = new THREE.Vector3(ox, oy, oz);
+        atoms.push({ position: bPos, element: bType.element, color: bType.color, radius: bType.radius });
+
+        // Anion X (I⁻) tại trung điểm 12 cạnh
+        const x1 = new THREE.Vector3(ox + half, oy, oz);
+        const x2 = new THREE.Vector3(ox, oy + half, oz);
+        const x3 = new THREE.Vector3(ox, oy, oz + half);
+        atoms.push({ position: x1, element: xType.element, color: xType.color, radius: xType.radius });
+        atoms.push({ position: x2, element: xType.element, color: xType.color, radius: xType.radius });
+        atoms.push({ position: x3, element: xType.element, color: xType.color, radius: xType.radius });
+
+        // Liên kết phối trí bát diện Pb-I
+        bonds.push({ start: bPos.clone(), end: x1.clone(), color: bondColor });
+        bonds.push({ start: bPos.clone(), end: x2.clone(), color: bondColor });
+        bonds.push({ start: bPos.clone(), end: x3.clone(), color: bondColor });
+
+        // Cation A (MA⁺ / CH₃NH₃⁺) tại tâm khối lập phương
+        const aPos = new THREE.Vector3(ox + half, oy + half, oz + half);
+        atoms.push({ position: aPos, element: aType.element, color: aType.color, radius: aType.radius });
+      }
+    }
+  }
+
+  // Bổ sung các đỉnh biên để hoàn chỉnh lồng bát diện
+  const maxBx = rx * a;
+  const maxBy = ry * a;
+  const maxBz = rz * a;
+  atoms.push({ position: new THREE.Vector3(maxBx, 0, 0), element: bType.element, color: bType.color, radius: bType.radius });
+  atoms.push({ position: new THREE.Vector3(0, maxBy, 0), element: bType.element, color: bType.color, radius: bType.radius });
+  atoms.push({ position: new THREE.Vector3(0, 0, maxBz), element: bType.element, color: bType.color, radius: bType.radius });
+  atoms.push({ position: new THREE.Vector3(maxBx, maxBy, maxBz), element: bType.element, color: bType.color, radius: bType.radius });
+
+  return { atoms, bonds };
+}
+
+// ── 16. Khói Đông Lạnh Aerogel (Mạng Xốp 3D Tứ Diện Nanoporous Silica Fractal) ─
+function generateAerogel(
+  a: number,
+  _rx: number,
+  _ry: number,
+  _rz: number,
+  info: MaterialData['molecularInfo']
+): { atoms: AtomInstance[]; bonds: BondInstance[] } {
+  const atoms: AtomInstance[] = [];
+  const bonds: BondInstance[] = [];
+  const siType = info.atomTypes.find((t) => t.element === 'Si') || info.atomTypes[0];
+  const oType = info.atomTypes.find((t) => t.element === 'O') || info.atomTypes[1] || siType;
+  const bondColor = info.bonds.color;
+
+  const nodes: THREE.Vector3[] = [];
+  const span = a * 2.2;
+
+  // Tạo khung mạng nano xốp fractal 3D bất đối xứng với khoảng rỗng lớn
+  for (let i = 0; i < 28; i++) {
+    const angle = i * 2.39996; // Golden angle spiral
+    const r = (0.65 + (i % 4) * 0.35) * span * 0.42;
+    const y = ((i - 14) / 14) * span * 0.6;
+    const x = r * Math.cos(angle);
+    const z = r * Math.sin(angle);
+    nodes.push(new THREE.Vector3(x, y, z));
+  }
+
+  for (const n of nodes) {
+    atoms.push({ position: n.clone(), element: 'Si', color: siType.color, radius: siType.radius });
+  }
+
+  const cutoff = span * 0.52;
+  for (let i = 0; i < nodes.length; i++) {
+    for (let j = i + 1; j < nodes.length; j++) {
+      const dist = nodes[i].distanceTo(nodes[j]);
+      if (dist > 0.4 && dist < cutoff) {
+        const midO = nodes[i].clone().lerp(nodes[j], 0.5);
+        const offset = new THREE.Vector3(nodes[i].y * 0.15, -nodes[i].x * 0.15, nodes[i].z * 0.15);
+        midO.add(offset);
+
+        atoms.push({ position: midO, element: 'O', color: oType.color, radius: oType.radius });
+
+        bonds.push({ start: nodes[i].clone(), end: midO.clone(), color: bondColor });
+        bonds.push({ start: midO.clone(), end: nodes[j].clone(), color: bondColor });
+      }
+    }
+  }
+
+  return { atoms, bonds };
+}
+
+// ── 17. Hợp Kim Nhớ Hình Nitinol (Mạng Lập Phương Trật Tự B2 NiTi - CsCl Type) ──
+function generateNitinolB2(
+  a: number,
+  rx: number,
+  ry: number,
+  rz: number,
+  info: MaterialData['molecularInfo']
+): { atoms: AtomInstance[]; bonds: BondInstance[] } {
+  const atoms: AtomInstance[] = [];
+  const bonds: BondInstance[] = [];
+  const niType = info.atomTypes.find((t) => t.element === 'Ni') || info.atomTypes[0];
+  const tiType = info.atomTypes.find((t) => t.element === 'Ti') || info.atomTypes[1] || niType;
+  const bondColor = info.bonds.color;
+
+  const half = a * 0.5;
+
+  for (let ix = 0; ix < rx; ix++) {
+    for (let iy = 0; iy < ry; iy++) {
+      for (let iz = 0; iz < rz; iz++) {
+        const ox = ix * a;
+        const oy = iy * a;
+        const oz = iz * a;
+
+        // Ni tại 8 đỉnh ô mạng
+        const niPos = new THREE.Vector3(ox, oy, oz);
+        atoms.push({ position: niPos, element: 'Ni', color: niType.color, radius: niType.radius });
+
+        // Ti tại tâm khối (CsCl B2)
+        const tiPos = new THREE.Vector3(ox + half, oy + half, oz + half);
+        atoms.push({ position: tiPos, element: 'Ti', color: tiType.color, radius: tiType.radius });
+
+        // Liên kết kim loại từ tâm khối Ti tới các đỉnh Ni
+        bonds.push({ start: niPos.clone(), end: tiPos.clone(), color: bondColor });
+      }
+    }
+  }
+
+  // Kết nối phối trí 8 phương
+  const cutoff = a * Math.sqrt(3) * 0.5 * 1.12;
+  for (let i = 0; i < atoms.length; i++) {
+    for (let j = i + 1; j < atoms.length; j++) {
+      if (atoms[i].element !== atoms[j].element) {
+        const d = atoms[i].position.distanceTo(atoms[j].position);
+        if (d > 0.1 && d <= cutoff) {
+          bonds.push({
+            start: atoms[i].position.clone(),
+            end: atoms[j].position.clone(),
+            color: bondColor,
+          });
+        }
+      }
+    }
   }
 
   return { atoms, bonds };

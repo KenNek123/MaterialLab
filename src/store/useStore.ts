@@ -58,7 +58,9 @@ export interface MaterialData {
     type:
       | 'graphene'
       | 'cnt'
+      | 'buckyball'
       | 'perovskite'
+      | 'aerogel'
       | 'mxene'
       | 'silicene'
       | 'borophene'
@@ -91,7 +93,9 @@ export interface MaterialData {
   geometry:
     | 'graphene-sheet'
     | 'nanotube-coil'
+    | 'buckyball-cage'
     | 'solar-panel'
+    | 'aerogel-block'
     | 'mxene-capacitor'
     | 'atomic-wafer'
     | 'borophene-mesh'

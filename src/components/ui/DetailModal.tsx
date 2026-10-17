@@ -72,6 +72,14 @@ export default function DetailModal() {
           badge: 'bg-emerald-500/20 text-emerald-300 border-emerald-400/40',
           glow: 'rgba(16, 185, 129, 0.4)',
         }
+      : material.category === 'nano'
+      ? {
+          banner: 'from-violet-500/25 via-purple-600/15 to-fuchsia-700/25',
+          border: 'border-violet-400/60',
+          accent: 'text-violet-300',
+          badge: 'bg-violet-500/20 text-violet-300 border-violet-400/40',
+          glow: 'rgba(139, 92, 246, 0.45)',
+        }
       : {
           banner: 'from-sky-500/25 via-blue-600/15 to-purple-700/25',
           border: 'border-sky-400/60',

@@ -130,7 +130,7 @@ export default function MaterialSelector() {
                     }`}
                     type="button"
                   >
-                    Tất cả (15)
+                    Tất cả ({MATERIALS.length})
                   </button>
                   {MATERIAL_CATEGORIES.map((cat) => (
                     <button

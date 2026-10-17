@@ -420,6 +420,21 @@ export const ELEMENT_REGISTRY: Record<string, ElementDetail> = {
     coordination: 'Bát diện đều với 6 nguyên tử Oxy trong lớp CoO₂',
     bondType: 'Liên kết phối trí ion - cộng hóa trị chuyển tiếp',
   },
+  MA: {
+    symbol: 'MA',
+    nameVi: 'Metylamoni (CH₃NH₃⁺)',
+    nameEn: 'Methylammonium Cation',
+    atomicNumber: 0,
+    atomicMass: '32.065 u',
+    electronConfig: '[CH₃NH₃]⁺ Cation hữu cơ',
+    electronegativity: 2.50,
+    atomicRadiusPm: 217,
+    categoryVi: 'Cation hữu cơ Perovskite',
+    color: '#fbbf24',
+    descriptionVi: 'Cation hữu cơ phân cực Methylammonium nằm tại tâm khối lập phương của ô mạng Perovskite MAPbI₃. Cation này liên tục tự quay linh động ở nhiệt độ phòng, tạo hiệu ứng chắn điện môi mạnh và kéo dài tuổi thọ của electron quang sinh.',
+    coordination: 'Phối trí 12 đỉnh hình lập-bát diện (Cuboctahedron) với các ion I⁻',
+    bondType: 'Hút tĩnh điện Coulomb & Cầu liên kết Hydro N-H···I yếu',
+  },
 };
 
 export function getElementInfo(symbol: string): ElementDetail | null {

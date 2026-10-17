@@ -53,6 +53,18 @@ export function MacroObject({ material, opacity, wireframeOpacity }: MacroObject
         return createCeramicBladeGeometry();
       case 'rubber-tyre':
         return createRubberTyreGeometry();
+      // Advanced Nano Materials
+      case 'nanotube-coil':
+      case 'nanotube':
+        return createNanotubeCoilGeometry();
+      case 'buckyball-cage':
+        return createBuckyballGeometry();
+      case 'solar-panel':
+        return createSolarPanelGeometry();
+      case 'aerogel-block':
+        return createAerogelBlockGeometry();
+      case 'nitinol-stent':
+        return createNitinolStentGeometry();
       // Backward compatibility aliases
       case 'graphene-sheet':
         return createGraphitePencilGeometry();
@@ -883,6 +895,193 @@ function createRubberTyreGeometry(): THREE.BufferGeometry {
   }
 
   const merged = mergeGeometries(parts) || tyreTorus;
+  merged.center();
+  return merged;
+}
+
+// ── 16. Ống Nano Carbon Đơn Vách: Bó Sợi Đồng Trục Nano Siêu Bền (SWCNT) ────
+function createNanotubeCoilGeometry(): THREE.BufferGeometry {
+  const parts: THREE.BufferGeometry[] = [];
+
+  // Ống trụ nano trung tâm (Inner Core Tube)
+  const innerTube = new THREE.CylinderGeometry(0.42, 0.42, 2.5, 32, 1, true);
+  parts.push(innerTube);
+
+  // Vỏ trụ nano đồng trục bên ngoài (Outer Sheath)
+  const outerTube = new THREE.CylinderGeometry(0.82, 0.82, 2.7, 32, 1, true);
+  parts.push(outerTube);
+
+  // 7 Vòng gân chiral nano quấn quanh thân ống
+  for (let i = 0; i < 7; i++) {
+    const y = -1.05 + i * 0.35;
+    const ring = new THREE.TorusGeometry(0.85, 0.045, 12, 32);
+    ring.rotateX(Math.PI / 2);
+    ring.translate(0, y, 0);
+    parts.push(ring);
+  }
+
+  // Khuyên khóa từ tính nano ở 2 đầu cáp
+  const capTop = new THREE.CylinderGeometry(0.92, 0.92, 0.22, 32, 1);
+  capTop.translate(0, 1.35, 0);
+  parts.push(capTop);
+
+  const capBot = new THREE.CylinderGeometry(0.92, 0.92, 0.22, 32, 1);
+  capBot.translate(0, -1.35, 0);
+  parts.push(capBot);
+
+  const merged = mergeGeometries(parts) || innerTube;
+  merged.center();
+  return merged;
+}
+
+// ── 17. Quả Cầu Buckyball C₆₀: Khung Lồng Đa Diện Geodesic Nano ─────────────
+function createBuckyballGeometry(): THREE.BufferGeometry {
+  const parts: THREE.BufferGeometry[] = [];
+
+  // Vỏ lồng ngoài 20 mặt cụt 60 đỉnh (Geodesic Truncated Icosahedron Facets)
+  const buckyShell = new THREE.IcosahedronGeometry(1.35, 1);
+  parts.push(buckyShell);
+
+  // Lõi lượng tử nano phát sáng bên trong (Quantum Dot Core)
+  const innerCore = new THREE.SphereGeometry(0.65, 24, 24);
+  parts.push(innerCore);
+
+  // Vòng quỹ đạo ổn định nano xích đạo
+  const equatorRing = new THREE.TorusGeometry(1.5, 0.04, 12, 48);
+  equatorRing.rotateX(Math.PI / 2);
+  parts.push(equatorRing);
+
+  const polarRing = new THREE.TorusGeometry(1.5, 0.04, 12, 48);
+  polarRing.rotateY(Math.PI / 2);
+  parts.push(polarRing);
+
+  const merged = mergeGeometries(parts) || buckyShell;
+  merged.center();
+  return merged;
+}
+
+// ── 18. Mô-đun Pin Năng Lượng Mặt Trời Perovskite Tandem Đa Lớp ──────────────
+function createSolarPanelGeometry(): THREE.BufferGeometry {
+  const parts: THREE.BufferGeometry[] = [];
+
+  // Tấm nền bán dẫn quang điện Perovskite (Active Absorber Layer)
+  const panel = new THREE.BoxGeometry(2.4, 0.08, 2.4);
+  parts.push(panel);
+
+  // Khung viền nhôm bảo vệ 4 cạnh
+  const borderX1 = new THREE.BoxGeometry(2.5, 0.14, 0.08);
+  borderX1.translate(0, 0, 1.22);
+  parts.push(borderX1);
+
+  const borderX2 = new THREE.BoxGeometry(2.5, 0.14, 0.08);
+  borderX2.translate(0, 0, -1.22);
+  parts.push(borderX2);
+
+  const borderZ1 = new THREE.BoxGeometry(0.08, 0.14, 2.4);
+  borderZ1.translate(1.22, 0, 0);
+  parts.push(borderZ1);
+
+  const borderZ2 = new THREE.BoxGeometry(0.08, 0.14, 2.4);
+  borderZ2.translate(-1.22, 0, 0);
+  parts.push(borderZ2);
+
+  // 5 Đường busbar dẫn điện mạ vàng trên mặt pin
+  for (let i = 0; i < 5; i++) {
+    const x = -0.9 + i * 0.45;
+    const busbar = new THREE.BoxGeometry(0.04, 0.03, 2.3);
+    busbar.translate(x, 0.05, 0);
+    parts.push(busbar);
+  }
+
+  // Tấm đế gốm tản nhiệt phía dưới
+  const base = new THREE.BoxGeometry(2.35, 0.06, 2.35);
+  base.translate(0, -0.07, 0);
+  parts.push(base);
+
+  const merged = mergeGeometries(parts) || panel;
+  merged.center();
+  return merged;
+}
+
+// ── 19. Khói Đông Lạnh Aerogel: Khối Tinh Thể Siêu Nhẹ Khói Xanh Rayleigh ────
+function createAerogelBlockGeometry(): THREE.BufferGeometry {
+  const parts: THREE.BufferGeometry[] = [];
+
+  // Khối lập phương aerogel chính bo góc mềm
+  const mainBlock = new THREE.BoxGeometry(1.85, 1.85, 1.85, 4, 4, 4);
+  parts.push(mainBlock);
+
+  // Đĩa chân đế công nghệ siêu mỏng
+  const basePedestal = new THREE.CylinderGeometry(1.3, 1.35, 0.08, 32);
+  basePedestal.translate(0, -1.0, 0);
+  parts.push(basePedestal);
+
+  // Khuyên phát quang nâng đỡ trọng lực (Anti-Gravity Nano Levitation Ring)
+  const levRing = new THREE.TorusGeometry(1.4, 0.035, 12, 48);
+  levRing.rotateX(Math.PI / 2);
+  levRing.translate(0, -0.85, 0);
+  parts.push(levRing);
+
+  const merged = mergeGeometries(parts) || mainBlock;
+  merged.center();
+  return merged;
+}
+
+// ── 20. Hợp Kim Nhớ Hình Nitinol: Stent Mạch Vành Tim Quả Trám Tự Bung ────────
+function createNitinolStentGeometry(): THREE.BufferGeometry {
+  const parts: THREE.BufferGeometry[] = [];
+
+  const stentRadius = 0.85;
+  const numRings = 7;
+  const strutsPerRing = 10;
+  const ringHeight = 0.35;
+
+  for (let r = 0; r < numRings; r++) {
+    const yCenter = (r - (numRings - 1) / 2) * ringHeight;
+
+    for (let s = 0; s < strutsPerRing; s++) {
+      const a1 = (s * 2 * Math.PI) / strutsPerRing;
+      const a2 = ((s + 1) * 2 * Math.PI) / strutsPerRing;
+
+      const p1 = new THREE.Vector3(
+        stentRadius * Math.cos(a1),
+        yCenter - ringHeight * 0.45,
+        stentRadius * Math.sin(a1)
+      );
+      const p2 = new THREE.Vector3(
+        stentRadius * Math.cos((a1 + a2) * 0.5),
+        yCenter + ringHeight * 0.45,
+        stentRadius * Math.sin((a1 + a2) * 0.5)
+      );
+      const p3 = new THREE.Vector3(
+        stentRadius * Math.cos(a2),
+        yCenter - ringHeight * 0.45,
+        stentRadius * Math.sin(a2)
+      );
+
+      const strut1 = createStrutBetween(p1, p2, 0.038);
+      if (strut1) parts.push(strut1);
+
+      const strut2 = createStrutBetween(p2, p3, 0.038);
+      if (strut2) parts.push(strut2);
+
+      // Cầu liên kết dọc giữa các vòng kề
+      if (r < numRings - 1 && s % 2 === 0) {
+        const nextY = yCenter + ringHeight;
+        const pNext = new THREE.Vector3(
+          stentRadius * Math.cos((a1 + a2) * 0.5),
+          nextY - ringHeight * 0.45,
+          stentRadius * Math.sin((a1 + a2) * 0.5)
+        );
+        const bridge = createStrutBetween(p2, pNext, 0.038);
+        if (bridge) parts.push(bridge);
+      }
+    }
+  }
+
+  // Ống trụ nền bảo đảm an toàn
+  const fallback = new THREE.CylinderGeometry(stentRadius, stentRadius, 2.5, 32, 1, true);
+  const merged = mergeGeometries(parts) || fallback;
   merged.center();
   return merged;
 }
