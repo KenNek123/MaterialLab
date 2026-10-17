@@ -1,5 +1,13 @@
 import type { Metadata, Viewport } from "next";
+import { Montserrat } from "next/font/google";
 import "./globals.css";
+
+const montserrat = Montserrat({
+  subsets: ["latin", "vietnamese"],
+  weight: ["300", "400", "500", "600", "700", "800", "900"],
+  display: "swap",
+  variable: "--font-montserrat",
+});
 
 export const metadata: Metadata = {
   title: "Digital Materials Lab | Nguyễn Văn Tài",
@@ -27,8 +35,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="vi" className="h-full antialiased selection:bg-blue-500/30 selection:text-blue-200">
+    <html lang="vi" className={`h-full antialiased selection:bg-blue-500/30 selection:text-blue-200 ${montserrat.variable} ${montserrat.className}`}>
       <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300..900;1,300..900&display=swap" rel="stylesheet" />
         <script
           dangerouslySetInnerHTML={{
             __html: `
@@ -65,7 +76,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className="h-full w-full overflow-hidden select-none bg-[#050510]">
+      <body className={`h-full w-full overflow-hidden select-none bg-[#050510] ${montserrat.className}`}>
         {children}
       </body>
     </html>

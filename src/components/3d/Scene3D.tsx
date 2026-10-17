@@ -432,7 +432,7 @@ function SnapshotManager() {
           const fontSizeTitle = Math.max(14, Math.round(bannerHeight * 0.32));
           const fontSizeSub = Math.max(11, Math.round(bannerHeight * 0.22));
 
-          ctx.font = `bold ${fontSizeTitle}px sans-serif`;
+          ctx.font = `bold ${fontSizeTitle}px 'Montserrat', sans-serif`;
           ctx.fillStyle = '#ffffff';
           const titleText =
             isDual3DView && matA && matB
@@ -440,7 +440,7 @@ function SnapshotManager() {
               : `${mat?.nameVi.toUpperCase() || 'VẬT LIỆU'} (${mat?.formula || ''})`;
           ctx.fillText(titleText, padX, canvas.height - bannerHeight * 0.44);
 
-          ctx.font = `600 ${fontSizeSub}px monospace`;
+          ctx.font = `600 ${fontSizeSub}px 'Montserrat', monospace`;
           ctx.fillStyle = '#38bdf8';
           const scaleText =
             activeLayer === 'macro'
@@ -454,12 +454,12 @@ function SnapshotManager() {
             canvas.height - bannerHeight * 0.16
           );
 
-          ctx.font = `bold ${fontSizeTitle}px sans-serif`;
+          ctx.font = `bold ${fontSizeTitle}px 'Montserrat', sans-serif`;
           ctx.fillStyle = '#38bdf8';
           ctx.textAlign = 'right';
           ctx.fillText('DIGITAL MATERIALS LAB', canvas.width - padX, canvas.height - bannerHeight * 0.44);
 
-          ctx.font = `${fontSizeSub}px sans-serif`;
+          ctx.font = `${fontSizeSub}px 'Montserrat', sans-serif`;
           ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
           ctx.fillText('NGUYỄN VĂN TÀI', canvas.width - padX, canvas.height - bannerHeight * 0.16);
 
