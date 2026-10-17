@@ -3,7 +3,6 @@
 import React, { useRef, useCallback, useEffect } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls, Environment, ContactShadows, Float, Html } from '@react-three/drei';
-import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
 import { EffectComposer, Bloom } from '@react-three/postprocessing';
 import * as THREE from 'three';
 import { useStore, ZoomLayer, StoreState } from '@/store/useStore';
@@ -13,15 +12,6 @@ import { MicroUnitCell } from './MicroUnitCell';
 import { MolecularStructure } from './MolecularStructure';
 import { CrystallographyOverlays } from './CrystallographyOverlays';
 import { sound } from '@/lib/soundFx';
-
-interface ZoomTargetDetail {
-  distance: number;
-  immediate?: boolean;
-}
-
-interface CameraAngleDetail {
-  angle: 'iso' | 'top' | 'side';
-}
 
 import {
   ZOOM_DIST,
@@ -43,11 +33,12 @@ function LayerTransitionOverlay() {
       <div
         className="fixed inset-0 z-10 pointer-events-none transition-all duration-700"
         style={{
-          background: activeLayer === 'macro'
-            ? 'radial-gradient(ellipse at center, transparent 65%, rgba(30,58,138,0.06) 100%)'
-            : activeLayer === 'micro'
-            ? 'radial-gradient(ellipse at center, transparent 55%, rgba(88,28,135,0.08) 100%)'
-            : 'radial-gradient(ellipse at center, transparent 45%, rgba(131,24,67,0.10) 100%)',
+          background:
+            activeLayer === 'macro'
+              ? 'radial-gradient(ellipse at center, transparent 65%, rgba(30,58,138,0.06) 100%)'
+              : activeLayer === 'micro'
+              ? 'radial-gradient(ellipse at center, transparent 55%, rgba(88,28,135,0.08) 100%)'
+              : 'radial-gradient(ellipse at center, transparent 45%, rgba(131,24,67,0.10) 100%)',
         }}
       />
       {/* High-Res Snapshot Shutter Flash */}
@@ -60,8 +51,19 @@ function LayerTransitionOverlay() {
   );
 }
 
+type OrbitControlsInstance = React.ComponentRef<typeof OrbitControls>;
+
+interface ZoomEventDetail {
+  distance?: number;
+  immediate?: boolean;
+}
+
+interface AngleEventDetail {
+  angle?: 'iso' | 'top' | 'side';
+}
+
 // ── Zoom, Angle & Cinematic Tour Controller ──────────────────────────────────
-function ZoomController({ controlsRef }: { controlsRef: React.RefObject<OrbitControlsImpl | null> }) {
+function ZoomController({ controlsRef }: { controlsRef: React.RefObject<OrbitControlsInstance | null> }) {
   const { camera } = useThree();
   const setActiveLayer = useStore((s: StoreState) => s.setActiveLayer);
   const setCameraDistance = useStore((s: StoreState) => s.setCameraDistance);
@@ -69,7 +71,6 @@ function ZoomController({ controlsRef }: { controlsRef: React.RefObject<OrbitCon
   const setCameraAngle = useStore((s: StoreState) => s.setCameraAngle);
 
   const isTourActive = useStore((s: StoreState) => s.isTourActive);
-  const setIsTourActive = useStore((s: StoreState) => s.setIsTourActive);
   const setTourPhase = useStore((s: StoreState) => s.setTourPhase);
   const setTourProgress = useStore((s: StoreState) => s.setTourProgress);
 
@@ -82,14 +83,14 @@ function ZoomController({ controlsRef }: { controlsRef: React.RefObject<OrbitCon
 
   useEffect(() => {
     const handleZoomTarget = (e: Event) => {
-      const customEvent = e as CustomEvent<ZoomTargetDetail>;
+      const customEvent = e as CustomEvent<ZoomEventDetail>;
       if (customEvent.detail && typeof customEvent.detail.distance === 'number') {
         targetDistRef.current = customEvent.detail.distance;
         isImmediateRef.current = !!customEvent.detail.immediate;
       }
     };
     const handleCameraAngle = (e: Event) => {
-      const customEvent = e as CustomEvent<CameraAngleDetail>;
+      const customEvent = e as CustomEvent<AngleEventDetail>;
       if (customEvent.detail && customEvent.detail.angle) {
         const angle = customEvent.detail.angle;
         setCameraAngle(angle);
@@ -99,13 +100,16 @@ function ZoomController({ controlsRef }: { controlsRef: React.RefObject<OrbitCon
         } else if (angle === 'side') {
           targetDirRef.current = new THREE.Vector3(1, 0.1, 0.001).normalize();
         } else {
-          // 'iso'
           targetDirRef.current = new THREE.Vector3(1, 0.65, 1).normalize();
         }
       }
     };
     const handlePointerDown = (e: PointerEvent) => {
-      if ((e.target as HTMLElement)?.closest?.('button, input, select, [role="button"], .cyber-glass, .custom-scrollbar, .pip-card')) {
+      if (
+        (e.target as HTMLElement)?.closest?.(
+          'button, input, select, [role="button"], .cyber-glass, .custom-scrollbar, .pip-card, .tools-menu, .material-library, .lesson-card'
+        )
+      ) {
         return;
       }
       if (useStore.getState().isTourActive) {
@@ -124,15 +128,14 @@ function ZoomController({ controlsRef }: { controlsRef: React.RefObject<OrbitCon
       window.removeEventListener('material-camera-angle', handleCameraAngle);
       window.removeEventListener('pointerdown', handlePointerDown);
     };
-  }, [setCameraAngle, setIsTourActive]);
+  }, [setCameraAngle]);
 
   useFrame((state, delta) => {
     if (!camera) return;
 
-    // ── Cinematic Multi-Scale Auto-Tour Mode ──────────────────────────────────
     if (isTourActive) {
       tourTimeRef.current += delta;
-      const totalDuration = 14.0; // 14s complete journey
+      const totalDuration = 14.0;
       const loopTime = tourTimeRef.current % totalDuration;
       const progress = loopTime / totalDuration;
       setTourProgress(progress);
@@ -141,23 +144,19 @@ function ZoomController({ controlsRef }: { controlsRef: React.RefObject<OrbitCon
       let phase: 'macro' | 'micro' | 'molecular';
 
       if (loopTime < 4.5) {
-        // Phase 1: Macro overview
         phase = 'macro';
         targetTourDist = 11.2;
       } else if (loopTime < 9.0) {
-        // Phase 2: Glide into Micro unit cell
         phase = 'micro';
         const t = (loopTime - 4.5) / 4.5;
         const smoothT = t * t * (3 - 2 * t);
         targetTourDist = THREE.MathUtils.lerp(11.2, 5.8, smoothT);
       } else if (loopTime < 13.0) {
-        // Phase 3: Plunge into Molecular / Nano lattice
         phase = 'molecular';
         const t = (loopTime - 9.0) / 4.0;
         const smoothT = t * t * (3 - 2 * t);
         targetTourDist = THREE.MathUtils.lerp(5.8, 2.3, smoothT);
       } else {
-        // Glide back to Macro
         phase = 'macro';
         const t = (loopTime - 13.0) / 1.0;
         const smoothT = t * t * (3 - 2 * t);
@@ -166,7 +165,6 @@ function ZoomController({ controlsRef }: { controlsRef: React.RefObject<OrbitCon
 
       setTourPhase(phase);
 
-      // Smooth cinematic camera orbit
       const orbitSpeed = phase === 'molecular' ? 0.35 : 0.45;
       const angle = tourTimeRef.current * orbitSpeed;
       const elevation = phase === 'molecular' ? 0.5 : 0.72;
@@ -200,7 +198,6 @@ function ZoomController({ controlsRef }: { controlsRef: React.RefObject<OrbitCon
 
     let hasTransform = false;
 
-    // Smooth camera angle gliding
     if (targetDirRef.current) {
       const currentDir = camera.position.clone().normalize();
       const currentDist = camera.position.length();
@@ -213,7 +210,6 @@ function ZoomController({ controlsRef }: { controlsRef: React.RefObject<OrbitCon
       }
     }
 
-    // Smooth camera distance zoom lerping
     if (targetDistRef.current !== null) {
       const currentDist = camera.position.length();
       const factor = isImmediateRef.current ? 0.45 : Math.min(1.0, delta * 8.5);
@@ -252,9 +248,8 @@ function ZoomController({ controlsRef }: { controlsRef: React.RefObject<OrbitCon
   return null;
 }
 
-
 // ── Holographic Pedestal ─────────────────────────────────────────────────────
-function HolographicPedestal({ radius = 1.6, color = '#60a5fa' }: { radius?: number; color?: string }) {
+function HolographicPedestal({ radius = 1.6, color = '#38bdf8' }: { radius?: number; color?: string }) {
   const outerRef = useRef<THREE.Mesh>(null);
   const innerRef = useRef<THREE.Mesh>(null);
 
@@ -264,16 +259,16 @@ function HolographicPedestal({ radius = 1.6, color = '#60a5fa' }: { radius?: num
   });
 
   return (
-    <group position={[0, -1.85, 0]}>
-      <mesh ref={outerRef} rotation={[-Math.PI / 2, 0, 0]}>
-        <ringGeometry args={[radius * 0.90, radius, 48]} />
-        <meshBasicMaterial color={color} transparent opacity={0.30} side={THREE.DoubleSide} />
+    <group position={[0, -1.85, 0]} raycast={() => null}>
+      <mesh ref={outerRef} raycast={() => null} rotation={[-Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[radius * 0.9, radius, 48]} />
+        <meshBasicMaterial color={color} transparent opacity={0.3} side={THREE.DoubleSide} />
       </mesh>
-      <mesh ref={innerRef} rotation={[-Math.PI / 2, 0, 0]}>
-        <ringGeometry args={[radius * 0.70, radius * 0.76, 36]} />
+      <mesh ref={innerRef} raycast={() => null} rotation={[-Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[radius * 0.7, radius * 0.76, 36]} />
         <meshBasicMaterial color={color} transparent opacity={0.22} side={THREE.DoubleSide} />
       </mesh>
-      <mesh rotation={[-Math.PI / 2, 0, 0]}>
+      <mesh raycast={() => null} rotation={[-Math.PI / 2, 0, 0]}>
         <circleGeometry args={[radius * 0.62, 32]} />
         <meshBasicMaterial color={color} transparent opacity={0.07} side={THREE.DoubleSide} />
       </mesh>
@@ -285,13 +280,21 @@ function HolographicPedestal({ radius = 1.6, color = '#60a5fa' }: { radius?: num
 function SingleMaterialDisplay({ material }: { material: NonNullable<ReturnType<typeof MATERIAL_MAP.get>> }) {
   return (
     <group position={[0, 0, 0]}>
-      <MacroObject material={material} />
-      <MicroUnitCell material={material} />
-      <MolecularStructure material={material} />
+      <MacroObject key={`macro-${material.id}`} material={material} />
+      <MicroUnitCell key={`micro-${material.id}`} material={material} />
+      <MolecularStructure key={`molecular-${material.id}`} material={material} />
       <CrystallographyOverlays />
       <HolographicPedestal
         radius={1.8}
-        color={material.category === 'metal' ? '#f59e0b' : material.category === 'nano' ? '#a855f7' : '#38bdf8'}
+        color={
+          material.category === 'metal'
+            ? '#f59e0b'
+            : material.category === 'tech'
+            ? '#38bdf8'
+            : material.category === 'polymer'
+            ? '#10b981'
+            : '#38bdf8'
+        }
       />
     </group>
   );
@@ -299,7 +302,8 @@ function SingleMaterialDisplay({ material }: { material: NonNullable<ReturnType<
 
 // ── Dual Material Display ─────────────────────────────────────────────────────
 function DualMaterialDisplay({
-  matA, matB,
+  matA,
+  matB,
 }: {
   matA: NonNullable<ReturnType<typeof MATERIAL_MAP.get>>;
   matB: NonNullable<ReturnType<typeof MATERIAL_MAP.get>>;
@@ -355,7 +359,6 @@ function SnapshotManager() {
     setSnapshotFlash(true);
     const timer = setTimeout(() => setSnapshotFlash(false), 300);
 
-    // Force frame render to ensure back-buffer is complete
     gl.render(scene, camera);
     const dataUrl = gl.domElement.toDataURL('image/png');
 
@@ -367,14 +370,12 @@ function SnapshotManager() {
       const ctx = canvas.getContext('2d');
       if (!ctx) return;
 
-      // Draw 3D scene
       ctx.drawImage(img, 0, 0);
 
       const mat = MATERIAL_MAP.get(selectedMaterial);
       const bannerHeight = Math.max(54, Math.round(canvas.height * 0.08));
       const padX = Math.round(canvas.width * 0.035);
 
-      // Sci-fi lower gradient band
       const grad = ctx.createLinearGradient(0, canvas.height - bannerHeight, 0, canvas.height);
       grad.addColorStop(0, 'rgba(5, 5, 16, 0)');
       grad.addColorStop(0.35, 'rgba(5, 5, 16, 0.82)');
@@ -385,7 +386,6 @@ function SnapshotManager() {
       const fontSizeTitle = Math.max(14, Math.round(bannerHeight * 0.32));
       const fontSizeSub = Math.max(11, Math.round(bannerHeight * 0.22));
 
-      // Title & Formula
       ctx.font = `bold ${fontSizeTitle}px sans-serif`;
       ctx.fillStyle = '#ffffff';
       ctx.fillText(
@@ -394,35 +394,33 @@ function SnapshotManager() {
         canvas.height - bannerHeight * 0.44
       );
 
-      // Sub-line: Scale and details
       ctx.font = `600 ${fontSizeSub}px monospace`;
       ctx.fillStyle = '#38bdf8';
       const scaleText =
         activeLayer === 'macro'
-          ? 'THANG ĐO: VĨ MÔ (MACRO)'
+          ? 'THANG ĐO: VĨ MÔ (VẬT THỂ)'
           : activeLayer === 'micro'
-          ? 'THANG ĐO: Ô MẠNG TINH THỂ (MICRO)'
-          : 'THANG ĐO: PHÂN TỬ / NANO';
+          ? 'THANG ĐO: Ô MẠNG TINH THỂ'
+          : 'THANG ĐO: NGUYÊN TỬ & PHÂN TỬ';
       ctx.fillText(
-        `${scaleText} • CẤU TRÚC 3D CHUẨN KHOA HỌC`,
+        `${scaleText} • CẤU TRÚC 3D KHOA HỌC CHUẨN XÁC`,
         padX,
         canvas.height - bannerHeight * 0.16
       );
 
-      // Right-aligned branding
       ctx.font = `bold ${fontSizeTitle}px sans-serif`;
-      ctx.fillStyle = '#c084fc';
+      ctx.fillStyle = '#38bdf8';
       ctx.textAlign = 'right';
-      ctx.fillText('MATERIAL 3D EXPLORER', canvas.width - padX, canvas.height - bannerHeight * 0.44);
+      ctx.fillText('DIGITAL MATERIALS LAB', canvas.width - padX, canvas.height - bannerHeight * 0.44);
 
       ctx.font = `${fontSizeSub}px sans-serif`;
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
-      ctx.fillText(new Date().toLocaleDateString('vi-VN'), canvas.width - padX, canvas.height - bannerHeight * 0.16);
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
+      ctx.fillText('GVHD: NGUYỄN VĂN TÀI', canvas.width - padX, canvas.height - bannerHeight * 0.16);
 
       const finalData = canvas.toDataURL('image/png');
       const a = document.createElement('a');
       a.href = finalData;
-      a.download = `Material3D_${selectedMaterial}_${activeLayer}.png`;
+      a.download = `DigitalMaterialsLab_${selectedMaterial}_${activeLayer}.png`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -437,7 +435,7 @@ function SnapshotManager() {
 
 // ── Scene Content ─────────────────────────────────────────────────────────────
 function SceneContent() {
-  const controlsRef = useRef<OrbitControlsImpl | null>(null);
+  const controlsRef = useRef<OrbitControlsInstance | null>(null);
   const { camera } = useThree();
   const selectedMaterial = useStore((s: StoreState) => s.selectedMaterial);
   const setIsUserInteracting = useStore((s: StoreState) => s.setIsUserInteracting);
@@ -481,7 +479,9 @@ function SceneContent() {
       if (isDual3DView) {
         camera.position.set(0, 3, 12);
       } else if (isFirstMount.current) {
-        camera.position.set(0, 2, 10);
+        const curDist = useStore.getState().cameraDistance || 10;
+        const curDir = new THREE.Vector3(0, 0.2, 1).normalize();
+        camera.position.copy(curDir.multiplyScalar(curDist));
         isFirstMount.current = false;
       }
       camera.lookAt(0, 0, 0);
@@ -490,7 +490,7 @@ function SceneContent() {
       controlsRef.current.target.set(0, 0, 0);
       controlsRef.current.update();
     }
-  }, [selectedMaterial, isDual3DView, camera]);
+  }, [isDual3DView, camera]);
 
   if (!material) return null;
 
@@ -517,7 +517,7 @@ function SceneContent() {
       {isDual3DView && matA && matB ? (
         <DualMaterialDisplay matA={matA} matB={matB} />
       ) : (
-        <SingleMaterialDisplay material={material} />
+        <SingleMaterialDisplay key={material.id} material={material} />
       )}
 
       <ContactShadows
@@ -575,6 +575,11 @@ export default function Scene3D() {
       <Canvas
         camera={{ position: [0, 2, 10], fov: 58, near: 0.08, far: 120 }}
         shadows={!isLow}
+        onPointerMissed={() => {
+          // Deselect atom when clicking empty background space
+          useStore.getState().setSelectedAtom(null);
+          useStore.getState().setInspectedAtom(null);
+        }}
         gl={{
           antialias: !isLow,
           alpha: false,
@@ -590,9 +595,7 @@ export default function Scene3D() {
         <SceneContent />
       </Canvas>
 
-      {/* Picture-in-Picture Layer Transition Overlay (pure HTML/CSS over canvas) */}
       <LayerTransitionOverlay />
     </div>
   );
 }
-

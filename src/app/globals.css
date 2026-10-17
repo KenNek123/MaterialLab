@@ -568,3 +568,136 @@ button:focus-visible, input:focus-visible, select:focus-visible {
   }
 }
 
+/* ── Left Floating Action Dock ────────────────────────────────────────── */
+.floating-action-dock {
+  position: absolute;
+  left: 316px;
+  top: 96px;
+  z-index: 22;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 6px;
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.82);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.55);
+}
+
+.dock-action-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 38px;
+  padding: 0 10px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #e2e8f0;
+  font-size: 11px;
+  font-weight: 750;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all 0.16s ease;
+}
+
+.dock-action-btn:hover {
+  background: rgba(56, 189, 248, 0.15);
+  border-color: rgba(56, 189, 248, 0.4);
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+.dock-action-btn.is-active {
+  background: rgba(56, 189, 248, 0.25);
+  border-color: #38bdf8;
+  color: #38bdf8;
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.25);
+}
+
+.dock-view-selector {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-top: 6px;
+  margin-top: 4px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.dock-view-label {
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: #94a3b8;
+  padding: 0 4px;
+}
+
+.dock-view-group {
+  display: flex;
+  gap: 3px;
+  background: rgba(0, 0, 0, 0.35);
+  padding: 2px;
+  border-radius: 7px;
+}
+
+.dock-view-btn {
+  flex: 1;
+  padding: 5px 6px;
+  border-radius: 5px;
+  border: 0;
+  background: transparent;
+  color: #94a3b8;
+  font-size: 10px;
+  font-weight: 750;
+  cursor: pointer;
+  transition: all 0.14s ease;
+  white-space: nowrap;
+}
+
+.dock-view-btn:hover {
+  color: #ffffff;
+}
+
+.dock-view-btn.is-active {
+  background: #0284c7;
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.4);
+}
+
+@media (max-width: 960px) {
+  .floating-action-dock {
+    left: 14px;
+    top: 76px;
+    flex-direction: row;
+    align-items: center;
+    max-width: calc(100vw - 28px);
+    overflow-x: auto;
+  }
+  .dock-view-selector {
+    flex-direction: row;
+    align-items: center;
+    padding-top: 0;
+    margin-top: 0;
+    border-top: 0;
+    border-left: 1px solid rgba(255, 255, 255, 0.1);
+    padding-left: 6px;
+  }
+}
+
+/* ── Block Netlify Badges Completely ────────────────────────────────── */
+a[href*="netlify"],
+[class*="netlify"],
+[id*="netlify"],
+iframe[src*="netlify"],
+div:has(> a[href*="netlify"]) {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+
+

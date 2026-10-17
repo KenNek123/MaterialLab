@@ -8,10 +8,10 @@ import {
   ChevronLeft,
   Search,
   GitCompare,
-  Layers,
   Sparkles,
 } from 'lucide-react';
 import { sound } from '@/lib/soundFx';
+import MaterialBadge from '@/components/ui/MaterialBadge';
 
 export default function MaterialSelector() {
   const selectedMaterial = useStore((s: StoreState) => s.selectedMaterial);
@@ -42,7 +42,6 @@ export default function MaterialSelector() {
       <AnimatePresence>
         {showSidebar && (
           <>
-            {/* Backdrop for click-outside dismissal */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -62,15 +61,15 @@ export default function MaterialSelector() {
               <div className="px-5 pt-4 pb-3 border-b border-white/10 bg-[#121e25]">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-2xl bg-[#58cc02] border-2 border-b-4 border-[#46a302] flex items-center justify-center text-white shadow-md">
+                    <div className="w-10 h-10 rounded-2xl bg-[#1cb0f6] border-2 border-b-4 border-[#0284c7] flex items-center justify-center text-white shadow-md">
                       <Sparkles size={18} />
                     </div>
                     <div>
                       <h2 className="text-base font-extrabold text-white tracking-wide">
-                        Thư viện Vật liệu
+                        Digital Materials Lab
                       </h2>
-                      <p className="text-xs text-white/50 font-bold">
-                        12 cấu trúc PBR & Mạng tinh thể
+                      <p className="text-xs text-sky-400 font-bold">
+                        GVHD: Nguyễn Văn Tài
                       </p>
                     </div>
                   </div>
@@ -84,6 +83,7 @@ export default function MaterialSelector() {
                       }}
                       className="w-8 h-8 duo-pill rounded-xl flex items-center justify-center text-[#1cb0f6]"
                       title="So sánh vật liệu này"
+                      type="button"
                     >
                       <GitCompare size={16} />
                     </button>
@@ -94,6 +94,7 @@ export default function MaterialSelector() {
                       }}
                       className="w-8 h-8 duo-pill rounded-xl flex items-center justify-center text-white/70 hover:text-white"
                       title="Thu gọn"
+                      type="button"
                     >
                       <ChevronLeft size={18} />
                     </button>
@@ -101,31 +102,35 @@ export default function MaterialSelector() {
                 </div>
 
                 {/* Search Bar */}
-                <div className="mt-3.5 relative">
-                  <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/40" />
+                <div className="mt-3 relative">
+                  <Search
+                    size={15}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40"
+                  />
                   <input
                     type="text"
+                    placeholder="Tìm theo tên, công thức..."
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    placeholder="Tìm kiếm: Au, Cu, Kim cương, Si..."
-                    className="w-full pl-10 pr-3.5 py-2 rounded-2xl bg-[#16242c] border-2 border-[#2b4452] text-xs sm:text-sm font-bold text-white placeholder-white/40 focus:outline-none focus:border-[#58cc02]"
+                    className="w-full bg-slate-900/80 border border-slate-700/80 rounded-xl pl-9 pr-3 py-1.5 text-xs text-white placeholder-white/40 focus:outline-none focus:border-sky-400"
                   />
                 </div>
 
-                {/* Category Pills (Chunky Duolingo 3D Buttons) */}
-                <div className="flex gap-1.5 mt-3 overflow-x-auto pb-1 custom-scrollbar">
+                {/* Category Pills */}
+                <div className="flex gap-1.5 mt-2.5 overflow-x-auto pb-1 custom-scrollbar">
                   <button
                     onClick={() => {
                       sound.playClick();
                       setSelectedCat('all');
                     }}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all shrink-0 border-2 border-b-3 active:translate-y-0.5 ${
+                    className={`px-2.5 py-1 rounded-lg text-[11px] font-bold whitespace-nowrap transition-colors ${
                       selectedCat === 'all'
-                        ? 'bg-[#1cb0f6] border-[#1cb0f6] border-b-[#1899d6] text-white shadow-sm'
-                        : 'bg-[#182830] border-[#2b4452] border-b-[#16242c] text-white/60 hover:text-white'
+                        ? 'bg-sky-500 text-white'
+                        : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
                     }`}
+                    type="button"
                   >
-                    Tất cả ({MATERIALS.length})
+                    Tất cả (15)
                   </button>
                   {MATERIAL_CATEGORIES.map((cat) => (
                     <button
@@ -134,86 +139,58 @@ export default function MaterialSelector() {
                         sound.playClick();
                         setSelectedCat(cat.key);
                       }}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all shrink-0 flex items-center gap-1.5 border-2 border-b-3 active:translate-y-0.5 ${
+                      className={`px-2.5 py-1 rounded-lg text-[11px] font-bold whitespace-nowrap transition-colors ${
                         selectedCat === cat.key
-                          ? 'bg-[#1cb0f6] border-[#1cb0f6] border-b-[#1899d6] text-white shadow-sm'
-                          : 'bg-[#182830] border-[#2b4452] border-b-[#16242c] text-white/60 hover:text-white'
+                          ? 'bg-sky-500 text-white'
+                          : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
                       }`}
+                      type="button"
                     >
-                      <span>{cat.icon}</span>
-                      <span>{cat.label}</span>
+                      {cat.label}
                     </button>
                   ))}
                 </div>
               </div>
 
-              {/* Material List (Spacious Chunky Cards) */}
-              <div className="flex-1 min-h-0 px-3.5 py-3 overflow-y-auto custom-scrollbar space-y-2">
-                {filteredMaterials.length === 0 ? (
-                  <div className="text-center py-10 text-xs text-white/40 font-bold">
-                    Không tìm thấy vật liệu phù hợp
-                  </div>
-                ) : (
-                  filteredMaterials.map((mat) => {
-                    const isSelected = selectedMaterial === mat.id;
-                    return (
-                      <motion.button
-                        key={mat.id}
-                        onClick={() => {
-                          sound.playClick();
-                          setSelectedMaterial(mat.id);
-                        }}
-                        className={`w-full text-left p-3 rounded-2xl transition-all duration-150 group relative border-2 border-b-4 active:translate-y-[2px] active:border-b-2
-                          ${
-                            isSelected
-                              ? 'bg-[#18313d] border-[#1cb0f6] border-b-[#1899d6] shadow-lg shadow-[#1cb0f6]/20'
-                              : 'bg-[#14232a] border-[#283e4a] border-b-[#19262e] hover:border-[#3d5e71] hover:bg-[#1a2c35]'
-                          }`}
-                        whileHover={{ scale: 1.01 }}
-                        layout
-                      >
-                        <div className="flex items-center gap-3">
-                          <span className="text-2xl w-10 h-10 flex items-center justify-center rounded-xl bg-[#1e313b] border-2 border-white/10 shrink-0 shadow-sm">
-                            {mat.icon}
+              {/* List */}
+              <div className="flex-1 overflow-y-auto p-3 space-y-1.5 custom-scrollbar">
+                {filteredMaterials.map((mat) => {
+                  const isSelected = mat.id === selectedMaterial;
+                  return (
+                    <button
+                      key={`sidebar-mat-${mat.id}`}
+                      onClick={() => {
+                        sound.playClick();
+                        setSelectedMaterial(mat.id);
+                        setShowSidebar(false);
+                      }}
+                      className={`w-full p-2.5 rounded-xl border text-left flex items-center gap-3 transition-all ${
+                        isSelected
+                          ? 'bg-sky-500/15 border-sky-400/60 shadow-sm'
+                          : 'bg-slate-900/40 border-slate-800 hover:bg-slate-800/60'
+                      }`}
+                      type="button"
+                    >
+                      <MaterialBadge material={mat} size="md" showSub />
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center justify-between gap-1">
+                          <strong className="text-xs text-white truncate">{mat.nameVi}</strong>
+                          <span className="font-mono text-[10px] text-sky-400 font-bold shrink-0">
+                            {mat.formula}
                           </span>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2">
-                              <span
-                                className={`text-xs sm:text-sm font-extrabold truncate ${
-                                  isSelected ? 'text-[#1cb0f6]' : 'text-white'
-                                }`}
-                              >
-                                {mat.nameVi}
-                              </span>
-                              <span className="text-[10px] text-[#1cb0f6] font-mono font-bold px-1.5 py-0.2 rounded-md bg-[#1cb0f6]/20 border border-[#1cb0f6]/30">
-                                {mat.formula}
-                              </span>
-                            </div>
-                            <div className="text-[11px] text-white/50 font-medium truncate mt-0.5">
-                              {mat.objectNameVi} • {mat.categoryLabel}
-                            </div>
-                          </div>
-
-                          {isSelected && (
-                            <div className="w-3 h-3 rounded-full bg-[#58cc02] shadow-[0_0_8px_#58cc02] shrink-0" />
-                          )}
                         </div>
-                      </motion.button>
-                    );
-                  })
-                )}
-              </div>
-
-              {/* Footer Summary */}
-              <div className="px-5 py-3 border-t border-white/10 bg-[#121e25] text-xs text-white/50 flex items-center justify-between font-bold">
-                <span>12 cấu trúc tinh thể đa thang đo</span>
-                <Layers size={14} className="text-[#58cc02]" />
+                        <span className="text-[10px] text-slate-400 truncate block mt-0.5">
+                          {mat.objectNameVi}
+                        </span>
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
             </motion.div>
-
-        </>
-      )}
-    </AnimatePresence>
-  </>
-);
+          </>
+        )}
+      </AnimatePresence>
+    </>
+  );
 }

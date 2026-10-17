@@ -2,13 +2,13 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Vật liệu 3D | Phòng khám phá trực quan",
-  description: "Công cụ giảng dạy trực quan giúp khám phá vật liệu từ vật thể, ô mạng đến cấp nguyên tử.",
-  keywords: ["material science", "3D", "molecular", "crystal structure", "WebGL", "Three.js"],
+  title: "Digital Materials Lab | GVHD: Nguyễn Văn Tài",
+  description: "Phòng thí nghiệm vật liệu kỹ thuật số - Khám phá vật liệu từ vĩ mô đến cấp nguyên tử. GVHD: Nguyễn Văn Tài.",
+  keywords: ["Digital Materials Lab", "material science", "3D", "molecular", "crystal structure", "WebGL", "Three.js"],
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "Vật liệu 3D",
+    title: "Digital Materials Lab",
   },
 };
 

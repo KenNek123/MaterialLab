@@ -22,62 +22,77 @@ export function MacroObject({ material, opacity, wireframeOpacity }: MacroObject
 
   const geometry = useMemo(() => {
     switch (material.geometry) {
-      case 'diamond-ring':
-        return createDiamondRingGeometry();
-      case 'coil':
-        return createCoilGeometry();
-      case 'racket':
-        return createRacketGeometry();
-      case 'lens':
-        return createLensGeometry();
-      case 'crystal-cube':
-        return createCrystalCubeGeometry();
-      case 'snowflake':
-        return createSnowflakeGeometry();
-      case 'fuselage':
-        return createFuselageGeometry();
+      case 'diamond-gem':
+        return createDiamondGemGeometry();
+      case 'graphite-pencil':
+        return createGraphitePencilGeometry();
+      case 'salt-cube':
+        return createSaltCubeGeometry();
+      case 'quartz-crystal':
+        return createQuartzCrystalGeometry();
+      case 'mxene-capacitor':
+      case 'ice-crystal':
+        return createMxeneCapacitorGeometry();
+      case 'gold-ingot':
+        return createGoldIngotGeometry();
+      case 'copper-coil':
+        return createCopperCoilGeometry();
+      case 'iron-beam':
+        return createIronBeamGeometry();
+      case 'aluminum-wing':
+        return createAluminumWingGeometry();
+      case 'titanium-implant':
+        return createTitaniumImplantGeometry();
+      case 'silicon-chip':
+        return createSiliconChipGeometry();
+      case 'teflon-pan':
+        return createTeflonPanGeometry();
+      case 'lithium-battery':
+        return createLithiumBatteryGeometry();
+      case 'ceramic-blade':
+        return createCeramicBladeGeometry();
+      case 'rubber-tyre':
+        return createRubberTyreGeometry();
+      // Backward compatibility aliases
+      case 'graphene-sheet':
+        return createGraphitePencilGeometry();
       case 'gold-bar':
-        return createGoldBarGeometry();
-      case 'titanium-bracket':
-        return createTitaniumBracketGeometry();
+        return createGoldIngotGeometry();
       case 'silicon-wafer':
-        return createSiliconWaferGeometry();
-      case 'nanotube':
-        return createNanotubeGeometry();
-      case 'iron-core':
-        return createIronCoreGeometry();
+        return createSiliconChipGeometry();
+      case 'turbine-blade':
+        return createAluminumWingGeometry();
       default:
-        return new THREE.SphereGeometry(1.5, isLow ? 32 : 64, isLow ? 32 : 64);
+        return createDiamondGemGeometry();
     }
-  }, [material.geometry, isLow]);
+  }, [material.geometry]);
 
   const wireGeometry = useMemo(() => {
-    return new THREE.EdgesGeometry(geometry, 15);
+    return new THREE.EdgesGeometry(geometry, 22);
   }, [geometry]);
 
   const wireMat = useMemo(() => {
     return new THREE.LineBasicMaterial({
-      color: '#88ccff',
+      color: material.emissive || '#38bdf8',
       transparent: true,
       opacity: 0,
     });
-  }, []);
+  }, [material.emissive]);
 
   const mat = useMemo(() => {
     if (isLow) {
-      // Lightweight MeshStandardMaterial for smooth performance on phones and weak PCs
       return new THREE.MeshStandardMaterial({
         color: material.color,
-        roughness: Math.max(0.2, material.roughness),
+        roughness: Math.max(0.15, material.roughness),
         metalness: material.metalness,
         transparent: true,
         opacity: 1,
         side: THREE.DoubleSide,
         ...(material.emissive
           ? {
-              emissive: material.emissive,
-              emissiveIntensity: material.emissiveIntensity || 0.15,
-            }
+            emissive: material.emissive,
+            emissiveIntensity: material.emissiveIntensity || 0.15,
+          }
           : {}),
       });
     }
@@ -86,17 +101,18 @@ export function MacroObject({ material, opacity, wireframeOpacity }: MacroObject
       color: material.color,
       roughness: material.roughness,
       metalness: material.metalness,
-      transmission: material.transmission,
-      clearcoat: material.clearcoat,
+      transmission: material.transmission || 0,
+      clearcoat: material.clearcoat || 0.8,
       transparent: true,
       opacity: 1,
       side: THREE.DoubleSide,
-      envMapIntensity: 1.6,
+      envMapIntensity: 1.8,
+      ior: material.id === 'diamond' ? 2.42 : material.id === 'ice' ? 1.31 : 1.5,
       ...(material.emissive
         ? {
-            emissive: material.emissive,
-            emissiveIntensity: material.emissiveIntensity || 0.15,
-          }
+          emissive: material.emissive,
+          emissiveIntensity: material.emissiveIntensity || 0.15,
+        }
         : {}),
     });
   }, [material, isLow]);
@@ -116,323 +132,822 @@ export function MacroObject({ material, opacity, wireframeOpacity }: MacroObject
 
     if (meshRef.current) {
       meshRef.current.visible = isMeshVisible;
-      const meshMat = meshRef.current.material;
-      if (meshMat instanceof THREE.Material) {
-        meshMat.opacity = curOpacity;
-        meshMat.transparent = curOpacity < 0.99;
+      if (meshRef.current.material) {
+        const m = meshRef.current.material as THREE.Material;
+        m.opacity = curOpacity;
+        m.transparent = curOpacity < 0.99;
+        m.depthWrite = curOpacity > 0.85;
       }
     }
     if (wireRef.current) {
       wireRef.current.visible = isWireVisible;
-      const currentWireMat = wireRef.current.material;
-      if (currentWireMat instanceof THREE.Material) {
-        currentWireMat.opacity = curWire * 0.5;
+      if (wireRef.current.material) {
+        const wm = wireRef.current.material as THREE.LineBasicMaterial;
+        wm.opacity = curWire * 0.45;
       }
     }
   });
 
   return (
-    <group ref={groupRef}>
+    <group ref={groupRef} raycast={() => null}>
       <mesh
         ref={meshRef}
+        raycast={() => null}
         geometry={geometry}
         material={mat}
         castShadow={!isLow}
         receiveShadow={!isLow}
       />
       {wireGeometry && (
-        <lineSegments ref={wireRef} geometry={wireGeometry} material={wireMat} />
+        <lineSegments ref={wireRef} raycast={() => null} geometry={wireGeometry} material={wireMat} />
       )}
     </group>
   );
 }
 
-function createDiamondRingGeometry(): THREE.BufferGeometry {
-  const ringGeo = new THREE.TorusGeometry(1.2, 0.14, 32, 64);
-  // Sharp natural crystal facets for authentic diamond brilliance
-  const diamondGeo = new THREE.OctahedronGeometry(0.58, 0);
-  diamondGeo.translate(0, 1.2 + 0.44, 0);
+// ── 1. Kim Cương Tự Nhiên: Giác Cắt Tròn Rực Rỡ (Brilliant Cut 16 Cạnh) ──────
+function createDiamondGemGeometry(): THREE.BufferGeometry {
+  const parts: THREE.BufferGeometry[] = [];
 
-  const parts: THREE.BufferGeometry[] = [ringGeo, diamondGeo];
-  // 4 jewelry prongs
-  const prongGeo = new THREE.CylinderGeometry(0.04, 0.04, 0.45, 12);
-  const prongOffsets = [
-    [0.22, 1.2 + 0.22, 0.22],
-    [-0.22, 1.2 + 0.22, 0.22],
-    [0.22, 1.2 + 0.22, -0.22],
-    [-0.22, 1.2 + 0.22, -0.22],
+  // Table (Mặt phẳng tròn đỉnh 16 cạnh)
+  const table = new THREE.CircleGeometry(0.95, 16);
+  table.rotateX(-Math.PI / 2);
+  table.translate(0, 0.64, 0);
+  parts.push(table);
+
+  // Crown (Tầng vương miện từ y = 0.04 đến y = 0.64, 16 cạnh)
+  const crown = new THREE.CylinderGeometry(0.95, 1.62, 0.6, 16, 1);
+  crown.translate(0, 0.34, 0);
+  parts.push(crown);
+
+  // Girdle (Vành đai giữa từ y = -0.04 đến y = 0.04, 16 cạnh)
+  const girdle = new THREE.CylinderGeometry(1.63, 1.63, 0.08, 16, 1);
+  parts.push(girdle);
+
+  // Pavilion (Tầng chóp đáy từ y = -1.54 đến y = -0.04, 16 cạnh)
+  const pavilion = new THREE.CylinderGeometry(1.62, 0.04, 1.5, 16, 1);
+  pavilion.translate(0, -0.79, 0);
+  parts.push(pavilion);
+
+  const merged = mergeGeometries(parts) || crown;
+  merged.center();
+  return merged;
+}
+
+// ── 2. Than Chì & Graphene: Ruột Bút Chì Lục Giác & Ngòi Chì ──────────────────
+function createGraphitePencilGeometry(): THREE.BufferGeometry {
+  const parts: THREE.BufferGeometry[] = [];
+
+  // Thân bút chì lục giác (y: -1.1 đến +0.9)
+  const body = new THREE.CylinderGeometry(0.52, 0.52, 2.0, 6);
+  body.translate(0, -0.1, 0);
+  parts.push(body);
+
+  // Phần gỗ gọt hình nón cụt (y: +0.9 đến +1.6)
+  const shavedWood = new THREE.CylinderGeometry(0.18, 0.52, 0.7, 6);
+  shavedWood.translate(0, 1.25, 0);
+  parts.push(shavedWood);
+
+  // Ngòi chì nhọn nối tiếp đỉnh nón cụt (y: +1.6 đến +2.05)
+  const leadTip = new THREE.ConeGeometry(0.18, 0.45, 16);
+  leadTip.translate(0, 1.825, 0);
+  parts.push(leadTip);
+
+  // Đai kim loại đuôi bút có gân (y: -1.5 đến -1.1)
+  const ferrule = new THREE.CylinderGeometry(0.535, 0.535, 0.4, 24);
+  ferrule.translate(0, -1.3, 0);
+  parts.push(ferrule);
+
+  // 2 Gân nổi trên đai kim loại
+  const rib1 = new THREE.TorusGeometry(0.54, 0.018, 12, 24);
+  rib1.rotateX(Math.PI / 2);
+  rib1.translate(0, -1.2, 0);
+  const rib2 = new THREE.TorusGeometry(0.54, 0.018, 12, 24);
+  rib2.rotateX(Math.PI / 2);
+  rib2.translate(0, -1.4, 0);
+  parts.push(rib1, rib2);
+
+  // Cục tẩy bo tròn ở đuôi bút
+  const eraser = new THREE.CylinderGeometry(0.49, 0.49, 0.28, 24);
+  eraser.translate(0, -1.64, 0);
+  parts.push(eraser);
+
+  const eraserCap = new THREE.SphereGeometry(0.49, 24, 12, 0, Math.PI * 2, 0, Math.PI * 0.5);
+  eraserCap.rotateX(Math.PI);
+  eraserCap.translate(0, -1.78, 0);
+  parts.push(eraserCap);
+
+  const merged = mergeGeometries(parts) || body;
+  merged.center();
+  return merged;
+}
+
+// ── 3. Muối Ăn Tinh Khiết (NaCl): Tinh Thể Muối Lập Phương Bậc Thang ──────────
+function createSaltCubeGeometry(): THREE.BufferGeometry {
+  const parts: THREE.BufferGeometry[] = [];
+
+  // Khối lập phương chính
+  const mainCube = new THREE.BoxGeometry(1.9, 1.9, 1.9);
+  parts.push(mainCube);
+
+  // Các bậc tinh thể Hopper phát triển đồng tâm trên 6 mặt
+  const step1X = new THREE.BoxGeometry(2.06, 1.45, 1.45);
+  const step2X = new THREE.BoxGeometry(2.18, 1.0, 1.0);
+  const step3X = new THREE.BoxGeometry(2.28, 0.55, 0.55);
+
+  const step1Y = new THREE.BoxGeometry(1.45, 2.06, 1.45);
+  const step2Y = new THREE.BoxGeometry(1.0, 2.18, 1.0);
+  const step3Y = new THREE.BoxGeometry(0.55, 2.28, 0.55);
+
+  const step1Z = new THREE.BoxGeometry(1.45, 1.45, 2.06);
+  const step2Z = new THREE.BoxGeometry(1.0, 1.0, 2.18);
+  const step3Z = new THREE.BoxGeometry(0.55, 0.55, 2.28);
+
+  parts.push(step1X, step2X, step3X, step1Y, step2Y, step3Y, step1Z, step2Z, step3Z);
+
+  const merged = mergeGeometries(parts) || mainCube;
+  merged.center();
+  return merged;
+}
+
+// ── 4. Thạch Anh & Thủy Tinh (SiO₂): Trụ Thạch Anh Lục Lăng Kèm Chóp Nhọn ─────
+function createQuartzCrystalGeometry(): THREE.BufferGeometry {
+  const parts: THREE.BufferGeometry[] = [];
+
+  // Trụ lục lăng chính ở trung tâm
+  const mainPrism = new THREE.CylinderGeometry(0.78, 0.78, 2.2, 6);
+  mainPrism.translate(0, -0.1, 0);
+  parts.push(mainPrism);
+
+  // Chóp kim tự tháp 6 mặt trên đỉnh
+  const mainTip = new THREE.ConeGeometry(0.78, 1.05, 6);
+  mainTip.translate(0, 1.525, 0);
+  parts.push(mainTip);
+
+  // Đế khoáng vật (Mineral Base Matrix)
+  const baseMatrix = new THREE.CylinderGeometry(1.35, 1.55, 0.6, 8);
+  baseMatrix.translate(0, -1.4, 0);
+  parts.push(baseMatrix);
+
+  // Tinh thể phụ bên trái mọc nghiêng từ đế khoáng vật
+  const sideLeft = new THREE.CylinderGeometry(0.38, 0.38, 1.2, 6);
+  const sideLeftTip = new THREE.ConeGeometry(0.38, 0.55, 6);
+  sideLeftTip.translate(0, 0.875, 0);
+  const leftCluster = mergeGeometries([sideLeft, sideLeftTip]);
+  if (leftCluster) {
+    leftCluster.rotateZ(0.42);
+    leftCluster.translate(-0.72, -0.55, 0.15);
+    parts.push(leftCluster);
+  }
+
+  // Tinh thể phụ bên phải mọc nghiêng từ đế khoáng vật
+  const sideRight = new THREE.CylinderGeometry(0.34, 0.34, 1.05, 6);
+  const sideRightTip = new THREE.ConeGeometry(0.34, 0.48, 6);
+  sideRightTip.translate(0, 0.765, 0);
+  const rightCluster = mergeGeometries([sideRight, sideRightTip]);
+  if (rightCluster) {
+    rightCluster.rotateZ(-0.46);
+    rightCluster.translate(0.72, -0.62, -0.12);
+    parts.push(rightCluster);
+  }
+
+  // Tinh thể phụ nhỏ phía trước
+  const sideFront = new THREE.CylinderGeometry(0.24, 0.24, 0.8, 6);
+  const sideFrontTip = new THREE.ConeGeometry(0.24, 0.38, 6);
+  sideFrontTip.translate(0, 0.59, 0);
+  const frontCluster = mergeGeometries([sideFront, sideFrontTip]);
+  if (frontCluster) {
+    frontCluster.rotateX(0.4);
+    frontCluster.translate(0.15, -0.75, 0.75);
+    parts.push(frontCluster);
+  }
+
+  const merged = mergeGeometries(parts) || mainPrism;
+  merged.center();
+  return merged;
+}
+
+// ── 5. Siêu Tụ Điện MXene: Cuộn Màng Mỏng Nano Tích Điện Siêu Tụ ──────────────
+function createMxeneCapacitorGeometry(): THREE.BufferGeometry {
+  const parts: THREE.BufferGeometry[] = [];
+
+  // Lõi trục trung tâm
+  const core = new THREE.CylinderGeometry(0.4, 0.4, 2.3, 28);
+  parts.push(core);
+
+  // Các lớp màng mỏng 2D xếp bậc (Telescoped concentric layers)
+  const radii = [0.64, 0.88, 1.12, 1.32];
+  const heights = [2.05, 1.82, 1.6, 1.38];
+
+  for (let i = 0; i < radii.length; i++) {
+    const cyl = new THREE.CylinderGeometry(radii[i], radii[i], heights[i], 32);
+    parts.push(cyl);
+  }
+
+  // Tấm màng mỏng 2D mở ra ngoài từ vỏ
+  const flap = new THREE.BoxGeometry(0.95, 1.36, 0.05);
+  flap.rotateY(-0.35);
+  flap.translate(1.38, 0, 0.52);
+  parts.push(flap);
+
+  // 2 Cực điện Dương & Âm trên đỉnh
+  const tabPos = new THREE.BoxGeometry(0.18, 0.5, 0.08);
+  tabPos.translate(-0.22, 1.35, 0);
+  const tabNeg = new THREE.BoxGeometry(0.18, 0.5, 0.08);
+  tabNeg.translate(0.22, 1.35, 0);
+  parts.push(tabPos, tabNeg);
+
+  const merged = mergeGeometries(parts) || core;
+  merged.center();
+  return merged;
+}
+
+// ── 6. Vàng Ròng 24K: Thỏi Vàng Đúc Chuẩn (Fine Gold 999.9) ───────────────────
+function createGoldIngotGeometry(): THREE.BufferGeometry {
+  const parts: THREE.BufferGeometry[] = [];
+
+  // Khối thỏi vàng hình chóp cụt chữ nhật
+  const base = new THREE.CylinderGeometry(1.18, 1.5, 0.65, 4);
+  base.rotateY(Math.PI / 4);
+  base.scale(1.48, 1.0, 0.88);
+  parts.push(base);
+
+  // Mặt bảng phía trên
+  const topPlate = new THREE.BoxGeometry(2.05, 0.06, 1.05);
+  topPlate.translate(0, 0.34, 0);
+  parts.push(topPlate);
+
+  // Viền nổi quanh mặt trên
+  const borderZ1 = new THREE.BoxGeometry(2.08, 0.06, 0.07);
+  borderZ1.translate(0, 0.37, 0.5);
+  const borderZ2 = new THREE.BoxGeometry(2.08, 0.06, 0.07);
+  borderZ2.translate(0, 0.37, -0.5);
+  const borderX1 = new THREE.BoxGeometry(0.07, 0.06, 1.0);
+  borderX1.translate(1.0, 0.37, 0);
+  const borderX2 = new THREE.BoxGeometry(0.07, 0.06, 1.0);
+  borderX2.translate(-1.0, 0.37, 0);
+  parts.push(borderZ1, borderZ2, borderX1, borderX2);
+
+  // Mộc tròn dập nổi
+  const mintStamp = new THREE.CylinderGeometry(0.24, 0.24, 0.05, 24);
+  mintStamp.translate(-0.54, 0.38, 0);
+  const stampRing = new THREE.TorusGeometry(0.16, 0.02, 10, 24);
+  stampRing.rotateX(Math.PI / 2);
+  stampRing.translate(-0.54, 0.40, 0);
+  parts.push(mintStamp, stampRing);
+
+  // Ký hiệu 999.9 dập nổi
+  const d1 = new THREE.BoxGeometry(0.14, 0.04, 0.22);
+  d1.translate(0.05, 0.38, 0);
+  const d2 = new THREE.BoxGeometry(0.14, 0.04, 0.22);
+  d2.translate(0.26, 0.38, 0);
+  const d3 = new THREE.BoxGeometry(0.14, 0.04, 0.22);
+  d3.translate(0.47, 0.38, 0);
+  const dot = new THREE.BoxGeometry(0.05, 0.04, 0.05);
+  dot.translate(0.58, 0.38, -0.07);
+  const d4 = new THREE.BoxGeometry(0.14, 0.04, 0.22);
+  d4.translate(0.72, 0.38, 0);
+  parts.push(d1, d2, d3, dot, d4);
+
+  const merged = mergeGeometries(parts) || base;
+  merged.center();
+  return merged;
+}
+
+// ── 7. Đồng Đỏ Dẫn Điện (Cu): Cuộn Dây Cáp Đồng & Lõi Đồng Dẫn Điện ──────────
+function createCopperCoilGeometry(): THREE.BufferGeometry {
+  const parts: THREE.BufferGeometry[] = [];
+
+  // Lõi cuộn Rulo
+  const spool = new THREE.CylinderGeometry(0.6, 0.6, 2.4, 32);
+  parts.push(spool);
+
+  // 2 Mặt bích giữ dây ở hai đầu
+  const topFlange = new THREE.CylinderGeometry(1.42, 1.42, 0.14, 36);
+  topFlange.translate(0, 1.15, 0);
+  const botFlange = new THREE.CylinderGeometry(1.42, 1.42, 0.14, 36);
+  botFlange.translate(0, -1.15, 0);
+  parts.push(topFlange, botFlange);
+
+  // 10 Vòng dây đồng xoắn chặt quanh trục
+  const numRings = 10;
+  for (let i = 0; i < numRings; i++) {
+    const y = (i - (numRings - 1) / 2) * 0.215;
+    const ring = new THREE.TorusGeometry(1.05, 0.105, 16, 36);
+    ring.rotateX(Math.PI / 2);
+    ring.translate(0, y, 0);
+    parts.push(ring);
+  }
+
+  // Đầu cáp đồng vươn ra theo phương tiếp tuyến
+  const lead = new THREE.CylinderGeometry(0.11, 0.11, 0.75, 16);
+  lead.rotateX(Math.PI / 2);
+  lead.translate(1.05, 0.88, 0.45);
+  parts.push(lead);
+
+  // Đầu cáp đồng lộ 7 sợi lõi bện (1 sợi trung tâm + 6 sợi quấn quanh)
+  const coreStrand = new THREE.CylinderGeometry(0.025, 0.025, 0.32, 12);
+  coreStrand.rotateX(Math.PI / 2);
+  coreStrand.translate(1.05, 0.88, 0.92);
+  parts.push(coreStrand);
+
+  for (let k = 0; k < 6; k++) {
+    const angle = (k * 2 * Math.PI) / 6;
+    const sx = 1.05 + Math.cos(angle) * 0.054;
+    const sy = 0.88 + Math.sin(angle) * 0.054;
+    const strand = new THREE.CylinderGeometry(0.024, 0.024, 0.32, 12);
+    strand.rotateX(Math.PI / 2);
+    strand.translate(sx, sy, 0.92);
+    parts.push(strand);
+  }
+
+  const merged = mergeGeometries(parts) || spool;
+  merged.center();
+  return merged;
+}
+
+// ── 8. Thép Xây Dựng & Sắt (Fe-C): Dầm Thép Hình Chữ I Công Trình ────────────
+function createIronBeamGeometry(): THREE.BufferGeometry {
+  const parts: THREE.BufferGeometry[] = [];
+  const length = 2.75;
+
+  // Bản bụng dọc (Web)
+  const web = new THREE.BoxGeometry(0.18, 1.76, length);
+  parts.push(web);
+
+  // Bản cánh trên và dưới (Flanges)
+  const topFlange = new THREE.BoxGeometry(1.6, 0.22, length);
+  topFlange.translate(0, 0.99, 0);
+  const botFlange = new THREE.BoxGeometry(1.6, 0.22, length);
+  botFlange.translate(0, -0.99, 0);
+  parts.push(topFlange, botFlange);
+
+  // Mối hàn góc lượn (fillet welds) tại giao tuyến giữa bản bụng và bản cánh
+  const weldCoords = [
+    [0.11, 0.86],
+    [-0.11, 0.86],
+    [0.11, -0.86],
+    [-0.11, -0.86],
   ];
-  for (const [px, py, pz] of prongOffsets) {
-    const prong = prongGeo.clone();
-    prong.translate(px, py, pz);
-    parts.push(prong);
+  for (const [wx, wy] of weldCoords) {
+    const weld = new THREE.CylinderGeometry(0.045, 0.045, length, 12);
+    weld.rotateX(Math.PI / 2);
+    weld.translate(wx, wy, 0);
+    parts.push(weld);
   }
 
-  const merged = mergeGeometries(parts);
-  return merged || ringGeo;
-}
-
-function createCoilGeometry(): THREE.BufferGeometry {
-  const points: THREE.Vector3[] = [];
-  const turns = 8;
-  const radius = 1.0;
-  const tubeRadius = 0.5;
-
-  for (let i = 0; i <= 360; i += 2) {
-    const angle = (i * Math.PI) / 180;
-    const coilAngle = angle * turns;
-    const x = (radius + tubeRadius * Math.cos(coilAngle)) * Math.cos(angle);
-    const y = tubeRadius * Math.sin(coilAngle);
-    const z = (radius + tubeRadius * Math.cos(coilAngle)) * Math.sin(angle);
-    points.push(new THREE.Vector3(x, y, z));
+  // Gân tăng cứng chạm khít bản bụng và 2 cánh
+  for (let i = -1; i <= 1; i++) {
+    const zPos = i * 0.9;
+    const stiffR = new THREE.BoxGeometry(0.66, 1.76, 0.12);
+    stiffR.translate(0.42, 0, zPos);
+    const stiffL = new THREE.BoxGeometry(0.66, 1.76, 0.12);
+    stiffL.translate(-0.42, 0, zPos);
+    parts.push(stiffR, stiffL);
   }
 
-  const curve = new THREE.CatmullRomCurve3(points, true);
-  return new THREE.TubeGeometry(curve, 200, 0.08, 12, true);
-}
-
-function createRacketGeometry(): THREE.BufferGeometry {
-  const headShape = new THREE.Shape();
-  headShape.ellipse(0, 0.5, 0.82, 1.12, 0, Math.PI * 2, false, 0);
-
-  // Real hollow cutout inside the racket frame
-  const hole = new THREE.Path();
-  hole.ellipse(0, 0.5, 0.68, 0.98, 0, Math.PI * 2, true, 0);
-  headShape.holes.push(hole);
-
-  const headGeo = new THREE.ExtrudeGeometry(headShape, {
-    depth: 0.14,
-    bevelEnabled: true,
-    bevelThickness: 0.02,
-    bevelSize: 0.02,
-    bevelSegments: 4,
-  });
-  headGeo.translate(0, 0, -0.07);
-
-  const handleGeo = new THREE.CylinderGeometry(0.09, 0.11, 1.25, 16);
-  handleGeo.translate(0, -0.85, 0);
-
-  const gripCap = new THREE.CylinderGeometry(0.12, 0.12, 0.08, 16);
-  gripCap.translate(0, -1.48, 0);
-
-  const merged = mergeGeometries([headGeo, handleGeo, gripCap]);
-  return merged || headGeo;
-}
-
-function createLensGeometry(): THREE.BufferGeometry {
-  const lens = new THREE.SphereGeometry(1.2, 48, 48);
-  lens.scale(1, 0.28, 1);
-  const mountRing = new THREE.TorusGeometry(1.22, 0.06, 16, 64);
-  mountRing.rotateX(Math.PI / 2);
-  const merged = mergeGeometries([lens, mountRing]);
-  return merged || lens;
-}
-
-function createCrystalCubeGeometry(): THREE.BufferGeometry {
-  const mainCube = new THREE.BoxGeometry(1.5, 1.5, 1.5);
-  // Intergrown secondary cubic crystal stepped on face (authentic natural halite specimen)
-  const subCube1 = new THREE.BoxGeometry(0.85, 0.85, 0.85);
-  subCube1.translate(0.5, 0.5, 0.5);
-  const subCube2 = new THREE.BoxGeometry(0.55, 0.55, 0.55);
-  subCube2.translate(-0.55, -0.45, 0.55);
-  return mergeGeometries([mainCube, subCube1, subCube2]) || mainCube;
-}
-
-function createSnowflakeGeometry(): THREE.BufferGeometry {
-  const arms: THREE.BufferGeometry[] = [];
-
-  for (let i = 0; i < 6; i++) {
-    const angle = (i * 60 * Math.PI) / 180;
-
-    const arm = new THREE.BoxGeometry(0.12, 1.4, 0.04);
-    arm.rotateZ(angle);
-    arm.translate(Math.cos(angle + Math.PI / 2) * 0.7, Math.sin(angle + Math.PI / 2) * 0.7, 0);
-    arms.push(arm);
-
-    const branch1 = new THREE.BoxGeometry(0.08, 0.5, 0.03);
-    branch1.rotateZ(angle + Math.PI / 6);
-    branch1.translate(
-      Math.cos(angle + Math.PI / 2) * 0.5 + Math.cos(angle + Math.PI / 2 + Math.PI / 6) * 0.2,
-      Math.sin(angle + Math.PI / 2) * 0.5 + Math.sin(angle + Math.PI / 2 + Math.PI / 6) * 0.2,
-      0
-    );
-    arms.push(branch1);
-
-    const branch2 = new THREE.BoxGeometry(0.08, 0.5, 0.03);
-    branch2.rotateZ(angle - Math.PI / 6);
-    branch2.translate(
-      Math.cos(angle + Math.PI / 2) * 0.5 + Math.cos(angle + Math.PI / 2 - Math.PI / 6) * 0.2,
-      Math.sin(angle + Math.PI / 2) * 0.5 + Math.sin(angle + Math.PI / 2 - Math.PI / 6) * 0.2,
-      0
-    );
-    arms.push(branch2);
+  // 2 Hàng bulông lục giác trên bản cánh
+  for (let z = -1.1; z <= 1.1; z += 0.55) {
+    const boltL = new THREE.CylinderGeometry(0.07, 0.07, 0.28, 6);
+    boltL.translate(-0.5, 1.02, z);
+    const boltR = new THREE.CylinderGeometry(0.07, 0.07, 0.28, 6);
+    boltR.translate(0.5, 1.02, z);
+    parts.push(boltL, boltR);
   }
 
-  const center = new THREE.CylinderGeometry(0.2, 0.2, 0.05, 6);
-  center.rotateX(Math.PI / 2);
-  arms.push(center);
-
-  return mergeGeometries(arms) || arms[0];
+  const merged = mergeGeometries(parts) || web;
+  merged.center();
+  return merged;
 }
 
-function createFuselageGeometry(): THREE.BufferGeometry {
-  // Aerodynamic aerospace fuselage nacelle with nose cone and winglets
-  const body = new THREE.CylinderGeometry(0.68, 0.72, 2.2, 32);
-  const nose = new THREE.ConeGeometry(0.68, 0.85, 32);
-  nose.translate(0, 1.52, 0);
-  const tail = new THREE.CylinderGeometry(0.72, 0.42, 0.75, 32);
-  tail.translate(0, -1.47, 0);
+// ── 9. Nhôm Hàng Không (Al): Cánh Phụ Khí Động Học Máy Bay (Winglet) ─────────
+function createAluminumWingGeometry(): THREE.BufferGeometry {
+  const parts: THREE.BufferGeometry[] = [];
 
+  // Biên dạng cánh khí động học vát xéo
   const wingShape = new THREE.Shape();
-  wingShape.moveTo(0, -0.4);
-  wingShape.lineTo(1.6, -0.15);
-  wingShape.lineTo(1.5, 0.15);
-  wingShape.lineTo(0, 0.4);
+  wingShape.moveTo(-1.1, -1.25);
+  wingShape.lineTo(0.45, -1.25);
+  wingShape.quadraticCurveTo(0.85, -0.4, 1.15, 1.25);
+  wingShape.lineTo(0.35, 1.35);
+  wingShape.quadraticCurveTo(-0.35, 0.2, -1.1, -1.25);
   wingShape.closePath();
 
-  const wing = new THREE.ExtrudeGeometry(wingShape, { depth: 0.05, bevelEnabled: true, bevelThickness: 0.015, bevelSize: 0.015 });
-  wing.rotateY(Math.PI / 2);
-  wing.translate(0.5, 0, 0);
-
-  const wing2 = wing.clone();
-  wing2.rotateY(Math.PI);
-  wing2.translate(-1.0, 0, 0);
-
-  return mergeGeometries([body, nose, tail, wing, wing2]) || body;
-}
-
-function createGoldBarGeometry(): THREE.BufferGeometry {
-  const length = 2.2;
-  const widthTop = 0.9;
-  const widthBottom = 1.2;
-  const height = 0.65;
-
-  const shape = new THREE.Shape();
-  shape.moveTo(-widthBottom / 2, -height / 2);
-  shape.lineTo(widthBottom / 2, -height / 2);
-  shape.lineTo(widthTop / 2, height / 2);
-  shape.lineTo(-widthTop / 2, height / 2);
-  shape.closePath();
-
-  const barGeo = new THREE.ExtrudeGeometry(shape, {
-    depth: length,
+  const wing = new THREE.ExtrudeGeometry(wingShape, {
+    depth: 0.24,
     bevelEnabled: true,
-    bevelThickness: 0.06,
-    bevelSize: 0.06,
+    bevelThickness: 0.07,
+    bevelSize: 0.07,
     bevelSegments: 4,
   });
-  barGeo.translate(0, 0, -length / 2);
+  wing.translate(0, 0, -0.12);
+  wing.rotateY(0.35);
+  parts.push(wing);
 
-  const stampGeo = new THREE.BoxGeometry(widthTop * 0.7, 0.02, length * 0.5);
-  stampGeo.translate(0, height / 2 + 0.06, 0);
+  // Winglet uốn cong vươn cao ở đầu mút cánh
+  const wingletTip = new THREE.CylinderGeometry(0.08, 0.14, 0.65, 16);
+  wingletTip.rotateZ(-0.45);
+  wingletTip.translate(0.95, 1.48, 0.05);
+  parts.push(wingletTip);
 
-  return mergeGeometries([barGeo, stampGeo]) || barGeo;
+  // Đế gá CNC hợp kim nhôm ở gốc cánh
+  const rootBase = new THREE.BoxGeometry(1.95, 0.24, 0.85);
+  rootBase.translate(-0.25, -1.35, 0);
+  parts.push(rootBase);
+
+  // Gân chịu lực CNC trên đế gá
+  const rib1 = new THREE.BoxGeometry(0.08, 0.28, 0.65);
+  rib1.translate(-0.75, -1.18, 0);
+  const rib2 = new THREE.BoxGeometry(0.08, 0.28, 0.65);
+  rib2.translate(-0.25, -1.18, 0);
+  const rib3 = new THREE.BoxGeometry(0.08, 0.28, 0.65);
+  rib3.translate(0.25, -1.18, 0);
+  parts.push(rib1, rib2, rib3);
+
+  const merged = mergeGeometries(parts) || wing;
+  merged.center();
+  return merged;
 }
 
-function createTitaniumBracketGeometry(): THREE.BufferGeometry {
-  const baseShape = new THREE.Shape();
-  baseShape.moveTo(-1.2, -0.8);
-  baseShape.lineTo(1.2, -0.8);
-  baseShape.lineTo(1.2, -0.3);
-  baseShape.lineTo(0.3, 1.1);
-  baseShape.lineTo(-0.3, 1.1);
-  baseShape.lineTo(-1.2, -0.3);
-  baseShape.closePath();
+// ── 10. Titan Y Tế Siêu Bền (Ti): Khớp Háng Nhân Tạo Cấy Ghép (Hip Implant) ──
+function createTitaniumImplantGeometry(): THREE.BufferGeometry {
+  const parts: THREE.BufferGeometry[] = [];
 
-  const hole = new THREE.Path();
-  hole.moveTo(-0.5, -0.4);
-  hole.lineTo(0.5, -0.4);
-  hole.lineTo(0, 0.7);
-  hole.closePath();
-  baseShape.holes.push(hole);
+  // Thân trụ cắm xương đùi thuôn dưới, to trên
+  const stem = new THREE.CylinderGeometry(0.42, 0.16, 2.1, 24);
+  stem.translate(0.25, -0.55, 0);
+  parts.push(stem);
 
-  const bracket = new THREE.ExtrudeGeometry(baseShape, {
-    depth: 0.4,
+  // Các vòng gờ nhám tích hợp xương
+  for (let i = -2; i <= 2; i++) {
+    const r = 0.31 + i * 0.032;
+    const rib = new THREE.TorusGeometry(r, 0.025, 12, 24);
+    rib.rotateX(Math.PI / 2);
+    rib.translate(0.25, -0.35 + i * 0.24, 0);
+    parts.push(rib);
+  }
+
+  // Cổ khớp nối liền mạch đúng hướng vào tâm chỏm cầu (-0.52, 1.2, 0)
+  const neck = createStrutBetween(
+    new THREE.Vector3(0.25, 0.42, 0),
+    new THREE.Vector3(-0.52, 1.2, 0),
+    0.22
+  );
+  if (neck) parts.push(neck);
+
+  // Vành vai cổ khớp
+  const collar = new THREE.TorusGeometry(0.38, 0.05, 14, 24);
+  collar.rotateX(Math.PI / 2);
+  collar.rotateZ(Math.PI / 4);
+  collar.translate(0.12, 0.55, 0);
+  parts.push(collar);
+
+  // Chỏm cầu khớp xoay (Femoral Ball Head)
+  const head = new THREE.SphereGeometry(0.54, 32, 32);
+  head.translate(-0.52, 1.2, 0);
+  parts.push(head);
+
+  // Chén ổ cối (Acetabular Cup) bao phía trên chỏm cầu
+  const cup = new THREE.SphereGeometry(0.63, 32, 16, 0, Math.PI * 2, 0, Math.PI * 0.52);
+  cup.rotateZ(-0.35);
+  cup.translate(-0.52, 1.2, 0);
+  parts.push(cup);
+
+  const cupRim = new THREE.TorusGeometry(0.63, 0.04, 14, 32);
+  cupRim.rotateX(Math.PI / 2);
+  cupRim.rotateZ(-0.35);
+  cupRim.translate(-0.52, 1.2, 0);
+  parts.push(cupRim);
+
+  const merged = mergeGeometries(parts) || stem;
+  merged.center();
+  return merged;
+}
+
+// ── 11. Silic Tinh Khiết Bán Dẫn (Si): Đĩa Bán Dẫn Silicon Wafer 300mm ───────
+function createSiliconChipGeometry(): THREE.BufferGeometry {
+  const parts: THREE.BufferGeometry[] = [];
+  const R = 1.58;
+
+  // Đĩa bán dẫn tròn siêu phẳng
+  const wafer = new THREE.CylinderGeometry(R, R, 0.08, 64);
+  parts.push(wafer);
+
+  // Vành bo viền mép đĩa wafer
+  const rim = new THREE.TorusGeometry(R, 0.024, 12, 64);
+  rim.rotateX(Math.PI / 2);
+  parts.push(rim);
+
+  // Khấc định vị mép đĩa (Alignment Notch)
+  const notch = new THREE.BoxGeometry(0.12, 0.1, 0.28);
+  notch.translate(R - 0.04, 0, 0);
+  parts.push(notch);
+
+  // Lưới đường mạch quang khắc cắt chuẩn theo chiều dài dây cung 2 * sqrt(R^2 - d^2)
+  const maxR = R - 0.06;
+  for (let i = -3; i <= 3; i++) {
+    if (i === 0) continue;
+    const d = i * 0.36;
+    const chord = 2 * Math.sqrt(Math.max(0, maxR * maxR - d * d));
+    const lineX = new THREE.BoxGeometry(chord, 0.02, 0.03);
+    lineX.translate(0, 0.05, d);
+    const lineZ = new THREE.BoxGeometry(0.03, 0.02, chord);
+    lineZ.translate(d, 0.05, 0);
+    parts.push(lineX, lineZ);
+  }
+
+  // Đế chip CPU ở tâm
+  const die = new THREE.BoxGeometry(0.88, 0.06, 0.88);
+  die.translate(0, 0.06, 0);
+  const dieCap = new THREE.BoxGeometry(0.68, 0.03, 0.68);
+  dieCap.translate(0, 0.095, 0);
+  parts.push(die, dieCap);
+
+  const merged = mergeGeometries(parts) || wafer;
+  merged.center();
+  return merged;
+}
+
+// ── 12. Nhựa Chống Dính Teflon (PTFE): Chảo Chiên Chống Dính & Tay Cầm ───────
+function createTeflonPanGeometry(): THREE.BufferGeometry {
+  const parts: THREE.BufferGeometry[] = [];
+
+  // Đáy chảo phẳng
+  const base = new THREE.CylinderGeometry(1.15, 1.05, 0.12, 36);
+  base.translate(0, -0.25, 0);
+  parts.push(base);
+
+  // Đáy từ (Magnetic Induction Bottom Plate)
+  const inductionPlate = new THREE.CylinderGeometry(1.02, 1.02, 0.03, 36);
+  inductionPlate.translate(0, -0.32, 0);
+  parts.push(inductionPlate);
+
+  // Vòng dẫn nhiệt đồng tâm dưới đáy
+  const ring1 = new THREE.TorusGeometry(0.85, 0.02, 12, 36);
+  ring1.rotateX(Math.PI / 2);
+  ring1.translate(0, -0.32, 0);
+  const ring2 = new THREE.TorusGeometry(0.5, 0.02, 12, 36);
+  ring2.rotateX(Math.PI / 2);
+  ring2.translate(0, -0.32, 0);
+  parts.push(ring1, ring2);
+
+  // Thành chảo loe rộng (outer & inner wall để có độ dày thực tế)
+  const outerWall = new THREE.CylinderGeometry(1.42, 1.15, 0.52, 36, 1, true);
+  outerWall.translate(0, 0.05, 0);
+  const innerWall = new THREE.CylinderGeometry(1.36, 1.09, 0.52, 36, 1, true);
+  innerWall.translate(0, 0.05, 0);
+  parts.push(outerWall, innerWall);
+
+  // Vành miệng chảo bo tròn
+  const rim = new THREE.TorusGeometry(1.39, 0.045, 14, 36);
+  rim.rotateX(Math.PI / 2);
+  rim.translate(0, 0.31, 0);
+  parts.push(rim);
+
+  // Khâu gắn kim loại tiếp xúc thành chảo
+  const connector = new THREE.CylinderGeometry(0.12, 0.12, 0.32, 16);
+  connector.rotateX(Math.PI / 2);
+  connector.translate(0, 0.16, 1.45);
+  parts.push(connector);
+
+  // Tay cầm dài gắn khít vào thành chảo
+  const handle = createStrutBetween(
+    new THREE.Vector3(0, 0.16, 1.45),
+    new THREE.Vector3(0, 0.46, 2.75),
+    0.13
+  );
+  if (handle) parts.push(handle);
+
+  const handleGrip = new THREE.CylinderGeometry(0.15, 0.13, 0.38, 16);
+  handleGrip.rotateX(Math.PI / 2);
+  handleGrip.translate(0, 0.44, 2.65);
+  parts.push(handleGrip);
+
+  const merged = mergeGeometries(parts) || base;
+  merged.center();
+  return merged;
+}
+
+// ── 13. Pin Điện Thoại Lithium (LiCoO₂): Khối Pin Sạc Lithium Smartphone ─────
+function createLithiumBatteryGeometry(): THREE.BufferGeometry {
+  const parts: THREE.BufferGeometry[] = [];
+
+  // Khối thân pin chữ nhật bo cạnh
+  const body = new THREE.BoxGeometry(1.75, 2.45, 0.42);
+  parts.push(body);
+
+  // Viền hàn kín bao quanh thân pin
+  const seal = new THREE.BoxGeometry(1.86, 2.56, 0.08);
+  parts.push(seal);
+
+  // Cụm mạch bảo vệ và cáp kết nối ở đầu trên
+  const flexRibbon = new THREE.BoxGeometry(0.85, 0.28, 0.12);
+  flexRibbon.translate(0, 1.36, 0);
+  parts.push(flexRibbon);
+
+  // 2 Chân tiếp xúc cực Dương (+) và Âm (-)
+  const pin1 = new THREE.BoxGeometry(0.18, 0.2, 0.14);
+  pin1.translate(-0.28, 1.54, 0);
+  const pin2 = new THREE.BoxGeometry(0.18, 0.2, 0.14);
+  pin2.translate(0.28, 1.54, 0);
+  parts.push(pin1, pin2);
+
+  // Van an toàn (Safety Vent Disk)
+  const vent = new THREE.CylinderGeometry(0.13, 0.13, 0.05, 20);
+  vent.translate(0.62, 1.25, 0);
+  parts.push(vent);
+
+  // 4 Vạch dung lượng nổi trên mặt pin
+  for (let i = 0; i < 4; i++) {
+    const bar = new THREE.BoxGeometry(0.48, 0.06, 0.04);
+    bar.translate(0, -0.45 + i * 0.18, 0.22);
+    parts.push(bar);
+  }
+
+  const merged = mergeGeometries(parts) || body;
+  merged.center();
+  return merged;
+}
+
+// ── 14. Gốm Sứ Kỹ Thuật (Al₂O₃): Lưỡi Dao Gốm Sắc Bén & Cán Dao ─────────────
+function createCeramicBladeGeometry(): THREE.BufferGeometry {
+  const parts: THREE.BufferGeometry[] = [];
+
+  // Lưỡi dao gốm có cạnh cong sắc bén
+  const bladeShape = new THREE.Shape();
+  bladeShape.moveTo(-0.35, -0.38);
+  bladeShape.lineTo(1.35, -0.34);
+  bladeShape.lineTo(1.7, 0.02);
+  bladeShape.lineTo(-0.35, 0.34);
+  bladeShape.closePath();
+
+  const blade = new THREE.ExtrudeGeometry(bladeShape, {
+    depth: 0.07,
     bevelEnabled: true,
-    bevelThickness: 0.04,
-    bevelSize: 0.04,
+    bevelThickness: 0.025,
+    bevelSize: 0.025,
     bevelSegments: 3,
   });
-  bracket.translate(0, 0, -0.2);
-  return bracket;
-}
+  blade.translate(0, 0, -0.035);
+  parts.push(blade);
 
-function createSiliconWaferGeometry(): THREE.BufferGeometry {
-  const wafer = new THREE.CylinderGeometry(1.4, 1.4, 0.06, 64);
-  const ring1 = new THREE.TorusGeometry(1.25, 0.015, 16, 64);
-  ring1.rotateX(Math.PI / 2);
-  const ring2 = new THREE.TorusGeometry(0.75, 0.012, 16, 64);
-  ring2.rotateX(Math.PI / 2);
-  const notch = new THREE.BoxGeometry(0.08, 0.07, 0.15);
-  notch.translate(1.4, 0, 0);
-  return mergeGeometries([wafer, ring1, ring2, notch]) || wafer;
-}
+  // Khâu dao (Bolster) đặt đúng tại gốc lưỡi dao (x = -0.42)
+  const bolster = new THREE.BoxGeometry(0.2, 0.62, 0.22);
+  bolster.translate(-0.42, 0, 0);
+  parts.push(bolster);
 
-function createNanotubeGeometry(): THREE.BufferGeometry {
-  const tube = new THREE.CylinderGeometry(0.85, 0.85, 2.4, 32, 1, true);
-  const elements: THREE.BufferGeometry[] = [tube];
+  // Cán dao nối tiếp phía sau khâu dao
+  const handle = new THREE.BoxGeometry(1.15, 0.42, 0.18);
+  handle.translate(-1.05, 0.05, 0);
+  parts.push(handle);
 
-  for (let i = -3; i <= 3; i++) {
-    const ring = new THREE.TorusGeometry(0.86, 0.025, 12, 32);
-    ring.rotateX(Math.PI / 2);
-    ring.translate(0, i * 0.35, 0);
-    elements.push(ring);
+  // 3 Đinh tán đính trên cán dao
+  for (let i = -1; i <= 1; i++) {
+    const rivet = new THREE.CylinderGeometry(0.045, 0.045, 0.22, 16);
+    rivet.rotateX(Math.PI / 2);
+    rivet.translate(-1.05 + i * 0.32, 0.05, 0);
+    parts.push(rivet);
   }
 
-  return mergeGeometries(elements) || tube;
+  const merged = mergeGeometries(parts) || blade;
+  merged.center();
+  return merged;
 }
 
-function createIronCoreGeometry(): THREE.BufferGeometry {
+// ── 15. Cao Su Tự Nhiên Đàn Hồi (Polymer): Lốp Xe Ô Tô Hoa Văn Rãnh Gai ──────
+function createRubberTyreGeometry(): THREE.BufferGeometry {
   const parts: THREE.BufferGeometry[] = [];
-  const back = new THREE.BoxGeometry(0.3, 2.0, 1.0);
-  back.translate(-0.6, 0, 0);
-  parts.push(back);
 
-  const top = new THREE.BoxGeometry(1.2, 0.3, 1.0);
-  top.translate(0.15, 0.85, 0);
-  parts.push(top);
+  // Thân lốp cao su hình xuyến
+  const tyreTorus = new THREE.TorusGeometry(1.22, 0.48, 24, 48);
+  parts.push(tyreTorus);
 
-  const mid = new THREE.BoxGeometry(1.2, 0.45, 1.0);
-  mid.translate(0.15, 0, 0);
-  parts.push(mid);
+  // Rãnh gai chữ V (directional V-chevron treads) trải rộng hết mặt lốp
+  const numTreads = 22;
+  for (let i = 0; i < numTreads; i++) {
+    const angle = (i * 2 * Math.PI) / numTreads;
+    const sinA = Math.sin(angle);
+    const cosA = Math.cos(angle);
 
-  const bot = new THREE.BoxGeometry(1.2, 0.3, 1.0);
-  bot.translate(0.15, -0.85, 0);
-  parts.push(bot);
+    // Cánh V bên trái
+    const treadL = new THREE.BoxGeometry(0.12, 0.18, 0.32);
+    treadL.rotateY(0.42);
+    treadL.rotateZ(angle);
+    treadL.translate(cosA * 1.66, sinA * 1.66, -0.16);
 
-  return mergeGeometries(parts) || back;
+    // Cánh V bên phải
+    const treadR = new THREE.BoxGeometry(0.12, 0.18, 0.32);
+    treadR.rotateY(-0.42);
+    treadR.rotateZ(angle);
+    treadR.translate(cosA * 1.66, sinA * 1.66, 0.16);
+
+    parts.push(treadL, treadR);
+  }
+
+  // Vành mâm hợp kim
+  const rimBead = new THREE.TorusGeometry(0.78, 0.08, 16, 36);
+  parts.push(rimBead);
+
+  const rimBarrel = new THREE.CylinderGeometry(0.76, 0.76, 0.54, 36, 1, true);
+  rimBarrel.rotateX(Math.PI / 2);
+  parts.push(rimBarrel);
+
+  // May-ơ trung tâm
+  const hub = new THREE.CylinderGeometry(0.28, 0.28, 0.38, 24);
+  hub.rotateX(Math.PI / 2);
+  parts.push(hub);
+
+  // 5 Ốc may-ơ (hexagonal lug nuts)
+  for (let k = 0; k < 5; k++) {
+    const na = (k * 2 * Math.PI) / 5;
+    const nut = new THREE.CylinderGeometry(0.032, 0.032, 0.42, 6);
+    nut.rotateX(Math.PI / 2);
+    nut.translate(Math.cos(na) * 0.17, Math.sin(na) * 0.17, 0);
+    parts.push(nut);
+  }
+
+  // 5 Chấu kép nối liền mạch từ may-ơ đến vành mâm
+  for (let i = 0; i < 5; i++) {
+    const a = (i * 2 * Math.PI) / 5;
+    // Chấu 1
+    const p1A = new THREE.Vector3(Math.cos(a - 0.09) * 0.24, Math.sin(a - 0.09) * 0.24, 0);
+    const p2A = new THREE.Vector3(Math.cos(a - 0.09) * 0.76, Math.sin(a - 0.09) * 0.76, 0);
+    const spokeA = createStrutBetween(p1A, p2A, 0.055);
+    if (spokeA) parts.push(spokeA);
+
+    // Chấu 2
+    const p1B = new THREE.Vector3(Math.cos(a + 0.09) * 0.24, Math.sin(a + 0.09) * 0.24, 0);
+    const p2B = new THREE.Vector3(Math.cos(a + 0.09) * 0.76, Math.sin(a + 0.09) * 0.76, 0);
+    const spokeB = createStrutBetween(p1B, p2B, 0.055);
+    if (spokeB) parts.push(spokeB);
+  }
+
+  const merged = mergeGeometries(parts) || tyreTorus;
+  merged.center();
+  return merged;
 }
 
-function mergeGeometries(geos: THREE.BufferGeometry[]): THREE.BufferGeometry | null {
-  if (geos.length === 0) return null;
-  if (geos.length === 1) return geos[0];
+// ── Helpers ──────────────────────────────────────────────────────────────────
+function createStrutBetween(
+  p1: THREE.Vector3,
+  p2: THREE.Vector3,
+  radius: number
+): THREE.BufferGeometry | null {
+  const dir = new THREE.Vector3().subVectors(p2, p1);
+  const length = dir.length();
+  if (length < 0.001) return null;
+
+  const geo = new THREE.CylinderGeometry(radius, radius, length, 16, 1, false);
+  const mid = new THREE.Vector3().addVectors(p1, p2).multiplyScalar(0.5);
+  const quaternion = new THREE.Quaternion().setFromUnitVectors(
+    new THREE.Vector3(0, 1, 0),
+    dir.clone().normalize()
+  );
+
+  const matrix = new THREE.Matrix4().compose(mid, quaternion, new THREE.Vector3(1, 1, 1));
+  geo.applyMatrix4(matrix);
+  return geo;
+}
+
+function mergeGeometries(geos: (THREE.BufferGeometry | null | undefined)[]): THREE.BufferGeometry | null {
+  const validGeos = geos.filter((g): g is THREE.BufferGeometry => !!g);
+  if (validGeos.length === 0) return null;
 
   const posArrays: Float32Array[] = [];
-  const normalArrays: Float32Array[] = [];
+  const normArrays: Float32Array[] = [];
   let totalVertices = 0;
 
-  for (const rawGeo of geos) {
-    // Unroll indexed geometries to non-indexed triangles so concatenation preserves exact topology
-    const geo = rawGeo.index ? rawGeo.toNonIndexed() : rawGeo;
-    geo.computeVertexNormals();
+  for (const rawGeo of validGeos) {
+    // 1. If rawGeo has no normal attribute, compute normals BEFORE toNonIndexed
+    if (!rawGeo.getAttribute('normal')) {
+      rawGeo.computeVertexNormals();
+    } else {
+      // 2. If it already has normals, normalize them to preserve smooth shading after transformations
+      rawGeo.normalizeNormals();
+    }
+
+    // 3. Convert to non-indexed or clone
+    const geo = rawGeo.index ? rawGeo.toNonIndexed() : rawGeo.clone();
     const pos = geo.getAttribute('position');
     const norm = geo.getAttribute('normal');
-    if (pos) {
+
+    if (pos && pos.count > 0 && norm && norm.count > 0) {
       posArrays.push(new Float32Array(pos.array));
+      normArrays.push(new Float32Array(norm.array));
       totalVertices += pos.count;
-    }
-    if (norm) {
-      normalArrays.push(new Float32Array(norm.array));
     }
   }
 
+  if (totalVertices === 0) return null;
+
+  // 4. Copy both position and normal arrays into merged geometry without recomputing facet normals
   const mergedPos = new Float32Array(totalVertices * 3);
   const mergedNorm = new Float32Array(totalVertices * 3);
   let offset = 0;
 
   for (let i = 0; i < posArrays.length; i++) {
     mergedPos.set(posArrays[i], offset);
-    if (normalArrays[i]) mergedNorm.set(normalArrays[i], offset);
+    mergedNorm.set(normArrays[i], offset);
     offset += posArrays[i].length;
   }
 

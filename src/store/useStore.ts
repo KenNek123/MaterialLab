@@ -7,7 +7,7 @@ export interface MaterialData {
   name: string;
   nameVi: string;
   formula: string;
-  category: 'metal' | 'crystal' | 'nano' | 'molecular';
+  category: 'daily' | 'metal' | 'tech' | 'polymer' | 'crystal' | 'nano' | 'molecular';
   categoryLabel: string;
   objectName: string;
   objectNameVi: string;
@@ -28,13 +28,13 @@ export interface MaterialData {
     electricalConductivity: string;
     density: string;
   };
-  // Normalized metrics for radar / bar comparison (0 to 100 scale)
+  // Normalized metrics for comparison (0 to 100 scale)
   metrics: {
     hardness: number;     // Độ cứng / Độ bền cơ học
     thermal: number;      // Độ dẫn nhiệt
     electrical: number;   // Độ dẫn điện
     density: number;      // Khối lượng riêng
-    corrosion: number;    // Độ chống ăn mòn
+    corrosion: number;    // Độ chống ăn mòn & độ ổn định hóa học
   };
   // Molecular info
   molecularInfo: {
@@ -43,18 +43,82 @@ export interface MaterialData {
     bondAngle: string;
     crystalSystem: string;
     atomTypes: { element: string; color: string; radius: number }[];
-    bonds: { type: string; color: string };
+    bonds: {
+      type: string;
+      color: string;
+      hybridization?: string;
+      coordinationGeometry?: string;
+      bondEnergy?: string;
+      interlayerForce?: string;
+      descriptionVi?: string;
+    };
   };
   // Crystal structure generator params
   structure: {
-    type: 'fcc' | 'bcc' | 'diamond' | 'hexagonal' | 'nacl' | 'ice' | 'graphene' | 'hcp' | 'cnt' | 'silica';
+    type:
+      | 'graphene'
+      | 'cnt'
+      | 'perovskite'
+      | 'mxene'
+      | 'silicene'
+      | 'borophene'
+      | 'gan'
+      | 'sic'
+      | 'mos2'
+      | 'hbn'
+      | 'nitinol'
+      | 'mof'
+      | 'bi2se3'
+      | 'lgps'
+      | 'hcp'
+      | 'fcc'
+      | 'bcc'
+      | 'diamond'
+      | 'hexagonal'
+      | 'nacl'
+      | 'ice'
+      | 'silica'
+      | 'teflon'
+      | 'battery'
+      | 'corundum'
+      | 'polymer-rubber';
     latticeConstant: number;
     repeatX: number;
     repeatY: number;
     repeatZ: number;
   };
-  // 3D object geometry
+  // 3D object geometry identifier
   geometry:
+    | 'graphene-sheet'
+    | 'nanotube-coil'
+    | 'solar-panel'
+    | 'mxene-capacitor'
+    | 'atomic-wafer'
+    | 'borophene-mesh'
+    | 'gan-chip'
+    | 'sic-inverter'
+    | 'mos2-sensor'
+    | 'hbn-insulator'
+    | 'nitinol-stent'
+    | 'mof-cage'
+    | 'topological-crystal'
+    | 'solid-battery'
+    | 'turbine-blade'
+    | 'diamond-gem'
+    | 'graphite-pencil'
+    | 'salt-cube'
+    | 'quartz-crystal'
+    | 'ice-crystal'
+    | 'gold-ingot'
+    | 'copper-coil'
+    | 'iron-beam'
+    | 'aluminum-wing'
+    | 'titanium-implant'
+    | 'silicon-chip'
+    | 'teflon-pan'
+    | 'lithium-battery'
+    | 'ceramic-blade'
+    | 'rubber-tyre'
     | 'diamond-ring'
     | 'coil'
     | 'racket'
@@ -128,6 +192,7 @@ export interface StoreState {
   snapshotTrigger: number;
   snapshotFlash: boolean;
 
+  // Actions
   setSelectedMaterial: (id: string) => void;
   setCameraDistance: (d: number) => void;
   setActiveLayer: (layer: ZoomLayer) => void;
@@ -165,6 +230,17 @@ export interface StoreState {
   // Snapshot actions
   triggerSnapshot: () => void;
   setSnapshotFlash: (v: boolean) => void;
+
+  // Central Reset & Clean-up Protocol
+  resetInteractionAndViewStates: () => void;
+  setSelectedAtom: (atom: InspectedAtom | null) => void;
+  setSelectedElement: (atom: InspectedAtom | null) => void;
+  setInspectedElement: (atom: InspectedAtom | null) => void;
+  setHoveredAtom: (atom: InspectedAtom | null) => void;
+  setIsDualView: (v: boolean) => void;
+  setIsCompareModalOpen: (v: boolean) => void;
+  setIsDetailModalOpen: (v: boolean) => void;
+  setIsPresentationMode: (v: boolean) => void;
 }
 
 export const useStore = create<StoreState>((set) => ({
@@ -175,16 +251,16 @@ export const useStore = create<StoreState>((set) => ({
   isUserInteracting: false,
   autoRotate: true,
   userAutoRotate: true,
-  showSidebar: false, // Default closed for a spacious, unobstructed 3D view
-  isDetailOpen: false, // In-depth technical info opens via dedicated button
-  graphicsQuality: 'low', // Default low for smooth 60fps on phones and weak PCs
-  structureLayerCount: 3, // Default 3 layers (Full 3D bulk structure, selectable 1, 2, or 3)
+  showSidebar: false,
+  isDetailOpen: false,
+  graphicsQuality: 'low',
+  structureLayerCount: 1,
   soundEnabled: false,
   cameraAngle: 'iso',
 
   isCompareOpen: false,
   compareMaterialA: 'diamond',
-  compareMaterialB: 'graphene',
+  compareMaterialB: 'gold',
   isDual3DView: false,
 
   // Cinematic Tour Initial State
@@ -195,7 +271,7 @@ export const useStore = create<StoreState>((set) => ({
   // Inspection Initial State
   inspectedAtom: null,
 
-  // Overlays Initial State
+  // Overlays Initial State (clean, no coordinate axes)
   showLatticeCage: true,
   showMillerPlanes: false,
 
@@ -203,9 +279,45 @@ export const useStore = create<StoreState>((set) => ({
   snapshotTrigger: 0,
   snapshotFlash: false,
 
-  setSelectedMaterial: (id) => set({ selectedMaterial: id }),
+  // Protocol Rule: Central clean-up whenever switching materials
+  resetInteractionAndViewStates: () =>
+    set({
+      isDual3DView: false,
+      isCompareOpen: false,
+      inspectedAtom: null,
+      isTourActive: false,
+      isDetailOpen: false,
+    }),
+
+  // Protocol Rule: Reset old states completely in single atomic call
+  setSelectedMaterial: (id) =>
+    set({
+      selectedMaterial: id,
+      inspectedAtom: null,
+      isDual3DView: false,
+      isCompareOpen: false,
+      isDetailOpen: false,
+      isTourActive: false,
+    }),
+
+  // Protocol Rule: Reset atom inspection when changing zoom layer
+  setActiveLayer: (layer) =>
+    set({
+      activeLayer: layer,
+      inspectedAtom: null,
+    }),
+
+  setSelectedAtom: (atom) => set({ inspectedAtom: atom }),
+  setSelectedElement: (atom) => set({ inspectedAtom: atom }),
+  setInspectedElement: (atom) => set({ inspectedAtom: atom }),
+  setHoveredAtom: (_atom) => {
+    void _atom;
+  },
+  setIsDualView: (v) => set({ isDual3DView: v }),
+  setIsCompareModalOpen: (v) => set({ isCompareOpen: v }),
+  setIsDetailModalOpen: (v) => set({ isDetailOpen: v }),
+  setIsPresentationMode: (v) => set({ isTourActive: v }),
   setCameraDistance: (d) => set({ cameraDistance: d }),
-  setActiveLayer: (layer) => set({ activeLayer: layer }),
   setZoomProgress: (p) => set({ zoomProgress: p }),
   setIsUserInteracting: (v) => set({ isUserInteracting: v }),
   setAutoRotate: (v) => set({ autoRotate: v }),
@@ -261,5 +373,3 @@ export const useStore = create<StoreState>((set) => ({
   triggerSnapshot: () => set((state) => ({ snapshotTrigger: state.snapshotTrigger + 1 })),
   setSnapshotFlash: (v) => set({ snapshotFlash: v }),
 }));
-
-

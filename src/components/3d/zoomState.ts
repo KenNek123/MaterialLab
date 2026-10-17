@@ -3,9 +3,9 @@ import { ZoomLayer } from '@/store/useStore';
 
 export const ZOOM_DIST = {
   MACRO: 9.5,
-  MICRO: 5.5,
-  MOLECULAR: 3.8,   // Perfect overview distance: all molecules, layers & bonds clearly visible
-  MIN: 2.2,         // Max zoom in: close bond inspection without clipping into atoms
+  MICRO: 6.2,
+  MOLECULAR: 4.8,   // Perfect overview distance: all molecules, layers & bonds clearly visible
+  MIN: 2.0,         // Max zoom in: close bond inspection without clipping into atoms
   MAX: 12.0,
 };
 

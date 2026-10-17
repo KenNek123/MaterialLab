@@ -3,7 +3,7 @@
 import React, { useEffect } from 'react';
 import { useStore, StoreState } from '@/store/useStore';
 import { MATERIAL_MAP } from '@/data/materials';
-import { Play, Pause, Square, Film, Layers, Sparkles } from 'lucide-react';
+import { Square, Film } from 'lucide-react';
 import { sound } from '@/lib/soundFx';
 
 export default function TourOverlay() {

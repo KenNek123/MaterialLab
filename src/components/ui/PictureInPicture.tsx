@@ -6,6 +6,7 @@ import { useStore, StoreState } from '@/store/useStore';
 import { MATERIAL_MAP } from '@/data/materials';
 import { ZOOM_DIST } from '@/components/3d/zoomState';
 import { sound } from '@/lib/soundFx';
+import MaterialBadge from '@/components/ui/MaterialBadge';
 import {
   Layers,
   ChevronDown,
@@ -123,7 +124,7 @@ export default function PictureInPicture() {
             }}
             className="px-3.5 py-2 flex items-center gap-2.5 cursor-pointer hover:bg-white/10 transition-colors"
           >
-            <span className="text-xl">{material.icon}</span>
+            <MaterialBadge material={material} size="sm" />
             <div className="flex items-center gap-2">
               <span className="text-xs font-bold text-white leading-tight">
                 {activeLayer === 'macro' ? 'Soi Nano' : activeLayer === 'micro' ? 'Vi mô' : 'Vĩ mô'}
@@ -211,7 +212,7 @@ export default function PictureInPicture() {
                     onClick={() => handleZoomTo(ZOOM_DIST.MACRO, 'macro', 0)}
                     className="p-2 rounded-xl bg-black/40 hover:bg-blue-600/20 border border-blue-500/20 flex flex-col items-center gap-1 text-center group active:scale-95 transition-all"
                   >
-                    <span className="text-xl group-hover:scale-110 transition-transform">{material.icon}</span>
+                    <MaterialBadge material={material} size="sm" />
                     <span className="text-[10px] font-bold text-white leading-tight">Vật thể vĩ mô</span>
                     <span className="text-[9px] text-blue-300">Quay lại 🔭</span>
                   </button>
@@ -245,9 +246,7 @@ export default function PictureInPicture() {
                 {/* Macro Object Reference Portal */}
                 <div className="relative rounded-xl p-2.5 bg-black/40 border border-blue-500/20 flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2 min-w-0">
-                    <div className="w-9 h-9 rounded-xl bg-blue-500/10 border border-blue-400/30 flex items-center justify-center text-xl shrink-0">
-                      {material.icon}
-                    </div>
+                    <MaterialBadge material={material} size="md" />
                     <div className="min-w-0">
                       <div className="text-xs font-bold text-white truncate">{material.objectNameVi}</div>
                       <div className="text-[9.5px] text-white/50 truncate">Ứng dụng vĩ mô thực tế</div>

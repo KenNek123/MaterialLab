@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useRef, useMemo, useEffect, useCallback } from 'react';
 import { useFrame, ThreeEvent } from '@react-three/fiber';
 import { Billboard } from '@react-three/drei';
@@ -14,14 +16,91 @@ interface MolecularStructureProps {
   scale?: number;
 }
 
+interface EnrichedBond {
+  start: THREE.Vector3;
+  end: THREE.Vector3;
+  startAtomIdx: number;
+  endAtomIdx: number;
+  startRadius: number;
+  endRadius: number;
+  colorA: THREE.Color;
+  colorB: THREE.Color;
+}
+
+// Pre-allocated reusable objects to avoid garbage collection in useFrame (Zero GC)
+const tempBondObjects = {
+  dummy: new THREE.Object3D(),
+  up: new THREE.Vector3(0, 1, 0),
+  dir: new THREE.Vector3(),
+  unitDir: new THREE.Vector3(),
+  quat: new THREE.Quaternion(),
+  midA: new THREE.Vector3(),
+  midB: new THREE.Vector3(),
+};
+
+const tempAtomObjects = {
+  dummy: new THREE.Object3D(),
+};
+
+function computeHalfBondMatrices(
+  pA: THREE.Vector3,
+  pB: THREE.Vector3,
+  rA: number,
+  rB: number,
+  thickness: number,
+  bondIdx: number,
+  mesh: THREE.InstancedMesh
+) {
+  const { dummy, up, dir, unitDir, quat, midA, midB } = tempBondObjects;
+
+  dir.subVectors(pB, pA);
+  const L = dir.length();
+  if (L < 0.0001) {
+    dummy.scale.set(0, 0, 0);
+    dummy.updateMatrix();
+    mesh.setMatrixAt(bondIdx * 2, dummy.matrix);
+    mesh.setMatrixAt(bondIdx * 2 + 1, dummy.matrix);
+    return;
+  }
+
+  unitDir.copy(dir).divideScalar(L);
+  quat.setFromUnitVectors(up, unitDir);
+
+  // Split distance between atom surfaces
+  const splitDist = THREE.MathUtils.clamp((L + rA - rB) * 0.5, L * 0.25, L * 0.75);
+
+  // Half-Bond A: starts at pA + unitDir * (rA * 0.3), ends at pA + unitDir * (splitDist + 0.0015)
+  const startDistA = rA * 0.3;
+  const endDistA = splitDist + 0.0015;
+  const lenA = Math.max(0.001, endDistA - startDistA);
+  const midDistA = (startDistA + endDistA) * 0.5;
+  midA.copy(pA).addScaledVector(unitDir, midDistA);
+
+  dummy.position.copy(midA);
+  dummy.quaternion.copy(quat);
+  dummy.scale.set(thickness, lenA, thickness);
+  dummy.updateMatrix();
+  mesh.setMatrixAt(bondIdx * 2, dummy.matrix);
+
+  // Half-Bond B: starts at pA + unitDir * (splitDist - 0.0015), ends at pB - unitDir * (rB * 0.3)
+  const startDistB = splitDist - 0.0015;
+  const endDistB = L - rB * 0.3;
+  const lenB = Math.max(0.001, endDistB - startDistB);
+  const midDistB = (startDistB + endDistB) * 0.5;
+  midB.copy(pA).addScaledVector(unitDir, midDistB);
+
+  dummy.position.copy(midB);
+  dummy.quaternion.copy(quat);
+  dummy.scale.set(thickness, lenB, thickness);
+  dummy.updateMatrix();
+  mesh.setMatrixAt(bondIdx * 2 + 1, dummy.matrix);
+}
+
 export function MolecularStructure({ material, opacity, scale }: MolecularStructureProps) {
   const groupRef = useRef<THREE.Group>(null);
   const atomMeshRef = useRef<THREE.InstancedMesh>(null);
   const bondMeshRef = useRef<THREE.InstancedMesh>(null);
   const glowMeshRef = useRef<THREE.InstancedMesh>(null);
-  const atomMatRef = useRef<THREE.Material>(null);
-  const bondMatRef = useRef<THREE.Material>(null);
-  const glowMatRef = useRef<THREE.Material>(null);
 
   const graphicsQuality = useStore((s: StoreState) => s.graphicsQuality);
   const structureLayerCount = useStore((s: StoreState) => s.structureLayerCount);
@@ -30,37 +109,88 @@ export function MolecularStructure({ material, opacity, scale }: MolecularStruct
   const setInspectedAtom = useStore((s: StoreState) => s.setInspectedAtom);
   const isLow = graphicsQuality === 'low';
 
-  const { atoms, bonds } = useMemo(() => {
-    const structure = generateCrystalStructure(material, structureLayerCount);
-    if (cameraAngle !== 'top') return structure;
+  // Generate structure & match bond endpoints to atom indices BEFORE flattening for 'top' view
+  const { atoms, enrichedBonds } = useMemo(() => {
+    const raw = generateCrystalStructure(material, structureLayerCount);
+    const baseBondColor = new THREE.Color(material.molecularInfo.bonds.color);
 
-    // A readable ball-and-stick diagram: flatten depth and add breathing room.
-    structure.atoms.forEach((atom) => {
-      atom.position.x *= 1.2;
-      atom.position.y *= 0.04;
-      atom.position.z *= 1.2;
-      atom.radius *= 0.82;
-    });
-    structure.bonds.forEach((bond) => {
-      bond.start.x *= 1.2;
-      bond.start.y *= 0.04;
-      bond.start.z *= 1.2;
-      bond.end.x *= 1.2;
-      bond.end.y *= 0.04;
-      bond.end.z *= 1.2;
-    });
-    return structure;
+    // Match each bond endpoint to its atom index in 3D space
+    const findAtomIdx = (pt: THREE.Vector3): number => {
+      let bestIdx = -1;
+      let minDistSq = 0.05;
+      for (let i = 0; i < raw.atoms.length; i++) {
+        const dSq = raw.atoms[i].position.distanceToSquared(pt);
+        if (dSq < minDistSq) {
+          minDistSq = dSq;
+          bestIdx = i;
+        }
+      }
+      return bestIdx;
+    };
+
+    const matched: { idxA: number; idxB: number }[] = raw.bonds.map((b) => ({
+      idxA: findAtomIdx(b.start),
+      idxB: findAtomIdx(b.end),
+    }));
+
+    // Apply top-view flattening if active
+    if (cameraAngle === 'top') {
+      raw.atoms.forEach((atom) => {
+        atom.position.x *= 1.2;
+        atom.position.y *= 0.04;
+        atom.position.z *= 1.2;
+        atom.radius *= 0.82;
+      });
+      raw.bonds.forEach((bond) => {
+        bond.start.x *= 1.2;
+        bond.start.y *= 0.04;
+        bond.start.z *= 1.2;
+        bond.end.x *= 1.2;
+        bond.end.y *= 0.04;
+        bond.end.z *= 1.2;
+      });
+    }
+
+    const processedBonds: EnrichedBond[] = [];
+    for (let i = 0; i < raw.bonds.length; i++) {
+      const b = raw.bonds[i];
+      if (b.start.distanceToSquared(b.end) < 0.0001) continue;
+
+      const { idxA, idxB } = matched[i];
+      const rA = idxA !== -1 ? raw.atoms[idxA].radius : 0.14;
+      const rB = idxB !== -1 ? raw.atoms[idxB].radius : 0.14;
+
+      // Color A and Color B for Bicolor Split-Bond
+      const atomColorA = idxA !== -1 ? new THREE.Color(raw.atoms[idxA].color) : baseBondColor.clone();
+      const atomColorB = idxB !== -1 ? new THREE.Color(raw.atoms[idxB].color) : baseBondColor.clone();
+
+      const colorA = atomColorA.clone().lerp(baseBondColor, 0.22);
+      const colorB = atomColorB.clone().lerp(baseBondColor, 0.22);
+
+      processedBonds.push({
+        start: b.start.clone(),
+        end: b.end.clone(),
+        startAtomIdx: idxA,
+        endAtomIdx: idxB,
+        startRadius: rA,
+        endRadius: rB,
+        colorA,
+        colorB,
+      });
+    }
+
+    return { atoms: raw.atoms, enrichedBonds: processedBonds };
   }, [cameraAngle, material, structureLayerCount]);
 
   const atomColors = useMemo(() => atoms.map((a) => new THREE.Color(a.color)), [atoms]);
-  const upVector = useMemo(() => new THREE.Vector3(0, 1, 0), []);
 
   // Setup atom instanced mesh
   useEffect(() => {
     if (!atomMeshRef.current || atoms.length === 0) return;
     const mesh = atomMeshRef.current;
     mesh.count = atoms.length;
-    const dummy = new THREE.Object3D();
+    const { dummy } = tempAtomObjects;
+    dummy.rotation.set(0, 0, 0);
     for (let i = 0; i < atoms.length; i++) {
       dummy.position.copy(atoms[i].position);
       dummy.scale.setScalar(atoms[i].radius);
@@ -72,12 +202,13 @@ export function MolecularStructure({ material, opacity, scale }: MolecularStruct
     if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
   }, [atoms, atomColors]);
 
-  // Setup glow instances (high mode only)
+  // Setup glow instances (high quality only)
   useEffect(() => {
     if (isLow || !glowMeshRef.current || atoms.length === 0) return;
     const mesh = glowMeshRef.current;
     mesh.count = atoms.length;
-    const dummy = new THREE.Object3D();
+    const { dummy } = tempAtomObjects;
+    dummy.rotation.set(0, 0, 0);
     for (let i = 0; i < atoms.length; i++) {
       dummy.position.copy(atoms[i].position);
       dummy.scale.setScalar(atoms[i].radius * 1.45);
@@ -89,37 +220,80 @@ export function MolecularStructure({ material, opacity, scale }: MolecularStruct
     if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
   }, [atoms, atomColors, isLow]);
 
-  // Setup bond instances with exact mathematical quaternion orientation (no gimbal lock)
+  // Setup bond instances (Bicolor Split-Bonds)
   useEffect(() => {
-    if (!bondMeshRef.current || bonds.length === 0) return;
+    if (!bondMeshRef.current || enrichedBonds.length === 0) return;
     const mesh = bondMeshRef.current;
-    mesh.count = bonds.length;
-    const dummy = new THREE.Object3D();
-    const bondBaseColor = new THREE.Color(material.molecularInfo.bonds.color);
+    mesh.count = enrichedBonds.length * 2;
+    const bondThickness = cameraAngle === 'top' ? 0.056 : isLow ? 0.045 : 0.052;
 
-    for (let i = 0; i < bonds.length; i++) {
-      const bond = bonds[i];
-      const dir = new THREE.Vector3().subVectors(bond.end, bond.start);
-      const length = dir.length();
-      if (length < 0.0001) continue;
-
-      const mid = new THREE.Vector3().addVectors(bond.start, bond.end).multiplyScalar(0.5);
-      dummy.position.copy(mid);
-
-      const bondThickness = cameraAngle === 'top' ? 0.06 : isLow ? 0.046 : 0.054;
-      dummy.scale.set(bondThickness, length, bondThickness);
-
-      const bondDir = dir.clone().normalize();
-      dummy.quaternion.setFromUnitVectors(upVector, bondDir);
-      dummy.updateMatrix();
-
-      mesh.setMatrixAt(i, dummy.matrix);
-      const col = bond.color ? new THREE.Color(bond.color) : bondBaseColor.clone();
-      mesh.setColorAt(i, col);
+    for (let i = 0; i < enrichedBonds.length; i++) {
+      const b = enrichedBonds[i];
+      computeHalfBondMatrices(b.start, b.end, b.startRadius, b.endRadius, bondThickness, i, mesh);
+      mesh.setColorAt(i * 2, b.colorA);
+      mesh.setColorAt(i * 2 + 1, b.colorB);
     }
     mesh.instanceMatrix.needsUpdate = true;
     if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
-  }, [bonds, cameraAngle, material.molecularInfo.bonds.color, isLow, upVector]);
+  }, [enrichedBonds, cameraAngle, isLow]);
+
+  // Materials
+  const atomMat = useMemo(() => {
+    if (isLow) {
+      return new THREE.MeshStandardMaterial({
+        color: '#ffffff',
+        transparent: true,
+        opacity: 1,
+        roughness: 0.25,
+        metalness: 0.3,
+      });
+    }
+    return new THREE.MeshPhysicalMaterial({
+      color: '#ffffff',
+      transparent: true,
+      opacity: 1,
+      roughness: 0.15,
+      metalness: 0.35,
+      clearcoat: 0.7,
+      clearcoatRoughness: 0.1,
+      envMapIntensity: 1.2,
+    });
+  }, [isLow]);
+
+  const bondMat = useMemo(() => {
+    if (isLow) {
+      return new THREE.MeshStandardMaterial({
+        color: '#ffffff',
+        transparent: true,
+        opacity: 0.92,
+        roughness: 0.3,
+        metalness: 0.25,
+      });
+    }
+    return new THREE.MeshPhysicalMaterial({
+      color: '#ffffff',
+      transparent: true,
+      opacity: 0.94,
+      roughness: 0.2,
+      metalness: 0.3,
+      clearcoat: 0.6,
+      clearcoatRoughness: 0.15,
+      envMapIntensity: 1.2,
+    });
+  }, [isLow]);
+
+  const glowMat = useMemo(
+    () =>
+      new THREE.MeshBasicMaterial({
+        transparent: true,
+        opacity: 0.12,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+      }),
+    []
+  );
+
+  const animatedPositionsRef = useRef<THREE.Vector3[]>([]);
 
   useFrame(({ clock }) => {
     if (!groupRef.current) return;
@@ -131,37 +305,47 @@ export function MolecularStructure({ material, opacity, scale }: MolecularStruct
     if (!isVisible) return;
 
     groupRef.current.scale.setScalar(curScale);
-    // Maintain 100% spatial alignment with Macro and MicroUnitCell layers
     groupRef.current.rotation.set(0, 0, 0);
 
-    if (atomMatRef.current) {
-      atomMatRef.current.opacity = curOpacity;
-      atomMatRef.current.transparent = curOpacity < 0.99;
+    if (atomMeshRef.current?.material) {
+      const m = atomMeshRef.current.material as THREE.Material;
+      m.opacity = curOpacity;
+      m.transparent = curOpacity < 0.99;
     }
-    if (bondMatRef.current) {
-      bondMatRef.current.opacity = Math.min(0.95, curOpacity * 0.88);
-      bondMatRef.current.transparent = true;
+    if (bondMeshRef.current?.material) {
+      const m = bondMeshRef.current.material as THREE.Material;
+      m.opacity = Math.min(0.95, curOpacity * 0.9);
+      m.transparent = true;
     }
-    if (glowMatRef.current) {
-      glowMatRef.current.opacity = curOpacity * 0.14;
+    if (glowMeshRef.current?.material) {
+      const m = glowMeshRef.current.material as THREE.Material;
+      m.opacity = curOpacity * 0.14;
     }
 
-    // High mode only: subtle quantum thermal vibration that maintains solid bond connection
     if (isLow || !atomMeshRef.current || atoms.length === 0) return;
     const mesh = atomMeshRef.current;
     const glow = glowMeshRef.current;
-    const dummy = new THREE.Object3D();
+    const bMesh = bondMeshRef.current;
+    const { dummy } = tempAtomObjects;
     const t = clock.elapsedTime;
 
+    if (animatedPositionsRef.current.length !== atoms.length) {
+      animatedPositionsRef.current = atoms.map((a) => a.position.clone());
+    }
+
     const maxVibrate = Math.min(atoms.length, 250);
-    const v = 0.006;
+    const v = 0.0055;
+    dummy.rotation.set(0, 0, 0);
+
     for (let i = 0; i < maxVibrate; i++) {
       const atom = atoms[i];
-      dummy.position.set(
-        atom.position.x + Math.sin(t * 3.1 + i * 1.73) * v,
-        atom.position.y + Math.sin(t * 2.7 + i * 2.31) * v,
-        atom.position.z + Math.cos(t * 2.9 + i * 1.17) * v
-      );
+      const ax = atom.position.x + Math.sin(t * 3.1 + i * 1.73) * v;
+      const ay = atom.position.y + Math.sin(t * 2.7 + i * 2.31) * v;
+      const az = atom.position.z + Math.cos(t * 2.9 + i * 1.17) * v;
+
+      animatedPositionsRef.current[i].set(ax, ay, az);
+
+      dummy.position.set(ax, ay, az);
       dummy.scale.setScalar(atom.radius);
       dummy.updateMatrix();
       mesh.setMatrixAt(i, dummy.matrix);
@@ -173,128 +357,130 @@ export function MolecularStructure({ material, opacity, scale }: MolecularStruct
     }
     mesh.instanceMatrix.needsUpdate = true;
     if (glow) glow.instanceMatrix.needsUpdate = true;
+
+    // Sync bond endpoints with vibrating atoms (Zero GC)
+    if (bMesh && enrichedBonds.length > 0) {
+      const bondThickness = cameraAngle === 'top' ? 0.056 : 0.052;
+      for (let i = 0; i < enrichedBonds.length; i++) {
+        const b = enrichedBonds[i];
+        const pA =
+          b.startAtomIdx !== -1 && b.startAtomIdx < maxVibrate
+            ? animatedPositionsRef.current[b.startAtomIdx]
+            : b.start;
+        const pB =
+          b.endAtomIdx !== -1 && b.endAtomIdx < maxVibrate
+            ? animatedPositionsRef.current[b.endAtomIdx]
+            : b.end;
+
+        computeHalfBondMatrices(pA, pB, b.startRadius, b.endRadius, bondThickness, i, bMesh);
+      }
+      bMesh.instanceMatrix.needsUpdate = true;
+    }
   });
 
-  const inspectAtomAtIndex = useCallback((id: number) => {
-    if (id < 0 || id >= atoms.length) return;
-    const atom = atoms[id];
-    const elem = getElementInfo(atom.element);
-    sound.playAtomPing();
-    setInspectedAtom({
-      element: atom.element,
-      nameVi: elem.nameVi,
-      nameEn: elem.nameEn,
-      atomicNumber: elem.atomicNumber,
-      atomicMass: elem.atomicMass,
-      electronConfig: elem.electronConfig,
-      electronegativity: elem.electronegativity,
-      atomicRadiusPm: elem.atomicRadiusPm,
-      categoryVi: elem.categoryVi,
-      color: atom.color,
-      descriptionVi: elem.descriptionVi,
-      coordination: material.molecularInfo.latticeType,
-      bondType: material.molecularInfo.bonds.type,
-      position: [atom.position.x, atom.position.y, atom.position.z],
-      index: id,
-    });
-  }, [atoms, material, setInspectedAtom]);
+  const inspectAtomAtIndex = useCallback(
+    (id: number) => {
+      if (id < 0 || id >= atoms.length) return;
+      const atom = atoms[id];
+      if (!atom || !atom.element) return;
+
+      const elem = getElementInfo(atom.element);
+      if (!elem || elem.atomicNumber === 0) return;
+
+      sound.playAtomPing();
+      setInspectedAtom({
+        element: elem.symbol,
+        nameVi: elem.nameVi,
+        nameEn: elem.nameEn,
+        atomicNumber: elem.atomicNumber,
+        atomicMass: elem.atomicMass,
+        electronConfig: elem.electronConfig,
+        electronegativity: elem.electronegativity,
+        atomicRadiusPm: elem.atomicRadiusPm,
+        categoryVi: elem.categoryVi,
+        color: atom.color || elem.color,
+        descriptionVi: elem.descriptionVi,
+        coordination: elem.coordination || material.molecularInfo.latticeType,
+        bondType: elem.bondType || material.molecularInfo.bonds.type,
+        position: [atom.position.x, atom.position.y, atom.position.z],
+        index: id,
+      });
+    },
+    [atoms, material, setInspectedAtom]
+  );
 
   const handleAtomSelect = (e: ThreeEvent<MouseEvent | PointerEvent>) => {
     if (zoomState.molecularOpacity < 0.35) return;
-    if (e.instanceId !== undefined) {
+    if (e.instanceId !== undefined && e.instanceId >= 0 && e.instanceId < atoms.length) {
       e.stopPropagation();
       inspectAtomAtIndex(e.instanceId);
     }
   };
 
+  // Synchronize reticle position with atom position across all angles (iso, side, top)
+  const reticlePosition = useMemo(() => {
+    if (!inspectedAtom) return null;
+    if (inspectedAtom.index !== undefined && atoms[inspectedAtom.index]) {
+      return atoms[inspectedAtom.index].position;
+    }
+    return inspectedAtom.position;
+  }, [inspectedAtom, atoms]);
+
   if (atoms.length === 0) return null;
 
   return (
     <group ref={groupRef}>
-      {/* Atom spheres - higher poly for clarity */}
+      {/* Atom spheres - the ONLY interactive target */}
       <instancedMesh
         ref={atomMeshRef}
         args={[undefined, undefined, atoms.length]}
+        material={atomMat}
         frustumCulled={false}
         onClick={handleAtomSelect}
         onDoubleClick={handleAtomSelect}
       >
-        <sphereGeometry args={[1, isLow ? 14 : 22, isLow ? 14 : 22]} />
-        {isLow ? (
-          <meshStandardMaterial
-            ref={atomMatRef}
-            color="#ffffff"
-            transparent
-            opacity={1}
-            roughness={0.25}
-            metalness={0.3}
-          />
-        ) : (
-          <meshPhysicalMaterial
-            ref={atomMatRef}
-            color="#ffffff"
-            transparent
-            opacity={1}
-            roughness={0.15}
-            metalness={0.35}
-            clearcoat={0.7}
-            clearcoatRoughness={0.1}
-            envMapIntensity={1.2}
-          />
-        )}
+        <sphereGeometry args={[1, isLow ? 14 : 24, isLow ? 14 : 24]} />
       </instancedMesh>
 
       {/* Selected Atom Holographic Reticle */}
-      {inspectedAtom && (
-        <Billboard position={inspectedAtom.position}>
-          <mesh>
-            <ringGeometry args={[0.20, 0.24, 32]} />
+      {inspectedAtom && reticlePosition && (
+        <Billboard position={reticlePosition}>
+          <mesh raycast={() => null}>
+            <ringGeometry args={[0.2, 0.24, 32]} />
             <meshBasicMaterial color="#22d3ee" side={THREE.DoubleSide} transparent opacity={0.9} />
           </mesh>
-          <mesh>
+          <mesh raycast={() => null}>
             <ringGeometry args={[0.29, 0.31, 32]} />
             <meshBasicMaterial color="#a855f7" side={THREE.DoubleSide} transparent opacity={0.6} />
           </mesh>
         </Billboard>
       )}
 
-      {/* Atom glow halos (high quality only) */}
+      {/* Atom glow halos (high quality only) - ignore raycast */}
       {!isLow && (
         <instancedMesh
           ref={glowMeshRef}
+          raycast={() => null}
           args={[undefined, undefined, atoms.length]}
+          material={glowMat}
           frustumCulled={false}
         >
           <sphereGeometry args={[1, 10, 10]} />
-          <meshBasicMaterial
-            ref={glowMatRef}
-            transparent
-            opacity={0.12}
-            blending={THREE.AdditiveBlending}
-            depthWrite={false}
-          />
         </instancedMesh>
       )}
 
-      {/* Bond cylinders - thicker and more visible */}
-      {bonds.length > 0 && (
+      {/* Bond cylinders - Bicolor Ball-and-Stick (2 half-bonds per bond) */}
+      {enrichedBonds.length > 0 && (
         <instancedMesh
           ref={bondMeshRef}
-          args={[undefined, undefined, bonds.length]}
+          raycast={() => null}
+          args={[undefined, undefined, enrichedBonds.length * 2]}
+          material={bondMat}
           frustumCulled={false}
         >
-          <cylinderGeometry args={[1, 1, 1, isLow ? 6 : 10]} />
-          <meshStandardMaterial
-            ref={bondMatRef}
-            color="#ffffff"
-            transparent
-            opacity={0.9}
-            roughness={0.35}
-            metalness={0.2}
-          />
+          <cylinderGeometry args={[1, 1, 1, isLow ? 8 : 14]} />
         </instancedMesh>
       )}
     </group>
   );
 }
-
