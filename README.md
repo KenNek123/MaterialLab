@@ -1,4 +1,4 @@
-# 🔬 Digital Materials Lab | GVHD: Nguyễn Văn Tài
+# 🔬 Digital Materials Lab | Nguyễn Văn Tài
 
 Phòng thí nghiệm số trực quan hóa và khám phá khoa học vật liệu 3D đa thang đo từ **Vật thể Vĩ mô (Macro)**, **Ô mạng Tinh thể (Micro)** đến **Cấu trúc Nguyên tử & Liên kết Hóa học (Molecular)**.
 

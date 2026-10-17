@@ -69,7 +69,7 @@ export default function MaterialSelector() {
                         Digital Materials Lab
                       </h2>
                       <p className="text-xs text-sky-400 font-bold">
-                        GVHD: Nguyễn Văn Tài
+                        Nguyễn Văn Tài
                       </p>
                     </div>
                   </div>

@@ -223,7 +223,7 @@ export default function HomePage() {
           </span>
           <div>
             <h1>Digital Materials Lab</h1>
-            <p>GVHD: Nguyễn Văn Tài</p>
+            <p>Nguyễn Văn Tài</p>
           </div>
         </div>
 
@@ -568,13 +568,13 @@ export default function HomePage() {
 
       {/* 2D Projection Mode Active Indicator */}
       {cameraAngle === 'top' && (
-        <div className="absolute top-20 left-1/2 -translate-x-1/2 z-20 pointer-events-none flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-900/90 border border-sky-400/60 backdrop-blur-md shadow-xl shadow-cyan-950/40 text-xs text-sky-200">
-          <span className="w-2 h-2 rounded-full bg-sky-400 animate-ping" />
-          <span className="font-bold text-white tracking-wide">CHẾ ĐỘ SƠ ĐỒ 2D</span>
-          <span className="text-white/30">|</span>
-          <span className="text-sky-300 font-mono text-[11px]">Hình chiếu trực diện mặt phẳng (001)</span>
-          <span className="text-white/30">|</span>
-          <span className="text-white/80 text-[11px] font-medium">{material.molecularInfo.latticeType}</span>
+        <div className="absolute top-[132px] md:top-20 left-1/2 -translate-x-1/2 z-20 pointer-events-none flex items-center justify-center flex-wrap gap-1.5 md:gap-2 px-3.5 py-1.5 rounded-full bg-slate-900/95 border border-sky-400/60 backdrop-blur-md shadow-xl shadow-cyan-950/40 text-xs text-sky-200 max-w-[94vw] text-center">
+          <span className="w-2 h-2 rounded-full bg-sky-400 animate-ping shrink-0" />
+          <span className="font-bold text-white tracking-wide shrink-0">CHẾ ĐỘ SƠ ĐỒ 2D</span>
+          <span className="text-white/30 shrink-0">|</span>
+          <span className="text-sky-300 font-mono text-[11px] shrink-0">Hình chiếu trực diện (001)</span>
+          <span className="text-white/30 shrink-0 hidden sm:inline">|</span>
+          <span className="text-white/80 text-[11px] font-medium hidden sm:inline">{material.molecularInfo.latticeType}</span>
         </div>
       )}
 

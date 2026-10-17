@@ -222,14 +222,34 @@ button:focus-visible, input:focus-visible, select:focus-visible {
     top: max(8px, env(safe-area-inset-top));
     left: max(8px, env(safe-area-inset-left));
     right: max(8px, env(safe-area-inset-right));
-    height: 52px;
+    min-height: 52px;
+    height: auto;
     grid-template-columns: 1fr auto;
     padding: 6px 10px;
     border-radius: 12px;
   }
-  .brand-mark { width: 36px; height: 36px; border-radius: 8px; }
-  .brand-lockup h1 { font-size: 15px; }
-  .brand-lockup p, .header-context, .desktop-only { display: none; }
+  .brand-lockup { gap: 8px; min-width: 0; }
+  .brand-mark { width: 36px; height: 36px; border-radius: 8px; flex-shrink: 0; }
+  .brand-lockup h1 {
+    font-size: 13.5px;
+    line-height: 1.15;
+    font-weight: 800;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .brand-lockup p {
+    display: block !important;
+    font-size: 10.5px;
+    font-weight: 700;
+    color: #0284c7;
+    line-height: 1.15;
+    margin-top: 1px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .header-context, .desktop-only { display: none; }
   .mobile-library-button { display: inline-flex; }
   .header-button { height: 38px; padding: 0 10px; font-size: 12px; border-radius: 8px; }
   .icon-button { width: 38px; height: 38px; border-radius: 8px; }
@@ -552,8 +572,9 @@ button:focus-visible, input:focus-visible, select:focus-visible {
 }
 
 @media (max-width: 560px) {
-  .brand-lockup h1 { font-size: 14px; }
-  .brand-mark { width: 34px; height: 34px; }
+  .brand-lockup h1 { font-size: 12.5px; }
+  .brand-lockup p { font-size: 9.5px; }
+  .brand-mark { width: 32px; height: 32px; }
   .header-button span { display: none; }
   .header-button { width: 38px; padding: 0; justify-content: center; }
   .header-button.mobile-library-button { width: 38px; }
@@ -685,18 +706,31 @@ button:focus-visible, input:focus-visible, select:focus-visible {
   }
 }
 
-/* ── Block Netlify Badges Completely ────────────────────────────────── */
-a[href*="netlify"],
-[class*="netlify"],
-[id*="netlify"],
-iframe[src*="netlify"],
-div:has(> a[href*="netlify"]) {
+/* ── Block Netlify Badges & Drawers Completely ──────────────────────── */
+#nl-badge-frame,
+[id*="nl-badge"],
+[class*="nl-badge"],
+iframe[title*="Netlify" i],
+iframe[title*="Powered by Netlify" i],
+iframe[src*="netlify" i],
+[id*="netlify" i]:not(#__next),
+[class*="netlify" i],
+a[href*="netlify.com" i],
+div:has(> a[href*="netlify.com" i]),
+netlify-drawer,
+[data-netlify-drawer] {
   display: none !important;
   visibility: hidden !important;
   opacity: 0 !important;
   pointer-events: none !important;
   width: 0 !important;
   height: 0 !important;
+  max-width: 0 !important;
+  max-height: 0 !important;
+  position: absolute !important;
+  top: -9999px !important;
+  left: -9999px !important;
+  z-index: -9999 !important;
 }
 
 

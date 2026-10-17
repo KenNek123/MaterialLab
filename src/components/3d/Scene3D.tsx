@@ -417,7 +417,7 @@ function SnapshotManager() {
 
       ctx.font = `${fontSizeSub}px sans-serif`;
       ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
-      ctx.fillText('GVHD: NGUYỄN VĂN TÀI', canvas.width - padX, canvas.height - bannerHeight * 0.16);
+      ctx.fillText('NGUYỄN VĂN TÀI', canvas.width - padX, canvas.height - bannerHeight * 0.16);
 
       const finalData = canvas.toDataURL('image/png');
       const a = document.createElement('a');
