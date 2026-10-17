@@ -77,7 +77,7 @@ export function progressToDistance(progress: number): number {
  * Smoothstep cubic easing: 3t² - 2t³
  * Zero derivative at endpoints = butter-smooth start and stop.
  */
-function smoothstep(t: number): number {
+export function smoothstep(t: number): number {
   const c = THREE.MathUtils.clamp(t, 0, 1);
   return c * c * (3 - 2 * c);
 }

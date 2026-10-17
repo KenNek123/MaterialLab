@@ -18,7 +18,6 @@ import {
   BarChart3,
   Layers,
   Sparkles,
-  Info,
   CheckCircle2,
   Atom,
 } from 'lucide-react';
@@ -397,7 +396,7 @@ function TabButton({
 }: {
   active: boolean;
   onClick: () => void;
-  icon: any;
+  icon: React.ComponentType<{ size?: number; className?: string }>;
   label: string;
   mobileLabel?: string;
   color: string;
@@ -431,7 +430,7 @@ function SpecCard({
   borderColor,
   iconColor,
 }: {
-  icon: any;
+  icon: React.ComponentType<{ size?: number; className?: string }>;
   label: string;
   value: string;
   gradient: string;

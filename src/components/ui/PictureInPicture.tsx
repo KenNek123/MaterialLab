@@ -1,24 +1,19 @@
 'use client';
 
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useStore, StoreState } from '@/store/useStore';
 import { MATERIAL_MAP } from '@/data/materials';
 import { ZOOM_DIST } from '@/components/3d/zoomState';
 import { sound } from '@/lib/soundFx';
 import {
   Layers,
-  Sparkles,
   ChevronDown,
   ChevronUp,
-  Maximize2,
   Atom,
   Microscope,
   Eye,
-  ArrowRight,
-  Shield,
   RotateCcw,
-  Compass,
 } from 'lucide-react';
 
 export default function PictureInPicture() {
@@ -27,12 +22,9 @@ export default function PictureInPicture() {
   const setCameraDistance = useStore((s: StoreState) => s.setCameraDistance);
   const setActiveLayer = useStore((s: StoreState) => s.setActiveLayer);
   const setZoomProgress = useStore((s: StoreState) => s.setZoomProgress);
-  const [isMinimized, setIsMinimized] = useState(false);
+  const [isMinimized, setIsMinimized] = useState(() => typeof window !== 'undefined' && window.innerWidth < 768);
 
   React.useEffect(() => {
-    if (window.innerWidth < 768) {
-      setIsMinimized(true);
-    }
     const handleResize = () => {
       if (window.innerWidth < 768) {
         setIsMinimized(true);

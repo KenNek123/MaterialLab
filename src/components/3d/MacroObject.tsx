@@ -116,16 +116,18 @@ export function MacroObject({ material, opacity, wireframeOpacity }: MacroObject
 
     if (meshRef.current) {
       meshRef.current.visible = isMeshVisible;
-    }
-    if (mat) {
-      mat.opacity = curOpacity;
-      mat.transparent = curOpacity < 0.99;
+      const meshMat = meshRef.current.material;
+      if (meshMat instanceof THREE.Material) {
+        meshMat.opacity = curOpacity;
+        meshMat.transparent = curOpacity < 0.99;
+      }
     }
     if (wireRef.current) {
       wireRef.current.visible = isWireVisible;
-    }
-    if (wireMat) {
-      wireMat.opacity = curWire * 0.5;
+      const currentWireMat = wireRef.current.material;
+      if (currentWireMat instanceof THREE.Material) {
+        currentWireMat.opacity = curWire * 0.5;
+      }
     }
   });
 

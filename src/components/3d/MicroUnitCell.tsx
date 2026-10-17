@@ -23,8 +23,6 @@ export function MicroUnitCell({ material }: MicroUnitCellProps) {
   const innerCageRef = useRef<THREE.LineSegments>(null);
 
   const graphicsQuality = useStore((s: StoreState) => s.graphicsQuality);
-  const autoRotate = useStore((s: StoreState) => s.autoRotate);
-  const cameraAngle = useStore((s: StoreState) => s.cameraAngle);
   const isLow = graphicsQuality === 'low';
 
   const { structure } = material;
@@ -110,10 +108,7 @@ export function MicroUnitCell({ material }: MicroUnitCellProps) {
     side: THREE.DoubleSide, blending: THREE.AdditiveBlending, depthWrite: false,
   }), [color]);
 
-  const cornerMat = useMemo(() => new THREE.MeshBasicMaterial({
-    color, transparent: true, opacity: 0,
-    blending: THREE.AdditiveBlending, depthWrite: false,
-  }), [color]);
+  const cornerMatRef = useRef<THREE.MeshBasicMaterial>(null);
 
   // Initialize corner instance matrices
   useEffect(() => {
@@ -148,13 +143,19 @@ export function MicroUnitCell({ material }: MicroUnitCellProps) {
     const planeOp = curOpacity * (isLow ? 0.07 : 0.13);
     const cornerOp = curOpacity * 0.55;
 
-    if (cageMat) cageMat.opacity = cageOp;
-    if (innerCageMat) {
+    const cageMaterial = cageRef.current?.material;
+    if (cageMaterial instanceof THREE.Material) cageMaterial.opacity = cageOp;
+
+    const innerCageMaterial = innerCageRef.current?.material;
+    if (innerCageMaterial instanceof THREE.Material) {
       // Inner cage pulses slightly
-      innerCageMat.opacity = cageOp * (0.4 + 0.15 * Math.sin(t * 1.8));
+      innerCageMaterial.opacity = cageOp * (0.4 + 0.15 * Math.sin(t * 1.8));
     }
-    if (planeMat) planeMat.opacity = planeOp;
-    if (cornerMat) cornerMat.opacity = cornerOp;
+
+    const planeMaterial = planeRef.current?.material;
+    if (planeMaterial instanceof THREE.Material) planeMaterial.opacity = planeOp;
+
+    if (cornerMatRef.current) cornerMatRef.current.opacity = cornerOp;
   });
 
   return (
@@ -176,10 +177,17 @@ export function MicroUnitCell({ material }: MicroUnitCellProps) {
       <instancedMesh
         ref={cornerMeshRef}
         args={[undefined, undefined, cornerPositions.length]}
-        material={cornerMat}
         frustumCulled={false}
       >
         <sphereGeometry args={[isLow ? 0.065 : 0.08, 8, 8]} />
+        <meshBasicMaterial
+          ref={cornerMatRef}
+          color={color}
+          transparent
+          opacity={0}
+          blending={THREE.AdditiveBlending}
+          depthWrite={false}
+        />
       </instancedMesh>
 
       {/* Crystal axes at origin corner */}

@@ -19,6 +19,9 @@ export function MolecularStructure({ material, opacity, scale }: MolecularStruct
   const atomMeshRef = useRef<THREE.InstancedMesh>(null);
   const bondMeshRef = useRef<THREE.InstancedMesh>(null);
   const glowMeshRef = useRef<THREE.InstancedMesh>(null);
+  const atomMatRef = useRef<THREE.Material>(null);
+  const bondMatRef = useRef<THREE.Material>(null);
+  const glowMatRef = useRef<THREE.Material>(null);
 
   const graphicsQuality = useStore((s: StoreState) => s.graphicsQuality);
   const structureLayerCount = useStore((s: StoreState) => s.structureLayerCount);
@@ -118,35 +121,6 @@ export function MolecularStructure({ material, opacity, scale }: MolecularStruct
     if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
   }, [bonds, cameraAngle, material.molecularInfo.bonds.color, isLow, upVector]);
 
-  // Materials
-  const atomMat = useMemo(() => {
-    if (isLow) {
-      return new THREE.MeshStandardMaterial({
-        color: '#ffffff',
-        transparent: true, opacity: 1,
-        roughness: 0.25, metalness: 0.3,
-      });
-    }
-    return new THREE.MeshPhysicalMaterial({
-      color: '#ffffff',
-      transparent: true, opacity: 1,
-      roughness: 0.15, metalness: 0.35,
-      clearcoat: 0.7, clearcoatRoughness: 0.1,
-      envMapIntensity: 1.2,
-    });
-  }, [isLow]);
-
-  const bondMat = useMemo(() => new THREE.MeshStandardMaterial({
-    color: '#ffffff',
-    transparent: true, opacity: 0.9,
-    roughness: 0.35, metalness: 0.2,
-  }), []);
-
-  const glowMat = useMemo(() => new THREE.MeshBasicMaterial({
-    transparent: true, opacity: 0.12,
-    blending: THREE.AdditiveBlending, depthWrite: false,
-  }), []);
-
   useFrame(({ clock }) => {
     if (!groupRef.current) return;
     const curOpacity = opacity ?? zoomState.molecularOpacity;
@@ -160,16 +134,16 @@ export function MolecularStructure({ material, opacity, scale }: MolecularStruct
     // Maintain 100% spatial alignment with Macro and MicroUnitCell layers
     groupRef.current.rotation.set(0, 0, 0);
 
-    if (atomMat) {
-      atomMat.opacity = curOpacity;
-      atomMat.transparent = curOpacity < 0.99;
+    if (atomMatRef.current) {
+      atomMatRef.current.opacity = curOpacity;
+      atomMatRef.current.transparent = curOpacity < 0.99;
     }
-    if (bondMat) {
-      bondMat.opacity = Math.min(0.95, curOpacity * 0.88);
-      bondMat.transparent = true;
+    if (bondMatRef.current) {
+      bondMatRef.current.opacity = Math.min(0.95, curOpacity * 0.88);
+      bondMatRef.current.transparent = true;
     }
-    if (glowMat) {
-      glowMat.opacity = curOpacity * 0.14;
+    if (glowMatRef.current) {
+      glowMatRef.current.opacity = curOpacity * 0.14;
     }
 
     // High mode only: subtle quantum thermal vibration that maintains solid bond connection
@@ -241,12 +215,33 @@ export function MolecularStructure({ material, opacity, scale }: MolecularStruct
       <instancedMesh
         ref={atomMeshRef}
         args={[undefined, undefined, atoms.length]}
-        material={atomMat}
         frustumCulled={false}
         onClick={handleAtomSelect}
         onDoubleClick={handleAtomSelect}
       >
         <sphereGeometry args={[1, isLow ? 14 : 22, isLow ? 14 : 22]} />
+        {isLow ? (
+          <meshStandardMaterial
+            ref={atomMatRef}
+            color="#ffffff"
+            transparent
+            opacity={1}
+            roughness={0.25}
+            metalness={0.3}
+          />
+        ) : (
+          <meshPhysicalMaterial
+            ref={atomMatRef}
+            color="#ffffff"
+            transparent
+            opacity={1}
+            roughness={0.15}
+            metalness={0.35}
+            clearcoat={0.7}
+            clearcoatRoughness={0.1}
+            envMapIntensity={1.2}
+          />
+        )}
       </instancedMesh>
 
       {/* Selected Atom Holographic Reticle */}
@@ -268,10 +263,16 @@ export function MolecularStructure({ material, opacity, scale }: MolecularStruct
         <instancedMesh
           ref={glowMeshRef}
           args={[undefined, undefined, atoms.length]}
-          material={glowMat}
           frustumCulled={false}
         >
           <sphereGeometry args={[1, 10, 10]} />
+          <meshBasicMaterial
+            ref={glowMatRef}
+            transparent
+            opacity={0.12}
+            blending={THREE.AdditiveBlending}
+            depthWrite={false}
+          />
         </instancedMesh>
       )}
 
@@ -280,10 +281,17 @@ export function MolecularStructure({ material, opacity, scale }: MolecularStruct
         <instancedMesh
           ref={bondMeshRef}
           args={[undefined, undefined, bonds.length]}
-          material={bondMat}
           frustumCulled={false}
         >
           <cylinderGeometry args={[1, 1, 1, isLow ? 6 : 10]} />
+          <meshStandardMaterial
+            ref={bondMatRef}
+            color="#ffffff"
+            transparent
+            opacity={0.9}
+            roughness={0.35}
+            metalness={0.2}
+          />
         </instancedMesh>
       )}
     </group>
