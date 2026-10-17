@@ -144,6 +144,7 @@ export default function HomePage() {
   const graphicsQuality = useStore((s: StoreState) => s.graphicsQuality);
   const toggleGraphicsQuality = useStore((s: StoreState) => s.toggleGraphicsQuality);
   const triggerSnapshot = useStore((s: StoreState) => s.triggerSnapshot);
+  const isCapturingSnapshot = useStore((s: StoreState) => s.isCapturingSnapshot);
   const cameraAngle = useStore((s: StoreState) => s.cameraAngle);
   const setCameraAngle = useStore((s: StoreState) => s.setCameraAngle);
   const showLatticeCage = useStore((s: StoreState) => s.showLatticeCage);
@@ -315,16 +316,18 @@ export default function HomePage() {
         </button>
 
         <button
-          className="dock-action-btn"
+          className={`dock-action-btn ${isCapturingSnapshot ? 'opacity-70 cursor-wait' : ''}`}
+          disabled={isCapturingSnapshot}
           onClick={() => {
+            if (isCapturingSnapshot) return;
             sound.playClick();
             triggerSnapshot();
           }}
           title="Chụp ảnh mô hình 3D độ phân giải cao"
           type="button"
         >
-          <Camera size={16} />
-          <span>Chụp mô hình</span>
+          <Camera size={16} className={isCapturingSnapshot ? 'animate-pulse text-cyan-400' : ''} />
+          <span>{isCapturingSnapshot ? 'Đang chụp...' : 'Chụp mô hình'}</span>
         </button>
 
         <div className="dock-view-selector">

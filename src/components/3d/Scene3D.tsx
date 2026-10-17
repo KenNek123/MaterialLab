@@ -12,6 +12,7 @@ import { MicroUnitCell } from './MicroUnitCell';
 import { MolecularStructure } from './MolecularStructure';
 import { CrystallographyOverlays } from './CrystallographyOverlays';
 import { sound } from '@/lib/soundFx';
+import { Camera } from 'lucide-react';
 
 import {
   ZOOM_DIST,
@@ -47,6 +48,12 @@ function LayerTransitionOverlay() {
           snapshotFlash ? 'opacity-85' : 'opacity-0'
         }`}
       />
+      {snapshotFlash && (
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 pointer-events-none flex items-center gap-2 px-4 py-2 rounded-full bg-slate-900/95 border border-cyan-400/80 text-cyan-300 text-xs font-semibold shadow-[0_0_20px_rgba(6,182,212,0.4)] backdrop-blur-md">
+          <Camera size={14} className="text-cyan-400" />
+          <span>Đã chụp ảnh mô hình 3D</span>
+        </div>
+      )}
     </>
   );
 }
@@ -352,85 +359,142 @@ function SnapshotManager() {
   const { gl, scene, camera } = useThree();
   const snapshotTrigger = useStore((s: StoreState) => s.snapshotTrigger);
   const setSnapshotFlash = useStore((s: StoreState) => s.setSnapshotFlash);
-  const selectedMaterial = useStore((s: StoreState) => s.selectedMaterial);
-  const activeLayer = useStore((s: StoreState) => s.activeLayer);
+  const setIsCapturingSnapshot = useStore((s: StoreState) => s.setIsCapturingSnapshot);
+
+  const lastHandledTriggerRef = useRef(0);
+  const isCapturingRef = useRef(false);
+
+  // Keep latest Three.js objects in refs to avoid re-triggering the effect
+  const glRef = useRef(gl);
+  glRef.current = gl;
+  const sceneRef = useRef(scene);
+  sceneRef.current = scene;
+  const cameraRef = useRef(camera);
+  cameraRef.current = camera;
 
   useEffect(() => {
-    if (snapshotTrigger === 0) return;
+    // Only capture when trigger value is positive AND strictly greater than previously handled
+    if (snapshotTrigger === 0 || snapshotTrigger <= lastHandledTriggerRef.current) {
+      return;
+    }
+    lastHandledTriggerRef.current = snapshotTrigger;
+
+    // Prevent duplicate/concurrent captures
+    if (isCapturingRef.current) return;
+    isCapturingRef.current = true;
+    setIsCapturingSnapshot(true);
+
     sound.playShutter();
     setSnapshotFlash(true);
-    const timer = setTimeout(() => setSnapshotFlash(false), 300);
+    const flashTimer = setTimeout(() => setSnapshotFlash(false), 300);
 
-    gl.render(scene, camera);
-    const dataUrl = gl.domElement.toDataURL('image/png');
+    // Read current state values synchronously at the moment of capture
+    const {
+      selectedMaterial,
+      activeLayer,
+      isDual3DView,
+      compareMaterialA,
+      compareMaterialB,
+    } = useStore.getState();
 
-    const img = new Image();
-    img.onload = () => {
-      const canvas = document.createElement('canvas');
-      canvas.width = img.width;
-      canvas.height = img.height;
-      const ctx = canvas.getContext('2d');
-      if (!ctx) return;
+    try {
+      const activeGl = glRef.current;
+      const activeScene = sceneRef.current;
+      const activeCamera = cameraRef.current;
 
-      ctx.drawImage(img, 0, 0);
+      activeGl.render(activeScene, activeCamera);
+      const dataUrl = activeGl.domElement.toDataURL('image/png');
 
-      const mat = MATERIAL_MAP.get(selectedMaterial);
-      const bannerHeight = Math.max(54, Math.round(canvas.height * 0.08));
-      const padX = Math.round(canvas.width * 0.035);
+      const img = new Image();
+      img.onload = () => {
+        try {
+          const canvas = document.createElement('canvas');
+          canvas.width = img.width;
+          canvas.height = img.height;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) return;
 
-      const grad = ctx.createLinearGradient(0, canvas.height - bannerHeight, 0, canvas.height);
-      grad.addColorStop(0, 'rgba(5, 5, 16, 0)');
-      grad.addColorStop(0.35, 'rgba(5, 5, 16, 0.82)');
-      grad.addColorStop(1, 'rgba(5, 5, 16, 0.98)');
-      ctx.fillStyle = grad;
-      ctx.fillRect(0, canvas.height - bannerHeight, canvas.width, bannerHeight);
+          ctx.drawImage(img, 0, 0);
 
-      const fontSizeTitle = Math.max(14, Math.round(bannerHeight * 0.32));
-      const fontSizeSub = Math.max(11, Math.round(bannerHeight * 0.22));
+          const mat = MATERIAL_MAP.get(selectedMaterial);
+          const matA = MATERIAL_MAP.get(compareMaterialA);
+          const matB = MATERIAL_MAP.get(compareMaterialB);
+          const bannerHeight = Math.max(54, Math.round(canvas.height * 0.08));
+          const padX = Math.round(canvas.width * 0.035);
 
-      ctx.font = `bold ${fontSizeTitle}px sans-serif`;
-      ctx.fillStyle = '#ffffff';
-      ctx.fillText(
-        `${mat?.nameVi.toUpperCase() || 'VẬT LIỆU'} (${mat?.formula || ''})`,
-        padX,
-        canvas.height - bannerHeight * 0.44
-      );
+          const grad = ctx.createLinearGradient(0, canvas.height - bannerHeight, 0, canvas.height);
+          grad.addColorStop(0, 'rgba(5, 5, 16, 0)');
+          grad.addColorStop(0.35, 'rgba(5, 5, 16, 0.82)');
+          grad.addColorStop(1, 'rgba(5, 5, 16, 0.98)');
+          ctx.fillStyle = grad;
+          ctx.fillRect(0, canvas.height - bannerHeight, canvas.width, bannerHeight);
 
-      ctx.font = `600 ${fontSizeSub}px monospace`;
-      ctx.fillStyle = '#38bdf8';
-      const scaleText =
-        activeLayer === 'macro'
-          ? 'THANG ĐO: VĨ MÔ (VẬT THỂ)'
-          : activeLayer === 'micro'
-          ? 'THANG ĐO: Ô MẠNG TINH THỂ'
-          : 'THANG ĐO: NGUYÊN TỬ & PHÂN TỬ';
-      ctx.fillText(
-        `${scaleText} • CẤU TRÚC 3D KHOA HỌC CHUẨN XÁC`,
-        padX,
-        canvas.height - bannerHeight * 0.16
-      );
+          const fontSizeTitle = Math.max(14, Math.round(bannerHeight * 0.32));
+          const fontSizeSub = Math.max(11, Math.round(bannerHeight * 0.22));
 
-      ctx.font = `bold ${fontSizeTitle}px sans-serif`;
-      ctx.fillStyle = '#38bdf8';
-      ctx.textAlign = 'right';
-      ctx.fillText('DIGITAL MATERIALS LAB', canvas.width - padX, canvas.height - bannerHeight * 0.44);
+          ctx.font = `bold ${fontSizeTitle}px sans-serif`;
+          ctx.fillStyle = '#ffffff';
+          const titleText =
+            isDual3DView && matA && matB
+              ? `SO SÁNH: ${matA.nameVi.toUpperCase()} & ${matB.nameVi.toUpperCase()}`
+              : `${mat?.nameVi.toUpperCase() || 'VẬT LIỆU'} (${mat?.formula || ''})`;
+          ctx.fillText(titleText, padX, canvas.height - bannerHeight * 0.44);
 
-      ctx.font = `${fontSizeSub}px sans-serif`;
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
-      ctx.fillText('NGUYỄN VĂN TÀI', canvas.width - padX, canvas.height - bannerHeight * 0.16);
+          ctx.font = `600 ${fontSizeSub}px monospace`;
+          ctx.fillStyle = '#38bdf8';
+          const scaleText =
+            activeLayer === 'macro'
+              ? 'THANG ĐO: VĨ MÔ (VẬT THỂ)'
+              : activeLayer === 'micro'
+              ? 'THANG ĐO: Ô MẠNG TINH THỂ'
+              : 'THANG ĐO: NGUYÊN TỬ & PHÂN TỬ';
+          ctx.fillText(
+            `${scaleText} • CẤU TRÚC 3D KHOA HỌC CHUẨN XÁC`,
+            padX,
+            canvas.height - bannerHeight * 0.16
+          );
 
-      const finalData = canvas.toDataURL('image/png');
-      const a = document.createElement('a');
-      a.href = finalData;
-      a.download = `DigitalMaterialsLab_${selectedMaterial}_${activeLayer}.png`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-    };
-    img.src = dataUrl;
+          ctx.font = `bold ${fontSizeTitle}px sans-serif`;
+          ctx.fillStyle = '#38bdf8';
+          ctx.textAlign = 'right';
+          ctx.fillText('DIGITAL MATERIALS LAB', canvas.width - padX, canvas.height - bannerHeight * 0.44);
 
-    return () => clearTimeout(timer);
-  }, [snapshotTrigger, gl, scene, camera, selectedMaterial, activeLayer, setSnapshotFlash]);
+          ctx.font = `${fontSizeSub}px sans-serif`;
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
+          ctx.fillText('NGUYỄN VĂN TÀI', canvas.width - padX, canvas.height - bannerHeight * 0.16);
+
+          const finalData = canvas.toDataURL('image/png');
+          const a = document.createElement('a');
+          a.href = finalData;
+          const fileName = isDual3DView
+            ? `DigitalMaterialsLab_SoSanh_${activeLayer}.png`
+            : `DigitalMaterialsLab_${selectedMaterial}_${activeLayer}.png`;
+          a.download = fileName;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+        } catch (err) {
+          console.error('Lỗi xuất ảnh 3D:', err);
+        } finally {
+          isCapturingRef.current = false;
+          setIsCapturingSnapshot(false);
+        }
+      };
+
+      img.onerror = () => {
+        isCapturingRef.current = false;
+        setIsCapturingSnapshot(false);
+      };
+
+      img.src = dataUrl;
+    } catch (err) {
+      console.error('Lỗi chụp WebGL:', err);
+      isCapturingRef.current = false;
+      setIsCapturingSnapshot(false);
+    }
+
+    return () => clearTimeout(flashTimer);
+  }, [snapshotTrigger, setSnapshotFlash, setIsCapturingSnapshot]);
 
   return null;
 }

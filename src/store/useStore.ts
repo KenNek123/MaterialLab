@@ -196,6 +196,7 @@ export interface StoreState {
   // High-Res Snapshot Export
   snapshotTrigger: number;
   snapshotFlash: boolean;
+  isCapturingSnapshot: boolean;
 
   // Actions
   setSelectedMaterial: (id: string) => void;
@@ -235,6 +236,7 @@ export interface StoreState {
   // Snapshot actions
   triggerSnapshot: () => void;
   setSnapshotFlash: (v: boolean) => void;
+  setIsCapturingSnapshot: (v: boolean) => void;
 
   // Central Reset & Clean-up Protocol
   resetInteractionAndViewStates: () => void;
@@ -283,6 +285,7 @@ export const useStore = create<StoreState>((set) => ({
   // Snapshot Initial State
   snapshotTrigger: 0,
   snapshotFlash: false,
+  isCapturingSnapshot: false,
 
   // Protocol Rule: Central clean-up whenever switching materials
   resetInteractionAndViewStates: () =>
@@ -377,4 +380,5 @@ export const useStore = create<StoreState>((set) => ({
   // Snapshot
   triggerSnapshot: () => set((state) => ({ snapshotTrigger: state.snapshotTrigger + 1 })),
   setSnapshotFlash: (v) => set({ snapshotFlash: v }),
+  setIsCapturingSnapshot: (v) => set({ isCapturingSnapshot: v }),
 }));
