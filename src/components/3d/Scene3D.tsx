@@ -670,7 +670,7 @@ function SnapshotManager() {
 
       // Material Title & Scale (always at bottom-left)
       ctx.textAlign = 'left';
-      ctx.font = `bold ${fontSizeTitle}px sans-serif`;
+      ctx.font = `bold ${fontSizeTitle}px 'Montserrat', sans-serif`;
       ctx.fillStyle = '#ffffff';
 
       const mat = MATERIAL_MAP.get(selectedMaterial);
@@ -700,21 +700,21 @@ function SnapshotManager() {
 
         // Brand Lockup at top-left
         ctx.textAlign = 'left';
-        ctx.font = `bold ${fontSizeTitle}px sans-serif`;
+        ctx.font = `bold ${fontSizeTitle}px 'Montserrat', sans-serif`;
         ctx.fillStyle = '#38bdf8';
         ctx.fillText('DIGITAL MATTERIALS LAB', padX, topBannerHeight * 0.44, exportCanvas.width - padX * 2);
 
-        ctx.font = `${fontSizeSub}px sans-serif`;
+        ctx.font = `${fontSizeSub}px 'Montserrat', sans-serif`;
         ctx.fillStyle = 'rgba(255, 255, 255, 0.78)';
         ctx.fillText('NGUYỄN VĂN TÀI', padX, topBannerHeight * 0.74, exportCanvas.width - padX * 2);
       } else {
         // Desktop / Landscape view: Place branding at bottom-right
         ctx.textAlign = 'right';
-        ctx.font = `bold ${fontSizeTitle}px sans-serif`;
+        ctx.font = `bold ${fontSizeTitle}px 'Montserrat', sans-serif`;
         ctx.fillStyle = '#38bdf8';
         ctx.fillText('DIGITAL MATTERIALS LAB', exportCanvas.width - padX, exportCanvas.height - bannerHeight * 0.44);
 
-        ctx.font = `${fontSizeSub}px sans-serif`;
+        ctx.font = `${fontSizeSub}px 'Montserrat', sans-serif`;
         ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
         ctx.fillText('NGUYỄN VĂN TÀI', exportCanvas.width - padX, exportCanvas.height - bannerHeight * 0.16);
       }
