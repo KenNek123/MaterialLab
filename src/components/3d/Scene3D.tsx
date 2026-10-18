@@ -653,10 +653,14 @@ function SnapshotManager() {
       // 3. Draw 3D scene from WebGL canvas
       ctx.drawImage(gl.domElement, 0, 0);
 
-      // 4. Draw scientific watermark footer banner
+      // 4. Draw scientific watermark banners
+      const isMobileOrPortrait = exportCanvas.width < exportCanvas.height || exportCanvas.width < 768;
       const bannerHeight = Math.max(54, Math.round(exportCanvas.height * 0.085));
       const padX = Math.round(exportCanvas.width * 0.035);
+      const fontSizeTitle = Math.max(14, Math.round(bannerHeight * 0.32));
+      const fontSizeSub = Math.max(11, Math.round(bannerHeight * 0.22));
 
+      // Draw bottom banner gradient
       const grad = ctx.createLinearGradient(0, exportCanvas.height - bannerHeight, 0, exportCanvas.height);
       grad.addColorStop(0, 'rgba(5, 5, 16, 0)');
       grad.addColorStop(0.35, 'rgba(5, 5, 16, 0.85)');
@@ -664,9 +668,8 @@ function SnapshotManager() {
       ctx.fillStyle = grad;
       ctx.fillRect(0, exportCanvas.height - bannerHeight, exportCanvas.width, bannerHeight);
 
-      const fontSizeTitle = Math.max(14, Math.round(bannerHeight * 0.32));
-      const fontSizeSub = Math.max(11, Math.round(bannerHeight * 0.22));
-
+      // Material Title & Scale (always at bottom-left)
+      ctx.textAlign = 'left';
       ctx.font = `bold ${fontSizeTitle}px sans-serif`;
       ctx.fillStyle = '#ffffff';
 
@@ -678,7 +681,12 @@ function SnapshotManager() {
         isDual3DView && matA && matB
           ? `SO SÁNH: ${matA.nameVi.toUpperCase()} & ${matB.nameVi.toUpperCase()}`
           : `${mat?.nameVi.toUpperCase() || 'VẬT LIỆU'} (${mat?.formula || ''})`;
-      ctx.fillText(titleText, padX, exportCanvas.height - bannerHeight * 0.44);
+      
+      const bottomMaxTextWidth = isMobileOrPortrait
+        ? exportCanvas.width - padX * 2
+        : Math.max(200, exportCanvas.width * 0.55);
+
+      ctx.fillText(titleText, padX, exportCanvas.height - bannerHeight * 0.44, bottomMaxTextWidth);
 
       ctx.font = `600 ${fontSizeSub}px monospace`;
       ctx.fillStyle = '#38bdf8';
@@ -691,17 +699,40 @@ function SnapshotManager() {
       ctx.fillText(
         `${scaleText} • CẤU TRÚC 3D KHOA HỌC CHUẨN XÁC`,
         padX,
-        exportCanvas.height - bannerHeight * 0.16
+        exportCanvas.height - bannerHeight * 0.16,
+        bottomMaxTextWidth
       );
 
-      ctx.font = `bold ${fontSizeTitle}px sans-serif`;
-      ctx.fillStyle = '#38bdf8';
-      ctx.textAlign = 'right';
-      ctx.fillText('DIGITAL MATTER LAB', exportCanvas.width - padX, exportCanvas.height - bannerHeight * 0.44);
+      if (isMobileOrPortrait) {
+        // Mobile / Portrait view: Place branding at the top-left with smooth gradient banner
+        const topBannerHeight = Math.max(54, Math.round(exportCanvas.height * 0.085));
+        const topGrad = ctx.createLinearGradient(0, 0, 0, topBannerHeight);
+        topGrad.addColorStop(0, 'rgba(5, 5, 16, 0.95)');
+        topGrad.addColorStop(0.5, 'rgba(5, 5, 16, 0.7)');
+        topGrad.addColorStop(1, 'rgba(5, 5, 16, 0)');
+        ctx.fillStyle = topGrad;
+        ctx.fillRect(0, 0, exportCanvas.width, topBannerHeight);
 
-      ctx.font = `${fontSizeSub}px sans-serif`;
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
-      ctx.fillText('NGUYỄN VĂN TÀI', exportCanvas.width - padX, exportCanvas.height - bannerHeight * 0.16);
+        // Brand Lockup at top-left
+        ctx.textAlign = 'left';
+        ctx.font = `bold ${fontSizeTitle}px sans-serif`;
+        ctx.fillStyle = '#38bdf8';
+        ctx.fillText('DIGITAL MATTER LAB', padX, topBannerHeight * 0.44, exportCanvas.width - padX * 2);
+
+        ctx.font = `${fontSizeSub}px sans-serif`;
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.78)';
+        ctx.fillText('NGUYỄN VĂN TÀI', padX, topBannerHeight * 0.74, exportCanvas.width - padX * 2);
+      } else {
+        // Desktop / Landscape view: Place branding at bottom-right
+        ctx.textAlign = 'right';
+        ctx.font = `bold ${fontSizeTitle}px sans-serif`;
+        ctx.fillStyle = '#38bdf8';
+        ctx.fillText('DIGITAL MATTER LAB', exportCanvas.width - padX, exportCanvas.height - bannerHeight * 0.44);
+
+        ctx.font = `${fontSizeSub}px sans-serif`;
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
+        ctx.fillText('NGUYỄN VĂN TÀI', exportCanvas.width - padX, exportCanvas.height - bannerHeight * 0.16);
+      }
 
       // Clean ASCII filename without diacritics for safe cross-platform saving
       const sanitize = (name: string) =>
@@ -719,30 +750,57 @@ function SnapshotManager() {
       const safeMatName = sanitize(rawMatName) || 'VatLieu';
       const fileName = `DigitalMatterLab_${safeMatName}_${activeLayer}_${Date.now()}.png`;
 
-      // 5. Export as PNG Data URL
-      // Data URL directly carries MIME type 'image/png' so OS and Chromium recognize it as a PNG image
-      const dataUrl = exportCanvas.toDataURL('image/png', 1.0);
-
-      const link = document.createElement('a');
-      link.href = dataUrl;
-      link.download = fileName;
-      link.style.position = 'fixed';
-      link.style.left = '-9999px';
-      link.style.top = '-9999px';
-      link.style.opacity = '0';
-      document.body.appendChild(link);
-
-      requestAnimationFrame(() => {
+      // 5. Export as pristine PNG image with guaranteed filename and .png extension
+      const triggerDownload = (url: string) => {
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = fileName;
+        link.setAttribute('download', fileName);
+        link.style.display = 'none';
+        document.body.appendChild(link);
         link.click();
-        // Keep in DOM for 2 seconds to prevent Chromium premature anchor disconnection
         setTimeout(() => {
           if (link.parentNode) {
             link.parentNode.removeChild(link);
           }
           isCapturingRef.current = false;
           setIsCapturingSnapshot(false);
-        }, 2000);
-      });
+        }, 500);
+      };
+
+      try {
+        const dataUrl = exportCanvas.toDataURL('image/png', 1.0);
+        triggerDownload(dataUrl);
+      } catch (canvasErr) {
+        // Fallback to Blob if toDataURL encounters canvas size limits
+        exportCanvas.toBlob(
+          (blob) => {
+            if (!blob) {
+              isCapturingRef.current = false;
+              setIsCapturingSnapshot(false);
+              return;
+            }
+            const blobUrl = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = blobUrl;
+            link.download = fileName;
+            link.setAttribute('download', fileName);
+            link.style.display = 'none';
+            document.body.appendChild(link);
+            link.click();
+            setTimeout(() => {
+              if (link.parentNode) {
+                link.parentNode.removeChild(link);
+              }
+              URL.revokeObjectURL(blobUrl);
+              isCapturingRef.current = false;
+              setIsCapturingSnapshot(false);
+            }, 500);
+          },
+          'image/png',
+          1.0
+        );
+      }
     } catch (err) {
       console.error('Lỗi xuất file chụp ảnh 3D:', err);
       isCapturingRef.current = false;
