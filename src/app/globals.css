@@ -1359,6 +1359,15 @@ div[data-nextjs-dialog-overlay] {
   transform: scale(0.93);
 }
 
+.dock-camera-btn {
+  color: #2563eb;
+}
+.dock-camera-btn:hover {
+  background: #eff6ff;
+  border-color: #60a5fa;
+  color: #1d4ed8;
+}
+
 .dock-tool-btn.zen-btn.is-active-zen {
   background: rgba(255, 255, 255, 0.94);
   border-color: rgba(147, 197, 253, 0.9);

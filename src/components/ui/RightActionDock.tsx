@@ -56,10 +56,11 @@ export default function RightActionDock({
         >
           <Camera
             size={19}
+            strokeWidth={2.2}
             className={
               isCapturingSnapshot
-                ? 'text-white animate-spin'
-                : 'text-white'
+                ? 'text-blue-600 animate-spin'
+                : 'text-blue-600'
             }
           />
         </button>
