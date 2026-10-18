@@ -3,11 +3,10 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useStore, StoreState } from '@/store/useStore';
-import { MATERIAL_MAP } from '@/data/materials';
+import { MATERIALS, MATERIAL_MAP } from '@/data/materials';
 import {
   X,
   Shield,
-  FlaskConical,
   BarChart3,
   Sparkles,
   CheckCircle2,
@@ -18,10 +17,13 @@ import {
   Compass,
   Layers,
   Flame,
-  Info,
   Activity,
   Layers3,
   Award,
+  ChevronDown,
+  ChevronUp,
+  Columns2,
+  Scale,
 } from 'lucide-react';
 import { sound } from '@/lib/soundFx';
 import MaterialBadge from '@/components/ui/MaterialBadge';
@@ -30,556 +32,901 @@ export default function DetailModal() {
   const isDetailOpen = useStore((s: StoreState) => s.isDetailOpen);
   const setIsDetailOpen = useStore((s: StoreState) => s.setIsDetailOpen);
   const selectedMaterial = useStore((s: StoreState) => s.selectedMaterial);
-  const setIsCompareOpen = useStore((s: StoreState) => s.setIsCompareOpen);
+  const setSelectedMaterial = useStore((s: StoreState) => s.setSelectedMaterial);
+  const compareMaterialA = useStore((s: StoreState) => s.compareMaterialA);
+  const compareMaterialB = useStore((s: StoreState) => s.compareMaterialB);
   const setCompareMaterialA = useStore((s: StoreState) => s.setCompareMaterialA);
+  const setCompareMaterialB = useStore((s: StoreState) => s.setCompareMaterialB);
+  const swapCompareMaterials = useStore((s: StoreState) => s.swapCompareMaterials);
+  const isDual3DView = useStore((s: StoreState) => s.isDual3DView);
+  const setIsDual3DView = useStore((s: StoreState) => s.setIsDual3DView);
 
-  const [activeTab, setActiveTab] = useState<'bonds' | 'metrics' | 'apps'>('bonds');
+  // 4 Tabs: bonds, metrics, apps, and compare (Synchronized with store)
+  const detailTab = useStore((s: StoreState) => s.detailTab);
+  const setDetailTab = useStore((s: StoreState) => s.setDetailTab);
+  const activeTab = detailTab || 'bonds';
+  const setActiveTab = setDetailTab;
+
+  // Collapsible Minimize state
+  const [isMinimized, setIsMinimized] = useState(false);
 
   const material = MATERIAL_MAP.get(selectedMaterial);
+  const matA = MATERIAL_MAP.get(compareMaterialA) || material || MATERIALS[0];
+  const matB = MATERIAL_MAP.get(compareMaterialB) || MATERIALS[1];
 
   if (!isDetailOpen || !material) return null;
 
-  const handleOpenCompare = () => {
-    sound.playClick();
-    setCompareMaterialA(material.id);
-    setIsDetailOpen(false);
-    setIsCompareOpen(true);
-  };
-
-  // Category Theme Colors & Accents
+  // Category Theme Colors & Accents (Gam màu Giáo dục: Clean White & Education Blue)
   const theme =
     material.category === 'metal'
       ? {
-          banner: 'from-amber-500/25 via-yellow-600/15 to-orange-700/25',
-          border: 'border-amber-400/60',
-          accent: 'text-amber-300',
-          badge: 'bg-amber-500/20 text-amber-300 border-amber-400/40',
-          glow: 'rgba(245, 158, 11, 0.4)',
+          banner: 'from-amber-50/90 via-yellow-50/60 to-orange-50/70',
+          border: 'border-amber-200/90',
+          accent: 'text-amber-800',
+          badge: 'bg-amber-50 text-amber-800 border-amber-200',
         }
       : material.category === 'tech'
       ? {
-          banner: 'from-cyan-500/25 via-blue-600/15 to-indigo-700/25',
-          border: 'border-cyan-400/60',
-          accent: 'text-cyan-300',
-          badge: 'bg-cyan-500/20 text-cyan-300 border-cyan-400/40',
-          glow: 'rgba(6, 182, 212, 0.4)',
+          banner: 'from-blue-50/90 via-sky-50/60 to-indigo-50/70',
+          border: 'border-blue-200/90',
+          accent: 'text-blue-800',
+          badge: 'bg-blue-50 text-blue-700 border-blue-200',
         }
       : material.category === 'crystal'
       ? {
-          banner: 'from-sky-500/25 via-blue-600/15 to-indigo-700/25',
-          border: 'border-sky-400/60',
-          accent: 'text-sky-300',
-          badge: 'bg-sky-500/20 text-sky-300 border-sky-400/40',
-          glow: 'rgba(56, 189, 248, 0.4)',
-        }
-      : material.category === 'molecular'
-      ? {
-          banner: 'from-cyan-500/25 via-teal-600/15 to-blue-700/25',
-          border: 'border-cyan-400/60',
-          accent: 'text-cyan-300',
-          badge: 'bg-cyan-500/20 text-cyan-300 border-cyan-400/40',
-          glow: 'rgba(6, 182, 212, 0.4)',
+          banner: 'from-sky-50/90 via-blue-50/60 to-indigo-50/70',
+          border: 'border-sky-200/90',
+          accent: 'text-sky-800',
+          badge: 'bg-sky-50 text-sky-800 border-sky-200',
         }
       : material.category === 'polymer'
       ? {
-          banner: 'from-emerald-500/25 via-teal-600/15 to-green-700/25',
-          border: 'border-emerald-400/60',
-          accent: 'text-emerald-300',
-          badge: 'bg-emerald-500/20 text-emerald-300 border-emerald-400/40',
-          glow: 'rgba(16, 185, 129, 0.4)',
+          banner: 'from-emerald-50/90 via-teal-50/60 to-green-50/70',
+          border: 'border-emerald-200/90',
+          accent: 'text-emerald-800',
+          badge: 'bg-emerald-50 text-emerald-800 border-emerald-200',
         }
       : material.category === 'nano'
       ? {
-          banner: 'from-violet-500/25 via-purple-600/15 to-fuchsia-700/25',
-          border: 'border-violet-400/60',
-          accent: 'text-violet-300',
-          badge: 'bg-violet-500/20 text-violet-300 border-violet-400/40',
-          glow: 'rgba(139, 92, 246, 0.45)',
+          banner: 'from-purple-50/90 via-violet-50/60 to-fuchsia-50/70',
+          border: 'border-purple-200/90',
+          accent: 'text-purple-800',
+          badge: 'bg-purple-50 text-purple-800 border-purple-200',
         }
       : {
-          banner: 'from-sky-500/25 via-blue-600/15 to-purple-700/25',
-          border: 'border-sky-400/60',
-          accent: 'text-sky-300',
-          badge: 'bg-sky-500/20 text-sky-300 border-sky-400/40',
-          glow: 'rgba(56, 189, 248, 0.4)',
+          banner: 'from-blue-50/90 via-sky-50/60 to-slate-50/80',
+          border: 'border-blue-200/90',
+          accent: 'text-blue-800',
+          badge: 'bg-blue-50 text-blue-700 border-blue-200',
         };
+
+  const metricsConfig = [
+    {
+      key: 'hardness' as const,
+      label: 'Độ cứng & Bền cơ học',
+      icon: Shield,
+      valA: matA.metrics.hardness,
+      valB: matB.metrics.hardness,
+      textA: matA.macroInfo.mechanicalStrength,
+      textB: matB.macroInfo.mechanicalStrength,
+    },
+    {
+      key: 'thermal' as const,
+      label: 'Độ dẫn nhiệt',
+      icon: Flame,
+      valA: matA.metrics.thermal,
+      valB: matB.metrics.thermal,
+      textA: matA.macroInfo.thermalConductivity,
+      textB: matB.macroInfo.thermalConductivity,
+    },
+    {
+      key: 'electrical' as const,
+      label: 'Độ dẫn điện',
+      icon: Zap,
+      valA: matA.metrics.electrical,
+      valB: matB.metrics.electrical,
+      textA: matA.macroInfo.electricalConductivity,
+      textB: matB.macroInfo.electricalConductivity,
+    },
+    {
+      key: 'density' as const,
+      label: 'Khối lượng riêng',
+      icon: Scale,
+      valA: matA.metrics.density,
+      valB: matB.metrics.density,
+      textA: matA.macroInfo.density,
+      textB: matB.macroInfo.density,
+    },
+    {
+      key: 'corrosion' as const,
+      label: 'Chống ăn mòn & Độ trơ',
+      icon: Sparkles,
+      valA: matA.metrics.corrosion,
+      valB: matB.metrics.corrosion,
+      textA: `${matA.metrics.corrosion} / 100`,
+      textB: `${matB.metrics.corrosion} / 100`,
+    },
+  ];
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-2.5 sm:p-5">
-        {/* Dim backdrop with blur */}
+      {isMinimized ? (
+        /* Minimized State: Sleek pill at bottom center */
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 20 }}
           onClick={() => {
             sound.playClick();
-            setIsDetailOpen(false);
+            setIsMinimized(false);
           }}
-          className="fixed inset-0 bg-black/85 backdrop-blur-md"
-        />
-
-        {/* Modal Dialog */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.94, y: 16 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.94, y: 16 }}
-          transition={{ type: 'spring', damping: 28, stiffness: 350 }}
-          className={`relative w-full max-w-3xl max-h-[92dvh] flex flex-col duo-card overflow-hidden z-10 shadow-2xl shadow-black/95 border-2 ${theme.border} bg-slate-950/95`}
+          className="fixed bottom-20 left-1/2 -translate-x-1/2 z-40 bg-white/95 backdrop-blur-md px-4 py-2.5 rounded-full border border-blue-200/90 shadow-lg flex items-center gap-3 cursor-pointer hover:scale-105 active:scale-95 transition-all text-slate-800"
+          title="Chạm để mở lại hồ sơ vật liệu"
         >
-          {/* Top candy highlight line */}
-          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-cyan-400 via-purple-500 to-amber-400" />
+          <MaterialBadge material={material} size="sm" />
+          <div className="flex flex-col min-w-0">
+            {activeTab === 'compare' ? (
+              <span className="text-xs font-bold text-slate-900 truncate">
+                {matA.nameVi} <span className="text-blue-600 font-mono">vs</span> {matB.nameVi}
+              </span>
+            ) : (
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-slate-900 truncate">{material.nameVi}</span>
+                <span className="text-[10px] font-mono font-bold text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-200/70 truncate">
+                  {material.formula}
+                </span>
+              </div>
+            )}
+            <span className="text-[10px] text-blue-600 font-semibold flex items-center gap-1 truncate">
+              <Sparkles size={11} className="text-blue-600 shrink-0" />
+              {activeTab === 'compare' ? 'Chạm để mở lại bảng so sánh' : 'Chạm để xem chi tiết hồ sơ'}
+            </span>
+          </div>
+          <ChevronUp size={18} className="text-blue-600 shrink-0 ml-1" />
+        </motion.div>
+      ) : (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-2.5 sm:p-5">
+          {/* Dim backdrop */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => {
+              sound.playClick();
+              setIsMinimized(true);
+            }}
+            className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm"
+          />
 
-          {/* Modal Header */}
-          <div
-            className={`px-4 sm:px-6 py-4 border-b-2 border-slate-800/80 bg-gradient-to-r ${theme.banner} flex items-center justify-between shrink-0`}
+          {/* Modal Dialog (Responsive Clean White & Education Blue) */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 14 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 14 }}
+            transition={{ type: 'spring', damping: 28, stiffness: 350 }}
+            className={`relative w-full max-w-4xl max-h-[92dvh] flex flex-col overflow-hidden z-10 shadow-2xl shadow-blue-900/15 border-2 ${theme.border} bg-white rounded-2xl sm:rounded-3xl`}
           >
-            <div className="flex items-center gap-3 sm:gap-4 min-w-0">
-              <MaterialBadge material={material} size="lg" showSub />
-              <div className="min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <h2 className="text-base sm:text-xl font-black text-white tracking-wide truncate drop-shadow">
-                    {material.nameVi}
-                  </h2>
-                  <span className="text-[11px] sm:text-xs font-mono font-black px-2.5 py-0.5 rounded-full bg-slate-900/90 text-cyan-300 border border-cyan-400/50 shadow-sm">
-                    {material.formula}
-                  </span>
-                  <span
-                    className={`text-[10px] sm:text-xs px-2.5 py-0.5 rounded-full font-bold border shadow-sm ${theme.badge}`}
-                  >
-                    {material.categoryLabel}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2 text-[11px] sm:text-xs text-slate-300 mt-1 flex-wrap">
-                  <span>
-                    Tên quốc tế: <strong className="text-white">{material.name}</strong>
-                  </span>
-                  <span className="text-slate-600">|</span>
-                  <span>
-                    Mô hình 3D: <strong className="text-sky-300">{material.objectNameVi}</strong>
-                  </span>
-                </div>
-              </div>
-            </div>
+            {/* Top candy highlight line */}
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-600 via-sky-400 to-indigo-600 z-10" />
 
-            <button
-              onClick={() => {
-                sound.playClick();
-                setIsDetailOpen(false);
-              }}
-              className="p-2 sm:p-2.5 bg-slate-900/80 hover:bg-slate-800 border border-slate-700 text-white/80 hover:text-white rounded-xl sm:rounded-2xl shrink-0 ml-2 transition-transform hover:scale-105 active:scale-95 shadow-md"
-              title="Đóng cửa sổ chi tiết (Esc)"
-              type="button"
+            {/* Modal Header */}
+            <div
+              className={`px-3.5 sm:px-6 py-3.5 border-b border-slate-200/80 bg-gradient-to-r ${theme.banner} flex items-center justify-between shrink-0 gap-2`}
             >
-              <X size={18} />
-            </button>
-          </div>
-
-          {/* Navigation Tabs Bar: Colorful Pills */}
-          <div className="grid grid-cols-3 gap-1.5 w-full border-b-2 border-slate-800/80 bg-slate-950 px-3 sm:px-5 py-2 shrink-0">
-            <TabButton
-              active={activeTab === 'bonds'}
-              onClick={() => {
-                sound.playClick();
-                setActiveTab('bonds');
-              }}
-              icon={Atom}
-              label="Cấu trúc & Bản chất Liên kết"
-              mobileLabel="Cấu trúc & Liên kết"
-              activeColor="bg-cyan-500/20 text-cyan-300 border-cyan-400/80 shadow-[0_0_12px_rgba(6,182,212,0.35)]"
-            />
-            <TabButton
-              active={activeTab === 'metrics'}
-              onClick={() => {
-                sound.playClick();
-                setActiveTab('metrics');
-              }}
-              icon={BarChart3}
-              label="Chỉ số Cơ - Lý - Hóa"
-              mobileLabel="Chỉ số Cơ lý"
-              activeColor="bg-amber-500/20 text-amber-300 border-amber-400/80 shadow-[0_0_12px_rgba(245,158,11,0.35)]"
-            />
-            <TabButton
-              active={activeTab === 'apps'}
-              onClick={() => {
-                sound.playClick();
-                setActiveTab('apps');
-              }}
-              icon={Sparkles}
-              label="Ứng dụng Đột phá & Đời sống"
-              mobileLabel="Ứng dụng Thực tế"
-              activeColor="bg-emerald-500/20 text-emerald-300 border-emerald-400/80 shadow-[0_0_12px_rgba(16,185,129,0.35)]"
-            />
-          </div>
-
-          {/* Modal Scrollable Content */}
-          <div className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-6 space-y-5 custom-scrollbar bg-slate-950/70">
-            {/* ══════════════════════════════════════════════════════════════════
-                TAB 1: CẤU TRÚC TINH THỂ & BẢN CHẤT LIÊN KẾT NGUYÊN TỬ
-            ══════════════════════════════════════════════════════════════════ */}
-            {activeTab === 'bonds' && (
-              <div className="space-y-4">
-                {/* 1. Main Chemical Bonding Card */}
-                <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-cyan-950/40 via-slate-900/90 to-blue-950/40 border-2 border-cyan-500/35 space-y-4 shadow-xl">
-                  <div className="flex items-center justify-between border-b border-cyan-500/20 pb-3">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-cyan-400 to-blue-600 text-slate-950 flex items-center justify-center font-black shadow-lg shadow-cyan-500/30">
-                        <Atom size={22} />
-                      </div>
-                      <div>
-                        <span className="text-[10px] font-mono uppercase tracking-widest text-cyan-400 font-extrabold block">
-                          Bản chất liên kết hóa học cốt lõi
-                        </span>
-                        <h4 className="text-sm sm:text-base font-black text-white leading-snug">
-                          {material.molecularInfo.bonds.type}
-                        </h4>
-                      </div>
-                    </div>
-                    {material.molecularInfo.bonds.bondEnergy && (
-                      <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/15 text-amber-300 border border-amber-500/30 text-xs font-mono font-bold shadow-sm">
-                        <Flame size={14} className="text-amber-400" />
-                        {material.molecularInfo.bonds.bondEnergy}
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Sub-Parameters Grid */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {material.molecularInfo.bonds.hybridization && (
-                      <div className="p-3.5 rounded-xl bg-slate-900/80 border border-cyan-500/30 flex items-start gap-3 shadow-sm">
-                        <div className="w-8 h-8 rounded-lg bg-cyan-500/20 text-cyan-300 flex items-center justify-center shrink-0">
-                          <Orbit size={18} />
-                        </div>
-                        <div>
-                          <div className="text-[10px] uppercase font-mono tracking-wider text-cyan-400/90 font-bold">
-                            Trạng thái lai hóa orbital
-                          </div>
-                          <div className="text-xs font-bold text-white mt-0.5">
-                            {material.molecularInfo.bonds.hybridization}
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {material.molecularInfo.bonds.coordinationGeometry && (
-                      <div className="p-3.5 rounded-xl bg-slate-900/80 border border-purple-500/30 flex items-start gap-3 shadow-sm">
-                        <div className="w-8 h-8 rounded-lg bg-purple-500/20 text-purple-300 flex items-center justify-center shrink-0">
-                          <Compass size={18} />
-                        </div>
-                        <div>
-                          <div className="text-[10px] uppercase font-mono tracking-wider text-purple-400/90 font-bold">
-                            Hình học phối trí (Geometry)
-                          </div>
-                          <div className="text-xs font-bold text-white mt-0.5">
-                            {material.molecularInfo.bonds.coordinationGeometry}
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {material.molecularInfo.bonds.bondEnergy && (
-                      <div className="sm:hidden p-3.5 rounded-xl bg-slate-900/80 border border-amber-500/30 flex items-start gap-3 shadow-sm">
-                        <div className="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-300 flex items-center justify-center shrink-0">
-                          <Flame size={18} />
-                        </div>
-                        <div>
-                          <div className="text-[10px] uppercase font-mono tracking-wider text-amber-400/90 font-bold">
-                            Năng lượng liên kết
-                          </div>
-                          <div className="text-xs font-mono font-bold text-white mt-0.5">
-                            {material.molecularInfo.bonds.bondEnergy}
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {material.molecularInfo.bonds.interlayerForce && (
-                      <div className="p-3.5 rounded-xl bg-slate-900/80 border border-emerald-500/30 flex items-start gap-3 sm:col-span-2 shadow-sm">
-                        <div className="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-300 flex items-center justify-center shrink-0">
-                          <Layers3 size={18} />
-                        </div>
-                        <div>
-                          <div className="text-[10px] uppercase font-mono tracking-wider text-emerald-400/90 font-bold">
-                            Tương tác liên tầng / Lực liên kết phụ
-                          </div>
-                          <div className="text-xs font-medium text-slate-200 mt-0.5">
-                            {material.molecularInfo.bonds.interlayerForce}
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Deep Scientific Explanation */}
-                  {material.molecularInfo.bonds.descriptionVi && (
-                    <div className="p-4 rounded-xl bg-gradient-to-r from-blue-950/60 to-indigo-950/50 border border-blue-400/30 text-xs text-blue-100 leading-relaxed shadow-inner">
-                      <div className="flex items-center gap-1.5 font-bold text-cyan-300 mb-1.5 text-[11px] uppercase tracking-wide">
-                        <Info size={15} />
-                        Cơ chế lượng tử & cấu trúc điện tử:
-                      </div>
-                      <p>{material.molecularInfo.bonds.descriptionVi}</p>
-                    </div>
-                  )}
-                </div>
-
-                {/* 2. Crystal Lattice Parameters Grid */}
-                <div>
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-300 mb-3 flex items-center gap-2">
-                    <FlaskConical size={15} className="text-purple-400" />
-                    Thông số hình học ô mạng & tinh thể học
-                  </h4>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <SpecCard
-                      icon={Layers}
-                      label="Kiểu mạng tinh thể"
-                      value={material.molecularInfo.latticeType}
-                      gradient="from-indigo-600/15 via-purple-600/10 to-slate-900/90"
-                      borderColor="border-indigo-400/40"
-                      iconBg="bg-indigo-500/20"
-                      iconColor="text-indigo-300"
-                    />
-                    <SpecCard
-                      icon={Compass}
-                      label="Hệ tinh thể (Crystal System)"
-                      value={material.molecularInfo.crystalSystem}
-                      gradient="from-purple-600/15 via-pink-600/10 to-slate-900/90"
-                      borderColor="border-purple-400/40"
-                      iconBg="bg-purple-500/20"
-                      iconColor="text-purple-300"
-                    />
-                    <SpecCard
-                      icon={Atom}
-                      label="Độ dài liên kết chính xác"
-                      value={material.molecularInfo.bondLength}
-                      gradient="from-cyan-600/15 via-teal-600/10 to-slate-900/90"
-                      borderColor="border-cyan-400/40"
-                      iconBg="bg-cyan-500/20"
-                      iconColor="text-cyan-300"
-                    />
-                    <SpecCard
-                      icon={Orbit}
-                      label="Góc liên kết nguyên tử"
-                      value={material.molecularInfo.bondAngle}
-                      gradient="from-emerald-600/15 via-teal-600/10 to-slate-900/90"
-                      borderColor="border-emerald-400/40"
-                      iconBg="bg-emerald-500/20"
-                      iconColor="text-emerald-300"
-                    />
-                  </div>
-                </div>
-
-                {/* 3. Constituent Element Tiles */}
-                <div className="p-4 rounded-2xl bg-slate-900/80 border-2 border-slate-800 space-y-2.5 shadow-md">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] uppercase font-mono tracking-wider text-slate-300 font-bold block">
-                      Nguyên tố cấu thành ô mạng tinh thể:
-                    </span>
-                    <span className="text-[10px] text-slate-400 font-mono">Bán kính nguyên tử pm</span>
-                  </div>
-                  <div className="flex flex-wrap gap-2.5">
-                    {material.molecularInfo.atomTypes.map((atom, idx) => (
-                      <div
-                        key={idx}
-                        className="flex items-center gap-2.5 px-3.5 py-2 rounded-xl bg-slate-800/90 border border-slate-700 shadow-sm hover:border-slate-500 transition-colors"
-                      >
-                        <span
-                          className="w-4 h-4 rounded-full inline-block shadow-md border border-white/20"
-                          style={{ backgroundColor: atom.color }}
-                        />
-                        <span className="font-mono font-black text-sm text-white">
-                          {atom.element}
-                        </span>
-                        <span className="text-[11px] font-mono text-cyan-300 bg-cyan-950/60 px-2 py-0.5 rounded-md border border-cyan-500/30">
-                          r = {(atom.radius * 100).toFixed(0)} pm
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* ══════════════════════════════════════════════════════════════════
-                TAB 2: CHỈ SỐ CƠ - LÝ - HÓA (ĐỘ CỨNG, NHIỆT, ĐIỆN, ĂN MÒN)
-            ══════════════════════════════════════════════════════════════════ */}
-            {activeTab === 'metrics' && (
-              <div className="space-y-4">
-                {/* 5 Normalized Metric Bars with Vibrant Glow */}
-                <div className="space-y-3.5 bg-slate-900/80 p-5 rounded-2xl border-2 border-slate-800 shadow-xl">
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-300 mb-2 flex items-center gap-2">
-                    <Activity size={15} className="text-amber-400" />
-                    Thang đo hiệu năng vật liệu chuẩn hóa (0 – 100 điểm)
-                  </h4>
-                  <MetricRow
-                    label="Độ cứng & Bền cơ học"
-                    score={material.metrics.hardness}
-                    barGradient="from-blue-500 via-sky-400 to-cyan-300"
-                    textColor="text-cyan-300"
-                    note={material.macroInfo.mechanicalStrength}
-                  />
-                  <MetricRow
-                    label="Độ dẫn nhiệt"
-                    score={material.metrics.thermal}
-                    barGradient="from-red-500 via-orange-400 to-amber-300"
-                    textColor="text-amber-300"
-                    note={material.macroInfo.thermalConductivity}
-                  />
-                  <MetricRow
-                    label="Độ dẫn điện"
-                    score={material.metrics.electrical}
-                    barGradient="from-emerald-500 via-teal-400 to-cyan-300"
-                    textColor="text-emerald-300"
-                    note={material.macroInfo.electricalConductivity}
-                  />
-                  <MetricRow
-                    label="Khối lượng riêng & Tỷ trọng"
-                    score={material.metrics.density}
-                    barGradient="from-purple-500 via-fuchsia-400 to-pink-300"
-                    textColor="text-purple-300"
-                    note={material.macroInfo.density}
-                  />
-                  <MetricRow
-                    label="Chống ăn mòn & Bền hóa học"
-                    score={material.metrics.corrosion}
-                    barGradient="from-rose-500 via-pink-400 to-red-400"
-                    textColor="text-rose-300"
-                    note="Độ trơ bề mặt trong môi trường axit, kiềm và nhiệt độ khắc nghiệt"
-                  />
-                </div>
-
-                {/* Macro Physical Specs Grid */}
-                <div>
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-300 mb-3 flex items-center gap-2">
-                    <Shield size={15} className="text-blue-400" />
-                    Thông số cơ lý định lượng thực tế
-                  </h4>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <SpecCard
-                      icon={Shield}
-                      label="Độ bền cơ học"
-                      value={material.macroInfo.mechanicalStrength}
-                      gradient="from-blue-600/15 via-indigo-600/10 to-slate-900/90"
-                      borderColor="border-blue-400/40"
-                      iconBg="bg-blue-500/20"
-                      iconColor="text-blue-300"
-                    />
-                    <SpecCard
-                      icon={Flame}
-                      label="Độ dẫn nhiệt định lượng"
-                      value={material.macroInfo.thermalConductivity}
-                      gradient="from-amber-600/15 via-orange-600/10 to-slate-900/90"
-                      borderColor="border-amber-400/40"
-                      iconBg="bg-amber-500/20"
-                      iconColor="text-amber-300"
-                    />
-                    <SpecCard
-                      icon={Zap}
-                      label="Độ dẫn điện định lượng"
-                      value={material.macroInfo.electricalConductivity}
-                      gradient="from-cyan-600/15 via-teal-600/10 to-slate-900/90"
-                      borderColor="border-cyan-400/40"
-                      iconBg="bg-cyan-500/20"
-                      iconColor="text-cyan-300"
-                    />
-                    <SpecCard
-                      icon={Layers}
-                      label="Khối lượng riêng thực tế"
-                      value={material.macroInfo.density}
-                      gradient="from-purple-600/15 via-pink-600/10 to-slate-900/90"
-                      borderColor="border-purple-400/40"
-                      iconBg="bg-purple-500/20"
-                      iconColor="text-purple-300"
-                    />
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* ══════════════════════════════════════════════════════════════════
-                TAB 3: ỨNG DỤNG ĐỘT PHÁ & BỐI CẢNH ĐỜI SỐNG THỰC TẾ
-            ══════════════════════════════════════════════════════════════════ */}
-            {activeTab === 'apps' && (
-              <div className="space-y-4">
-                <div>
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-300 mb-3 flex items-center gap-2">
-                    <Sparkles size={15} className="text-emerald-400" />
-                    Các lĩnh vực ứng dụng then chốt của {material.nameVi}
-                  </h4>
-                  <div className="grid grid-cols-1 gap-3">
-                    {material.macroInfo.applications.map((app, i) => (
-                      <div
-                        key={i}
-                        className="p-4 rounded-2xl bg-gradient-to-r from-emerald-950/40 via-slate-900/90 to-teal-950/30 border-2 border-emerald-500/30 flex items-start gap-3.5 hover:border-emerald-400/60 transition-colors shadow-md"
-                      >
-                        <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-600 text-slate-950 flex items-center justify-center font-black shrink-0 mt-0.5 shadow-md shadow-emerald-500/30">
-                          <CheckCircle2 size={18} />
-                        </div>
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2">
-                            <span className="text-[10px] font-mono uppercase tracking-wider text-emerald-400 font-extrabold block">
-                              Ứng dụng trọng tâm #{i + 1}
-                            </span>
-                            <span className="text-[9px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-bold">
-                              Thực tế
-                            </span>
-                          </div>
-                          <p className="text-xs sm:text-sm text-slate-100 font-semibold leading-relaxed mt-1">
-                            {app}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Technology Classification Banner */}
-                <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-slate-900/90 via-blue-950/40 to-slate-900/90 border-2 border-slate-700/80 space-y-2.5 shadow-lg">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400 font-bold flex items-center gap-1.5">
-                      <Award size={14} className="text-cyan-400" />
-                      Phân loại Khoa học & Công nghệ Vật liệu
+              <div className="flex items-center gap-2.5 sm:gap-4 min-w-0 flex-1">
+                <MaterialBadge material={material} size="md" showSub />
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                    <h2 className="text-sm sm:text-lg md:text-xl font-black text-slate-900 tracking-wide truncate">
+                      {material.nameVi}
+                    </h2>
+                    <span className="text-[10px] sm:text-xs font-mono font-black px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200 shadow-sm whitespace-nowrap">
+                      {material.formula}
                     </span>
                     <span
-                      className={`px-3 py-1 rounded-full text-xs font-bold border shadow-sm ${theme.badge}`}
+                      className={`text-[9px] sm:text-xs px-2.5 py-0.5 rounded-full font-bold border shadow-sm truncate hidden xs:inline ${theme.badge}`}
                     >
                       {material.categoryLabel}
                     </span>
                   </div>
-                  <p className="text-xs text-slate-300 leading-relaxed">
-                    Sự kết hợp giữa liên kết hóa học{' '}
-                    <strong className="text-white">{material.molecularInfo.bonds.type}</strong> và cấu trúc ô mạng{' '}
-                    <strong className="text-cyan-300">{material.molecularInfo.latticeType}</strong> tạo nên những đặc tính cơ lý vượt trội, giúp vật liệu đóng vai trò nền tảng trong đời sống và các ngành công nghệ cao.
-                  </p>
+                  <div className="flex items-center gap-2 text-[10px] sm:text-xs text-slate-600 mt-0.5 truncate">
+                    <span className="truncate">
+                      Mô hình: <strong className="text-blue-700 font-bold">{material.objectNameVi}</strong>
+                    </span>
+                  </div>
                 </div>
               </div>
-            )}
-          </div>
 
-          {/* Modal Footer Controls */}
-          <div className="px-4 sm:px-6 py-3.5 border-t-2 border-slate-800/80 bg-slate-950 flex items-center justify-between gap-3 shrink-0">
-            <button
-              onClick={handleOpenCompare}
-              className="py-2.5 px-4 sm:px-5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-xs uppercase tracking-wider flex items-center gap-2 shadow-lg shadow-purple-600/30 transition-transform active:scale-95"
-              type="button"
-              title="Mở bảng so sánh vật liệu này với vật liệu khác"
-            >
-              <ArrowRightLeft size={15} />
-              <span>So sánh đối chiếu</span>
-            </button>
+              {/* Header Right Actions: Minimize & Close */}
+              <div className="flex items-center gap-1.5 shrink-0">
+                <button
+                  onClick={() => {
+                    sound.playClick();
+                    setIsMinimized(true);
+                  }}
+                  className="p-2 sm:p-2.5 bg-white hover:bg-slate-100 border border-slate-200 text-slate-600 hover:text-slate-900 rounded-xl transition-all active:scale-95 shadow-sm min-w-[40px] min-h-[40px] flex items-center justify-center cursor-pointer"
+                  title="Thu nhỏ để ngắm mô hình 3D"
+                  type="button"
+                >
+                  <ChevronDown size={17} />
+                </button>
 
-            <button
-              onClick={() => {
-                sound.playClick();
-                setIsDetailOpen(false);
-              }}
-              className="py-2.5 px-6 sm:px-8 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white font-black text-xs uppercase tracking-wider shadow-lg shadow-blue-600/30 transition-transform active:scale-95"
-              type="button"
-            >
-              Đóng
-            </button>
-          </div>
-        </motion.div>
-      </div>
+                <button
+                  onClick={() => {
+                    sound.playClick();
+                    setIsDetailOpen(false);
+                  }}
+                  className="p-2 sm:p-2.5 bg-white hover:bg-slate-100 border border-slate-200 text-slate-600 hover:text-slate-900 rounded-xl transition-all active:scale-95 shadow-sm min-w-[40px] min-h-[40px] flex items-center justify-center cursor-pointer"
+                  title="Đóng cửa sổ chi tiết (Esc)"
+                  type="button"
+                >
+                  <X size={17} />
+                </button>
+              </div>
+            </div>
+
+            {/* Navigation Tabs Bar: 4 Pills with Compare Tab */}
+            <div className="grid grid-cols-4 gap-1 sm:gap-2 w-full border-b border-slate-200 bg-slate-50 px-2 sm:px-5 py-2 shrink-0">
+              <TabButton
+                active={activeTab === 'bonds'}
+                onClick={() => {
+                  sound.playClick();
+                  setActiveTab('bonds');
+                }}
+                icon={Atom}
+                label="Cấu trúc & Liên kết"
+                mobileLabel="Cấu trúc"
+                activeColor="bg-blue-600 text-white border-blue-600 shadow-sm"
+              />
+              <TabButton
+                active={activeTab === 'metrics'}
+                onClick={() => {
+                  sound.playClick();
+                  setActiveTab('metrics');
+                }}
+                icon={BarChart3}
+                label="Chỉ số Cơ - Lý - Hóa"
+                mobileLabel="Chỉ số"
+                activeColor="bg-blue-600 text-white border-blue-600 shadow-sm"
+              />
+              <TabButton
+                active={activeTab === 'apps'}
+                onClick={() => {
+                  sound.playClick();
+                  setActiveTab('apps');
+                }}
+                icon={Sparkles}
+                label="Ứng dụng Đột phá"
+                mobileLabel="Ứng dụng"
+                activeColor="bg-blue-600 text-white border-blue-600 shadow-sm"
+              />
+              <TabButton
+                active={activeTab === 'compare'}
+                onClick={() => {
+                  sound.playClick();
+                  setCompareMaterialA(material.id);
+                  setActiveTab('compare');
+                }}
+                icon={Columns2}
+                label="So sánh Đối chiếu"
+                mobileLabel="So sánh"
+                activeColor="bg-blue-600 text-white border-blue-600 shadow-sm"
+              />
+            </div>
+
+            {/* Modal Scrollable Content */}
+            <div className="flex-1 min-h-0 overflow-y-auto p-3.5 sm:p-6 space-y-5 custom-scrollbar bg-slate-50/40">
+              {/* ══════════════════════════════════════════════════════════════════
+                  TAB 1: CẤU TRÚC TINH THỂ & BẢN CHẤT LIÊN KẾT NGUYÊN TỬ
+              ══════════════════════════════════════════════════════════════════ */}
+              {activeTab === 'bonds' && (
+                <div className="space-y-4">
+                  {/* 1. Main Chemical Bonding Card */}
+                  <div className="p-4 sm:p-5 rounded-2xl bg-white border border-slate-200/90 space-y-4 shadow-sm">
+                    {/* Header Row: Responsive flex - NEVER squeezes title vertically */}
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-slate-100 pb-3">
+                      <div className="flex items-center gap-3 min-w-0 flex-1">
+                        <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white flex items-center justify-center font-black shadow-md shadow-blue-500/20 shrink-0">
+                          <Atom size={22} />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <span className="text-[11px] font-mono uppercase tracking-wider text-blue-600 font-bold block truncate">
+                            Bản chất liên kết hóa học cốt lõi
+                          </span>
+                          <h4 className="text-sm sm:text-base font-extrabold text-slate-900 leading-snug break-words">
+                            {material.molecularInfo.bonds.type}
+                          </h4>
+                        </div>
+                      </div>
+                      {material.molecularInfo.bonds.bondEnergy && (
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-50 text-amber-800 border border-amber-200 text-xs font-mono font-bold shadow-sm self-start sm:self-auto shrink-0">
+                          <Flame size={14} className="text-amber-500" />
+                          {material.molecularInfo.bonds.bondEnergy}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Sub-Parameters Grid */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {material.molecularInfo.bonds.hybridization && (
+                        <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80 flex items-start gap-3 shadow-sm min-w-0">
+                          <div className="w-8 h-8 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center shrink-0">
+                            <Orbit size={18} />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="text-[10px] uppercase font-mono tracking-wider text-slate-500 font-bold truncate">
+                              Trạng thái lai hóa orbital
+                            </div>
+                            <div className="text-xs font-bold text-slate-800 mt-0.5 break-words">
+                              {material.molecularInfo.bonds.hybridization}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {material.molecularInfo.bonds.coordinationGeometry && (
+                        <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80 flex items-start gap-3 shadow-sm min-w-0">
+                          <div className="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center shrink-0">
+                            <Compass size={18} />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="text-[10px] uppercase font-mono tracking-wider text-slate-500 font-bold truncate">
+                              Hình học phối trí (Geometry)
+                            </div>
+                            <div className="text-xs font-bold text-slate-800 mt-0.5 break-words">
+                              {material.molecularInfo.bonds.coordinationGeometry}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {material.molecularInfo.bonds.interlayerForce && (
+                        <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80 flex items-start gap-3 sm:col-span-2 shadow-sm min-w-0">
+                          <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+                            <Layers3 size={18} />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="text-[10px] uppercase font-mono tracking-wider text-slate-500 font-bold truncate">
+                              Lực liên kết giữa các tầng lớp (Interlayer Force)
+                            </div>
+                            <div className="text-xs font-semibold text-slate-700 mt-0.5 leading-relaxed break-words">
+                              {material.molecularInfo.bonds.interlayerForce}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Scientific Deep-Dive Description */}
+                    {material.molecularInfo.bonds.descriptionVi && (
+                      <div className="p-3.5 sm:p-4 rounded-xl bg-blue-50/70 border border-blue-100 leading-relaxed text-xs sm:text-sm text-slate-700">
+                        <span className="font-bold text-blue-900 block mb-1">
+                          Giải thích cơ chế liên kết lượng tử:
+                        </span>
+                        {material.molecularInfo.bonds.descriptionVi}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* 2. Crystallographic Parameters */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <SpecCard
+                      icon={Layers}
+                      label="Kiểu mạng tinh thể"
+                      value={material.molecularInfo.latticeType}
+                      iconBg="bg-blue-100"
+                      iconColor="text-blue-700"
+                    />
+                    <SpecCard
+                      icon={Compass}
+                      label="Hệ tinh thể"
+                      value={material.molecularInfo.crystalSystem}
+                      iconBg="bg-indigo-100"
+                      iconColor="text-indigo-700"
+                    />
+                    <SpecCard
+                      icon={Activity}
+                      label="Độ dài liên kết"
+                      value={material.molecularInfo.bondLength}
+                      iconBg="bg-sky-100"
+                      iconColor="text-sky-700"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* ══════════════════════════════════════════════════════════════════
+                  TAB 2: CHỈ SỐ CƠ - LÝ - HÓA ĐỊNH LƯỢNG
+              ══════════════════════════════════════════════════════════════════ */}
+              {activeTab === 'metrics' && (
+                <div className="space-y-4">
+                  <div className="p-4 sm:p-5 rounded-2xl bg-white border border-slate-200/90 space-y-4 shadow-sm">
+                    <div className="flex items-center gap-3 border-b border-slate-100 pb-3">
+                      <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 text-white flex items-center justify-center font-black shadow-md shadow-amber-500/20 shrink-0">
+                        <BarChart3 size={22} />
+                      </div>
+                      <div>
+                        <span className="text-[10px] font-mono uppercase tracking-widest text-amber-600 font-extrabold block">
+                          Chỉ số định lượng chuẩn hóa
+                        </span>
+                        <h4 className="text-sm sm:text-base font-extrabold text-slate-900">
+                          Cơ tính & Đặc tính vật lý (Thang điểm 0 - 100)
+                        </h4>
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      <MetricRow
+                        label="Độ cứng & Bền cơ học"
+                        score={material.metrics.hardness}
+                        barGradient="from-blue-600 via-sky-500 to-cyan-400"
+                        textColor="text-blue-700"
+                        note={material.macroInfo.mechanicalStrength}
+                      />
+                      <MetricRow
+                        label="Độ dẫn nhiệt"
+                        score={material.metrics.thermal}
+                        barGradient="from-amber-500 via-orange-400 to-yellow-400"
+                        textColor="text-amber-700"
+                        note={material.macroInfo.thermalConductivity}
+                      />
+                      <MetricRow
+                        label="Độ dẫn điện"
+                        score={material.metrics.electrical}
+                        barGradient="from-blue-500 via-indigo-400 to-sky-400"
+                        textColor="text-blue-700"
+                        note={material.macroInfo.electricalConductivity}
+                      />
+                      <MetricRow
+                        label="Khối lượng riêng"
+                        score={material.metrics.density}
+                        barGradient="from-purple-500 via-fuchsia-400 to-indigo-400"
+                        textColor="text-purple-700"
+                        note={material.macroInfo.density}
+                      />
+                      <MetricRow
+                        label="Độ trơ hóa học & Chống ăn mòn"
+                        score={material.metrics.corrosion}
+                        barGradient="from-emerald-500 via-teal-400 to-green-400"
+                        textColor="text-emerald-700"
+                        note={`${material.metrics.corrosion} / 100 - Khả năng chống chịu axit, kiềm và oxi hóa`}
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* ══════════════════════════════════════════════════════════════════
+                  TAB 3: ỨNG DỤNG ĐỘT PHÁ & BỐI CẢNH ĐỜI SỐNG THỰC TẾ
+              ══════════════════════════════════════════════════════════════════ */}
+              {activeTab === 'apps' && (
+                <div className="space-y-4">
+                  <div>
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3 flex items-center gap-2">
+                      <Sparkles size={15} className="text-blue-600" />
+                      Các lĩnh vực ứng dụng then chốt của {material.nameVi}
+                    </h4>
+                    <div className="grid grid-cols-1 gap-3">
+                      {material.macroInfo.applications.map((app, i) => (
+                        <div
+                          key={i}
+                          className="p-4 rounded-2xl bg-white border border-slate-200/90 flex items-start gap-3.5 hover:border-blue-300 transition-colors shadow-sm"
+                        >
+                          <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center font-black shrink-0 mt-0.5 border border-blue-200/60">
+                            <CheckCircle2 size={18} />
+                          </div>
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2">
+                              <span className="text-[10px] font-mono uppercase tracking-wider text-blue-600 font-extrabold block">
+                                Ứng dụng trọng tâm #{i + 1}
+                              </span>
+                              <span className="text-[9px] px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200 font-bold">
+                                Thực tiễn
+                              </span>
+                            </div>
+                            <p className="text-xs sm:text-sm text-slate-800 font-semibold leading-relaxed mt-1">
+                              {app}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Technology Classification Banner */}
+                  <div className="p-4 sm:p-5 rounded-2xl bg-white border border-slate-200/90 space-y-2.5 shadow-sm">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-mono uppercase tracking-wider text-slate-500 font-bold flex items-center gap-1.5">
+                        <Award size={14} className="text-blue-600" />
+                        Phân loại Khoa học & Công nghệ Vật liệu
+                      </span>
+                      <span
+                        className={`px-3 py-1 rounded-full text-xs font-bold border shadow-sm ${theme.badge}`}
+                      >
+                        {material.categoryLabel}
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-600 leading-relaxed">
+                      Sự kết hợp giữa liên kết hóa học{' '}
+                      <strong className="text-slate-900">{material.molecularInfo.bonds.type}</strong> và cấu trúc ô mạng{' '}
+                      <strong className="text-blue-700">{material.molecularInfo.latticeType}</strong> tạo nên những đặc tính cơ lý vượt trội, giúp vật liệu đóng vai trò nền tảng trong đời sống và các ngành công nghệ cao.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* ══════════════════════════════════════════════════════════════════
+                  TAB 4: SO SÁNH ĐỐI CHIẾU (DUAL MATRIX - SYNCHRONIZED TAB)
+              ══════════════════════════════════════════════════════════════════ */}
+              {activeTab === 'compare' && (
+                <div className="space-y-5">
+                  {/* Selectors Bar */}
+                  <div className="grid grid-cols-1 md:grid-cols-[1fr,auto,1fr] gap-2.5 sm:gap-3 p-3 rounded-2xl bg-white border border-slate-200 items-center shadow-sm">
+                    {/* Material A */}
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2.5 bg-blue-50/50 p-2.5 rounded-xl border border-blue-200/60 min-w-0">
+                      <div className="flex items-center gap-2 min-w-0 flex-1">
+                        <MaterialBadge material={matA} size="sm" />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="text-[9px] uppercase font-mono tracking-widest text-blue-700 font-bold block">
+                              VẬT LIỆU A
+                            </span>
+                            <span className="text-[9px] px-2 py-0.2 rounded-full bg-blue-100 text-blue-800 border border-blue-200 font-bold truncate">
+                              {matA.categoryLabel}
+                            </span>
+                          </div>
+                          <select
+                            value={compareMaterialA}
+                            onChange={(e) => {
+                              sound.playClick();
+                              setCompareMaterialA(e.target.value);
+                            }}
+                            className="w-full bg-white text-slate-800 font-bold text-xs focus:outline-none cursor-pointer mt-0.5 px-2 py-1 rounded border border-slate-200 truncate"
+                          >
+                            {MATERIALS.map((m) => (
+                              <option key={`opt-a-${m.id}`} value={m.id} className="text-slate-800 font-bold">
+                                {m.nameVi} ({m.formula})
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => {
+                          sound.playClick();
+                          setSelectedMaterial(matA.id);
+                        }}
+                        className="px-2.5 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-extrabold uppercase tracking-wider shrink-0 transition-transform active:scale-95 shadow-sm self-end sm:self-auto cursor-pointer"
+                        title="Đặt vật liệu A làm mô hình 3D chính"
+                        type="button"
+                      >
+                        XEM 3D
+                      </button>
+                    </div>
+
+                    {/* Swap */}
+                    <div className="flex justify-center my-0.5 md:my-0">
+                      <button
+                        onClick={() => {
+                          sound.playClick();
+                          swapCompareMaterials();
+                        }}
+                        className="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-blue-600 flex items-center justify-center transition-all hover:scale-105 active:rotate-180 cursor-pointer"
+                        title="Đổi chỗ hai vật liệu"
+                        type="button"
+                      >
+                        <ArrowRightLeft size={15} />
+                      </button>
+                    </div>
+
+                    {/* Material B */}
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2.5 bg-indigo-50/50 p-2.5 rounded-xl border border-indigo-200/60 min-w-0">
+                      <div className="flex items-center gap-2 min-w-0 flex-1">
+                        <MaterialBadge material={matB} size="sm" />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="text-[9px] uppercase font-mono tracking-widest text-indigo-700 font-bold block">
+                              VẬT LIỆU B
+                            </span>
+                            <span className="text-[9px] px-2 py-0.2 rounded-full bg-indigo-100 text-indigo-800 border border-indigo-200 font-bold truncate">
+                              {matB.categoryLabel}
+                            </span>
+                          </div>
+                          <select
+                            value={compareMaterialB}
+                            onChange={(e) => {
+                              sound.playClick();
+                              setCompareMaterialB(e.target.value);
+                            }}
+                            className="w-full bg-white text-slate-800 font-bold text-xs focus:outline-none cursor-pointer mt-0.5 px-2 py-1 rounded border border-slate-200 truncate"
+                          >
+                            {MATERIALS.map((m) => (
+                              <option key={`opt-b-${m.id}`} value={m.id} className="text-slate-800 font-bold">
+                                {m.nameVi} ({m.formula})
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => {
+                          sound.playClick();
+                          setSelectedMaterial(matB.id);
+                        }}
+                        className="px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-[10px] font-extrabold uppercase tracking-wider shrink-0 transition-transform active:scale-95 shadow-sm self-end sm:self-auto cursor-pointer"
+                        title="Đặt vật liệu B làm mô hình 3D chính"
+                        type="button"
+                      >
+                        XEM 3D
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Dual 3D View Toggle */}
+                  <div className="flex items-center justify-between p-3 rounded-xl bg-white border border-slate-200 shadow-sm">
+                    <span className="text-xs text-slate-700">
+                      Chế độ quan sát 3D: <strong className="text-slate-900">{isDual3DView ? 'Xem hai mô hình song song' : 'Xem mô hình đơn'}</strong>
+                    </span>
+                    <button
+                      onClick={() => {
+                        sound.playClick();
+                        setIsDual3DView(!isDual3DView);
+                      }}
+                      className={`px-3 py-1.5 text-xs font-bold rounded-xl border transition-all cursor-pointer ${
+                        isDual3DView
+                          ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
+                          : 'bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200'
+                      }`}
+                      type="button"
+                    >
+                      {isDual3DView ? 'Tắt xem kép 3D' : 'Bật xem kép 3D'}
+                    </button>
+                  </div>
+
+                  {/* SECTION 1: Bond & Lattice Matrix */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                    {/* Material A Card */}
+                    <div className="p-3.5 sm:p-4 rounded-2xl bg-white border border-blue-200/80 space-y-3 min-w-0 shadow-sm">
+                      <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <MaterialBadge material={matA} size="sm" />
+                          <div className="min-w-0">
+                            <span className="text-xs font-black text-slate-900 block truncate">{matA.nameVi}</span>
+                            <span className="text-[10px] font-mono text-slate-500 block truncate">{matA.formula} · {matA.categoryLabel}</span>
+                          </div>
+                        </div>
+                        {matA.molecularInfo.bonds.bondEnergy && (
+                          <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-lg bg-blue-50 text-blue-700 border border-blue-200 shrink-0 ml-1">
+                            {matA.molecularInfo.bonds.bondEnergy}
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200">
+                        <span className="text-[9px] uppercase font-mono tracking-wider text-blue-600 font-extrabold block">
+                          Kiểu liên kết cốt lõi
+                        </span>
+                        <strong className="text-xs sm:text-sm text-slate-800 block mt-0.5 break-words">
+                          {matA.molecularInfo.bonds.type}
+                        </strong>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2 text-xs">
+                        <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200 min-w-0">
+                          <span className="text-[9px] text-slate-500 uppercase font-mono font-bold block truncate">
+                            Kiểu mạng
+                          </span>
+                          <strong className="text-slate-800 block mt-0.5 text-[11px] sm:text-xs break-words">
+                            {matA.molecularInfo.latticeType}
+                          </strong>
+                        </div>
+                        <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200 min-w-0">
+                          <span className="text-[9px] text-slate-500 uppercase font-mono font-bold block truncate">
+                            Hệ tinh thể
+                          </span>
+                          <strong className="text-slate-800 block mt-0.5 text-[11px] sm:text-xs break-words">
+                            {matA.molecularInfo.crystalSystem}
+                          </strong>
+                        </div>
+                        <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200 min-w-0">
+                          <span className="text-[9px] text-slate-500 uppercase font-mono font-bold block truncate">
+                            Độ dài liên kết
+                          </span>
+                          <span className="font-mono text-blue-700 font-bold block mt-0.5 text-[11px] sm:text-xs truncate">
+                            {matA.molecularInfo.bondLength}
+                          </span>
+                        </div>
+                        <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200 min-w-0">
+                          <span className="text-[9px] text-slate-500 uppercase font-mono font-bold block truncate">
+                            Góc liên kết
+                          </span>
+                          <span className="font-mono text-blue-700 font-bold block mt-0.5 text-[11px] sm:text-xs truncate">
+                            {matA.molecularInfo.bondAngle}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Material B Card */}
+                    <div className="p-3.5 sm:p-4 rounded-2xl bg-white border border-indigo-200/80 space-y-3 min-w-0 shadow-sm">
+                      <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <MaterialBadge material={matB} size="sm" />
+                          <div className="min-w-0">
+                            <span className="text-xs font-black text-slate-900 block truncate">{matB.nameVi}</span>
+                            <span className="text-[10px] font-mono text-slate-500 block truncate">{matB.formula} · {matB.categoryLabel}</span>
+                          </div>
+                        </div>
+                        {matB.molecularInfo.bonds.bondEnergy && (
+                          <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-lg bg-indigo-50 text-indigo-700 border border-indigo-200 shrink-0 ml-1">
+                            {matB.molecularInfo.bonds.bondEnergy}
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200">
+                        <span className="text-[9px] uppercase font-mono tracking-wider text-indigo-600 font-extrabold block">
+                          Kiểu liên kết cốt lõi
+                        </span>
+                        <strong className="text-xs sm:text-sm text-slate-800 block mt-0.5 break-words">
+                          {matB.molecularInfo.bonds.type}
+                        </strong>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2 text-xs">
+                        <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200 min-w-0">
+                          <span className="text-[9px] text-slate-500 uppercase font-mono font-bold block truncate">
+                            Kiểu mạng
+                          </span>
+                          <strong className="text-slate-800 block mt-0.5 text-[11px] sm:text-xs break-words">
+                            {matB.molecularInfo.latticeType}
+                          </strong>
+                        </div>
+                        <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200 min-w-0">
+                          <span className="text-[9px] text-slate-500 uppercase font-mono font-bold block truncate">
+                            Hệ tinh thể
+                          </span>
+                          <strong className="text-slate-800 block mt-0.5 text-[11px] sm:text-xs break-words">
+                            {matB.molecularInfo.crystalSystem}
+                          </strong>
+                        </div>
+                        <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200 min-w-0">
+                          <span className="text-[9px] text-slate-500 uppercase font-mono font-bold block truncate">
+                            Độ dài liên kết
+                          </span>
+                          <span className="font-mono text-indigo-700 font-bold block mt-0.5 text-[11px] sm:text-xs truncate">
+                            {matB.molecularInfo.bondLength}
+                          </span>
+                        </div>
+                        <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200 min-w-0">
+                          <span className="text-[9px] text-slate-500 uppercase font-mono font-bold block truncate">
+                            Góc liên kết
+                          </span>
+                          <span className="font-mono text-indigo-700 font-bold block mt-0.5 text-[11px] sm:text-xs truncate">
+                            {matB.molecularInfo.bondAngle}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* SECTION 2: Quantitative Metrics Comparison */}
+                  <div className="space-y-3">
+                    <span className="text-xs font-mono uppercase tracking-wider text-slate-500 block font-bold">
+                      ĐỐI CHIẾU 5 CHỈ SỐ CƠ - LÝ - HÓA (0 - 100)
+                    </span>
+                    {metricsConfig.map((metric) => {
+                      const Icon = metric.icon;
+                      const delta = metric.valA - metric.valB;
+                      return (
+                        <div key={`compare-metric-${metric.key}`} className="p-3.5 rounded-xl bg-white border border-slate-200 space-y-2 shadow-sm">
+                          <div className="flex items-center justify-between text-xs">
+                            <div className="flex items-center gap-2">
+                              <Icon size={15} className="text-slate-500" />
+                              <span className="font-bold text-slate-800">{metric.label}</span>
+                            </div>
+                            <span className="text-[10px] font-mono text-slate-500">
+                              Chênh lệch: <strong className={delta > 0 ? 'text-blue-600' : delta < 0 ? 'text-indigo-600' : 'text-slate-500'}>{Math.abs(delta)} điểm</strong>
+                            </span>
+                          </div>
+                          <div className="grid grid-cols-2 gap-2 text-xs">
+                            <div className="space-y-1">
+                              <div className="flex justify-between text-[11px] text-slate-700">
+                                <span className="truncate font-semibold">{matA.nameVi}</span>
+                                <span className="font-mono font-bold shrink-0 text-blue-700">{metric.valA}</span>
+                              </div>
+                              <div className="h-2 rounded-full bg-slate-100 overflow-hidden border border-slate-200">
+                                <div className="h-full rounded-full bg-blue-600" style={{ width: `${metric.valA}%` }} />
+                              </div>
+                              <div className="text-[9px] text-slate-500 truncate">{metric.textA}</div>
+                            </div>
+                            <div className="space-y-1">
+                              <div className="flex justify-between text-[11px] text-slate-700">
+                                <span className="truncate font-semibold">{matB.nameVi}</span>
+                                <span className="font-mono font-bold shrink-0 text-indigo-700">{metric.valB}</span>
+                              </div>
+                              <div className="h-2 rounded-full bg-slate-100 overflow-hidden border border-slate-200">
+                                <div className="h-full rounded-full bg-indigo-600" style={{ width: `${metric.valB}%` }} />
+                              </div>
+                              <div className="text-[9px] text-slate-500 truncate">{metric.textB}</div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* SECTION 3: Applications Comparison */}
+                  <div className="space-y-3">
+                    <span className="text-xs font-mono uppercase tracking-wider text-slate-500 block font-bold">
+                      ỨNG DỤNG THỰC TIỄN & ĐỘT PHÁ CÔNG NGHỆ
+                    </span>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                      <div className="p-3.5 rounded-2xl bg-white border border-blue-200/80 space-y-2 shadow-sm">
+                        <span className="text-[11px] font-black text-blue-700 uppercase font-mono block">
+                          Ứng dụng của {matA.nameVi}
+                        </span>
+                        <ul className="space-y-1.5 text-xs text-slate-700">
+                          {matA.macroInfo.applications.map((app, idx) => (
+                            <li key={`app-a-${idx}`} className="flex items-start gap-2">
+                              <CheckCircle2 size={13} className="text-blue-600 shrink-0 mt-0.5" />
+                              <span className="leading-snug">{app}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+
+                      <div className="p-3.5 rounded-2xl bg-white border border-indigo-200/80 space-y-2 shadow-sm">
+                        <span className="text-[11px] font-black text-indigo-700 uppercase font-mono block">
+                          Ứng dụng của {matB.nameVi}
+                        </span>
+                        <ul className="space-y-1.5 text-xs text-slate-700">
+                          {matB.macroInfo.applications.map((app, idx) => (
+                            <li key={`app-b-${idx}`} className="flex items-start gap-2">
+                              <CheckCircle2 size={13} className="text-indigo-600 shrink-0 mt-0.5" />
+                              <span className="leading-snug">{app}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer Controls */}
+            <div className="px-3.5 sm:px-6 py-3 border-t border-slate-200 bg-slate-50 flex items-center justify-between gap-3 shrink-0">
+              <button
+                onClick={() => {
+                  sound.playClick();
+                  if (activeTab === 'compare') {
+                    setActiveTab('bonds');
+                  } else {
+                    setActiveTab('compare');
+                  }
+                }}
+                className="py-2.5 px-4 sm:px-5 rounded-xl bg-white hover:bg-slate-100 text-slate-700 font-bold text-xs uppercase tracking-wider flex items-center gap-2 border border-slate-200 shadow-sm transition-all min-h-[44px] cursor-pointer"
+                type="button"
+              >
+                <ArrowRightLeft size={15} className="text-blue-600" />
+                <span>{activeTab === 'compare' ? 'Về Hồ sơ Cấu trúc' : 'So sánh Đối chiếu'}</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  sound.playClick();
+                  setIsDetailOpen(false);
+                }}
+                className="py-2.5 px-5 sm:px-6 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs uppercase tracking-wider transition-all active:scale-95 shadow-md shadow-blue-500/20 min-h-[44px] cursor-pointer"
+                type="button"
+              >
+                Đóng
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </AnimatePresence>
   );
 }
@@ -602,16 +949,16 @@ function TabButton({
   return (
     <button
       onClick={onClick}
-      className={`py-2 px-2 sm:px-3 text-xs font-bold border rounded-xl transition-all flex items-center justify-center gap-1.5 min-w-0 ${
+      className={`py-2 px-1.5 sm:px-3 text-xs font-bold border rounded-xl transition-all flex items-center justify-center gap-1.5 min-w-0 min-h-[40px] cursor-pointer ${
         active
           ? `${activeColor}`
-          : 'border-slate-800 bg-slate-900/40 text-slate-400 hover:text-white hover:bg-slate-800/60'
+          : 'border-slate-200 bg-white text-slate-600 hover:text-slate-900 hover:bg-slate-100'
       }`}
       type="button"
     >
-      <Icon size={16} className="shrink-0" />
-      <span className="hidden sm:inline truncate">{label}</span>
-      <span className="sm:hidden truncate text-[11px]">{mobileLabel}</span>
+      <Icon size={15} className="shrink-0" />
+      <span className="hidden md:inline truncate">{label}</span>
+      <span className="md:hidden truncate text-[11px]">{mobileLabel}</span>
     </button>
   );
 }
@@ -620,31 +967,27 @@ function SpecCard({
   icon: Icon,
   label,
   value,
-  gradient,
-  borderColor,
   iconBg,
   iconColor,
 }: {
   icon: React.ElementType;
   label: string;
   value: string;
-  gradient: string;
-  borderColor: string;
   iconBg: string;
   iconColor: string;
 }) {
   return (
     <div
-      className={`p-3.5 rounded-2xl bg-gradient-to-br ${gradient} border-2 ${borderColor} flex items-start gap-3 shadow-md`}
+      className="p-3.5 rounded-2xl bg-white border border-slate-200/90 flex items-start gap-3 shadow-sm min-w-0"
     >
       <div className={`w-9 h-9 rounded-xl ${iconBg} ${iconColor} flex items-center justify-center shrink-0 shadow-sm`}>
         <Icon size={19} />
       </div>
       <div className="min-w-0 flex-1">
-        <span className="text-[10px] uppercase font-mono tracking-wider text-slate-400 font-bold block">
+        <span className="text-[10px] uppercase font-mono tracking-wider text-slate-500 font-bold block truncate">
           {label}
         </span>
-        <strong className="text-xs sm:text-sm text-white font-bold block mt-0.5 leading-snug">
+        <strong className="text-xs sm:text-sm text-slate-800 font-bold block mt-0.5 leading-snug break-words">
           {value}
         </strong>
       </div>
@@ -666,15 +1009,15 @@ function MetricRow({
   note: string;
 }) {
   return (
-    <div className="space-y-1.5">
-      <div className="flex items-center justify-between text-xs">
-        <span className="text-slate-200 font-semibold">{label}</span>
-        <span className={`font-mono font-black ${textColor}`}>
+    <div className="space-y-1.5 min-w-0">
+      <div className="flex items-center justify-between text-xs min-w-0 gap-2">
+        <span className="text-slate-800 font-bold truncate">{label}</span>
+        <span className={`font-mono font-black shrink-0 ${textColor}`}>
           {score}
-          <span className="text-slate-500 font-normal text-[10px]"> / 100</span>
+          <span className="text-slate-400 font-normal text-[10px]"> / 100</span>
         </span>
       </div>
-      <div className="h-2.5 rounded-full bg-slate-800 overflow-hidden p-0.5 border border-slate-700/60">
+      <div className="h-2.5 rounded-full bg-slate-100 overflow-hidden p-0.5 border border-slate-200">
         <motion.div
           initial={{ width: 0 }}
           animate={{ width: `${score}%` }}
@@ -682,7 +1025,7 @@ function MetricRow({
           className={`h-full rounded-full bg-gradient-to-r ${barGradient} shadow-sm`}
         />
       </div>
-      <div className="text-[11px] text-slate-400 italic leading-tight">{note}</div>
+      <div className="text-[11px] text-slate-500 italic leading-tight break-words">{note}</div>
     </div>
   );
 }

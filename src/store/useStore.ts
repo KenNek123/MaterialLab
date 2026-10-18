@@ -156,6 +156,8 @@ export interface InspectedAtom {
   index: number;
 }
 
+export type GraphicsQuality = 'low' | 'medium' | 'high';
+
 export interface StoreState {
   selectedMaterial: string;
   cameraDistance: number;
@@ -166,7 +168,8 @@ export interface StoreState {
   userAutoRotate: boolean;
   showSidebar: boolean;
   isDetailOpen: boolean;
-  graphicsQuality: 'low' | 'high';
+  detailTab: 'bonds' | 'metrics' | 'apps' | 'compare';
+  graphicsQuality: GraphicsQuality;
 
   // Comparison mode state
   isCompareOpen: boolean;
@@ -183,6 +186,7 @@ export interface StoreState {
 
   // Cinematic Multi-Scale Auto-Tour
   isTourActive: boolean;
+  isTourPaused: boolean;
   tourPhase: 'macro' | 'micro' | 'molecular';
   tourProgress: number; // 0 to 1
 
@@ -198,7 +202,24 @@ export interface StoreState {
   snapshotFlash: boolean;
   isCapturingSnapshot: boolean;
 
+  // Zen Mode & Mobile UI States
+  isZenMode: boolean;
+  showZoomControls: boolean;
+  isToolbarOpen: boolean;
+  isBottomSheetOpen: boolean;
+  isBottomDockHidden: boolean;
+  setIsBottomDockHidden: (v: boolean) => void;
+  toggleBottomDockHidden: () => void;
+
+  isRightDockHidden: boolean;
+  setIsRightDockHidden: (v: boolean) => void;
+  toggleRightDockHidden: () => void;
+
+  isMaterialCardVisible: boolean;
+
   // Actions
+  setIsBottomSheetOpen: (v: boolean) => void;
+  toggleBottomSheet: () => void;
   setSelectedMaterial: (id: string) => void;
   setCameraDistance: (d: number) => void;
   setActiveLayer: (layer: ZoomLayer) => void;
@@ -208,7 +229,7 @@ export interface StoreState {
   toggleAutoRotate: () => void;
   setShowSidebar: (v: boolean) => void;
   setIsDetailOpen: (v: boolean) => void;
-  setGraphicsQuality: (q: 'low' | 'high') => void;
+  setGraphicsQuality: (q: GraphicsQuality) => void;
   toggleGraphicsQuality: () => void;
   setStructureLayerCount: (count: 1 | 2 | 3) => void;
   toggleSound: () => void;
@@ -219,9 +240,13 @@ export interface StoreState {
   setCompareMaterialB: (id: string) => void;
   setIsDual3DView: (v: boolean) => void;
   swapCompareMaterials: () => void;
+  setDetailTab: (tab: 'bonds' | 'metrics' | 'apps' | 'compare') => void;
+  openDetailTab: (tab: 'bonds' | 'metrics' | 'apps' | 'compare') => void;
 
   // Tour actions
   setIsTourActive: (v: boolean) => void;
+  setIsTourPaused: (v: boolean) => void;
+  toggleTourPause: () => void;
   toggleTour: () => void;
   setTourPhase: (phase: 'macro' | 'micro' | 'molecular') => void;
   setTourProgress: (progress: number) => void;
@@ -237,6 +262,16 @@ export interface StoreState {
   triggerSnapshot: () => void;
   setSnapshotFlash: (v: boolean) => void;
   setIsCapturingSnapshot: (v: boolean) => void;
+
+  // Zen Mode & Mobile UI Actions
+  toggleZenMode: () => void;
+  setIsZenMode: (v: boolean) => void;
+  toggleZoomControls: () => void;
+  setShowZoomControls: (v: boolean) => void;
+  toggleToolbar: () => void;
+  setIsToolbarOpen: (v: boolean) => void;
+  toggleMaterialCardVisible: () => void;
+  setIsMaterialCardVisible: (v: boolean) => void;
 
   // Central Reset & Clean-up Protocol
   resetInteractionAndViewStates: () => void;
@@ -260,7 +295,19 @@ export const useStore = create<StoreState>((set) => ({
   userAutoRotate: true,
   showSidebar: false,
   isDetailOpen: false,
-  graphicsQuality: 'low',
+  graphicsQuality: (() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem('dml_graphics_quality_v2') as GraphicsQuality | null;
+        if (saved === 'low' || saved === 'medium' || saved === 'high') {
+          return saved;
+        }
+      } catch {
+        // Fallback
+      }
+    }
+    return 'high';
+  })(),
   structureLayerCount: 1,
   soundEnabled: false,
   cameraAngle: 'iso',
@@ -269,9 +316,11 @@ export const useStore = create<StoreState>((set) => ({
   compareMaterialA: 'diamond',
   compareMaterialB: 'gold',
   isDual3DView: false,
+  detailTab: 'bonds',
 
   // Cinematic Tour Initial State
   isTourActive: false,
+  isTourPaused: false,
   tourPhase: 'macro',
   tourProgress: 0,
 
@@ -287,6 +336,12 @@ export const useStore = create<StoreState>((set) => ({
   snapshotFlash: false,
   isCapturingSnapshot: false,
 
+  // Zen Mode & Mobile UI Initial State
+  isZenMode: false,
+  showZoomControls: true,
+  isToolbarOpen: false,
+  isMaterialCardVisible: true,
+
   // Protocol Rule: Central clean-up whenever switching materials
   resetInteractionAndViewStates: () =>
     set({
@@ -294,7 +349,9 @@ export const useStore = create<StoreState>((set) => ({
       isCompareOpen: false,
       inspectedAtom: null,
       isTourActive: false,
+      isTourPaused: false,
       isDetailOpen: false,
+      detailTab: 'bonds',
     }),
 
   // Protocol Rule: Reset old states completely in single atomic call
@@ -306,6 +363,8 @@ export const useStore = create<StoreState>((set) => ({
       isCompareOpen: false,
       isDetailOpen: false,
       isTourActive: false,
+      isTourPaused: false,
+      detailTab: 'bonds',
     }),
 
   // Protocol Rule: Reset atom inspection when changing zoom layer
@@ -336,16 +395,40 @@ export const useStore = create<StoreState>((set) => ({
     }),
   setShowSidebar: (v) => set({ showSidebar: v }),
   setIsDetailOpen: (v) => set({ isDetailOpen: v }),
-  setGraphicsQuality: (q) => set({ graphicsQuality: q }),
+  setGraphicsQuality: (q) => {
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('dml_graphics_quality_v2', q);
+      } catch {
+        // Fallback
+      }
+    }
+    set({ graphicsQuality: q });
+  },
   toggleGraphicsQuality: () =>
-    set((state) => ({
-      graphicsQuality: state.graphicsQuality === 'low' ? 'high' : 'low',
-    })),
+    set((state) => {
+      const order: GraphicsQuality[] = ['high', 'medium', 'low'];
+      const nextIdx = (order.indexOf(state.graphicsQuality) + 1) % order.length;
+      const next = order[nextIdx];
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.setItem('dml_graphics_quality_v2', next);
+        } catch {
+          // Fallback
+        }
+      }
+      return { graphicsQuality: next };
+    }),
   setStructureLayerCount: (count) => set({ structureLayerCount: count }),
   toggleSound: () => set({ soundEnabled: false }),
   setCameraAngle: (angle) => set({ cameraAngle: angle }),
 
-  setIsCompareOpen: (v) => set({ isCompareOpen: v }),
+  setIsCompareOpen: (v) =>
+    set({
+      isCompareOpen: v,
+      isDetailOpen: v,
+      detailTab: v ? 'compare' : 'bonds',
+    }),
   setCompareMaterialA: (id) => set({ compareMaterialA: id }),
   setCompareMaterialB: (id) => set({ compareMaterialB: id }),
   setIsDual3DView: (v) => set({ isDual3DView: v }),
@@ -354,14 +437,24 @@ export const useStore = create<StoreState>((set) => ({
       compareMaterialA: state.compareMaterialB,
       compareMaterialB: state.compareMaterialA,
     })),
+  setDetailTab: (tab) => set({ detailTab: tab }),
+  openDetailTab: (tab) =>
+    set({
+      isDetailOpen: true,
+      isCompareOpen: tab === 'compare',
+      detailTab: tab,
+    }),
 
   // Tour
-  setIsTourActive: (v) => set({ isTourActive: v }),
+  setIsTourActive: (v) => set({ isTourActive: v, isTourPaused: false }),
+  setIsTourPaused: (v) => set({ isTourPaused: v }),
+  toggleTourPause: () => set((state) => ({ isTourPaused: !state.isTourPaused })),
   toggleTour: () =>
     set((state) => {
       const next = !state.isTourActive;
       return {
         isTourActive: next,
+        isTourPaused: false,
         tourProgress: 0,
         tourPhase: 'macro',
         autoRotate: next ? false : state.userAutoRotate,
@@ -381,4 +474,23 @@ export const useStore = create<StoreState>((set) => ({
   triggerSnapshot: () => set((state) => ({ snapshotTrigger: state.snapshotTrigger + 1 })),
   setSnapshotFlash: (v) => set({ snapshotFlash: v }),
   setIsCapturingSnapshot: (v) => set({ isCapturingSnapshot: v }),
+
+  // Zen Mode & Mobile UI Reducers
+  toggleZenMode: () => set((state) => ({ isZenMode: !state.isZenMode })),
+  setIsZenMode: (v) => set({ isZenMode: v }),
+  toggleZoomControls: () => set((state) => ({ showZoomControls: !state.showZoomControls })),
+  setShowZoomControls: (v) => set({ showZoomControls: v }),
+  toggleToolbar: () => set((state) => ({ isToolbarOpen: !state.isToolbarOpen })),
+  setIsToolbarOpen: (v) => set({ isToolbarOpen: v }),
+  isBottomSheetOpen: false,
+  setIsBottomSheetOpen: (v) => set({ isBottomSheetOpen: v }),
+  toggleBottomSheet: () => set((state) => ({ isBottomSheetOpen: !state.isBottomSheetOpen })),
+  isBottomDockHidden: false,
+  setIsBottomDockHidden: (v) => set({ isBottomDockHidden: v }),
+  toggleBottomDockHidden: () => set((state) => ({ isBottomDockHidden: !state.isBottomDockHidden })),
+  isRightDockHidden: false,
+  setIsRightDockHidden: (v) => set({ isRightDockHidden: v }),
+  toggleRightDockHidden: () => set((state) => ({ isRightDockHidden: !state.isRightDockHidden })),
+  toggleMaterialCardVisible: () => set((state) => ({ isMaterialCardVisible: !state.isMaterialCardVisible })),
+  setIsMaterialCardVisible: (v) => set({ isMaterialCardVisible: v }),
 }));

@@ -60,7 +60,8 @@ export function CrystallographyOverlays() {
     if (!groupRef.current) return;
     const op = Math.max(zoomState.microOpacity, zoomState.molecularOpacity);
     groupRef.current.visible = isVisible && op > 0.05;
-    const targetScale = activeLayer === 'micro' ? zoomState.microScale : zoomState.molecularScale;
+    // Smooth continuous scale following crystallography unit cell
+    const targetScale = zoomState.microScale;
     groupRef.current.scale.setScalar(targetScale);
   });
 

@@ -236,11 +236,21 @@ export default function ZoomScrubber() {
                   <div className="flex items-center gap-1">
                     {([1, 2, 3] as const).map((num) => {
                       const label =
-                        selectedMaterial === 'nanotube'
+                        selectedMaterial === 'cnt'
                           ? `${num}V`
+                          : ['teflon', 'rubber', 'kevlar'].includes(selectedMaterial)
+                          ? `${num}S`
                           : `${num}L`;
 
                       const isActive = structureLayerCount === num;
+                      const unitName =
+                        selectedMaterial === 'cnt'
+                          ? 'vách đồng trục (SWCNT/DWCNT/MWCNT)'
+                          : ['teflon', 'rubber', 'kevlar'].includes(selectedMaterial)
+                          ? 'chuỗi sợi phân tử'
+                          : selectedMaterial === 'buckyball'
+                          ? 'quả bóng C60 cụm Fullerite'
+                          : 'tầng/lớp tinh thể';
 
                       return (
                         <button
@@ -254,7 +264,7 @@ export default function ZoomScrubber() {
                               ? 'bg-[#58cc02] border-[#58cc02] border-b-[#46a302] text-white shadow-sm'
                               : 'bg-[#182830] border-[#283e4a] border-b-[#16242c] text-white/60 hover:text-white'
                           }`}
-                          title={`Cấu trúc ${num} ${selectedMaterial === 'nanotube' ? 'vách' : 'tầng/lớp'}`}
+                          title={`Cấu trúc ${num} ${unitName}`}
                         >
                           {label}
                         </button>

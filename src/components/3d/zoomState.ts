@@ -99,13 +99,25 @@ export function computeAndUpdateZoomState(distance: number) {
   const p = distanceToProgress(distance);
   zoomState.zoomProgress = p;
 
-  // Layer classification with hysteresis boundaries
-  if (p < 0.30) {
-    zoomState.layer = 'macro';
-  } else if (p < 0.70) {
-    zoomState.layer = 'micro';
+  // Real-time responsive layer classification with hysteresis:
+  // When zooming in: Macro -> Micro at p >= 0.28, Micro -> Molecular at p >= 0.65
+  // When zooming out: Molecular -> Micro at p <= 0.58, Micro -> Macro at p <= 0.22
+  const cur = zoomState.layer;
+  if (cur === 'macro') {
+    if (p >= 0.28) {
+      zoomState.layer = 'micro';
+    }
+  } else if (cur === 'micro') {
+    if (p < 0.22) {
+      zoomState.layer = 'macro';
+    } else if (p >= 0.65) {
+      zoomState.layer = 'molecular';
+    }
   } else {
-    zoomState.layer = 'molecular';
+    // cur === 'molecular'
+    if (p <= 0.58) {
+      zoomState.layer = 'micro';
+    }
   }
 
   // ── Phase 1: Pure Macro (p = 0 → 0.25) ────────────────────────────────────
@@ -115,9 +127,9 @@ export function computeAndUpdateZoomState(distance: number) {
     zoomState.macroScale = 1.0 + t * 0.08;
     zoomState.wireframeOpacity = t * 0.25;
     zoomState.microOpacity = 0.0;
-    zoomState.microScale = 0.45;
+    zoomState.microScale = THREE.MathUtils.lerp(0.45, 0.65, t);
     zoomState.molecularOpacity = 0.0;
-    zoomState.molecularScale = 0.12;
+    zoomState.molecularScale = 0.35;
 
     // PiP: micro starts to peek (thumbnail hint)
     zoomState.pipMicroProgress = t * 0.3;  // barely visible thumbnail
@@ -132,18 +144,18 @@ export function computeAndUpdateZoomState(distance: number) {
 
     // Macro dissolves cleanly before reaching micro layer (zero by rawT ~ 0.5 / p ~ 0.40)
     zoomState.macroOpacity = Math.max(0, 1.0 - smootherstep(rawT * 2.0));
-    zoomState.macroScale = 1.0 + s * 0.12;
+    zoomState.macroScale = 1.08 + s * 0.04;
 
     // Subtle energy wireframe shimmer dissolves completely by rawT ~ 0.5
-    zoomState.wireframeOpacity = rawT < 0.5 ? Math.max(0, Math.sin(rawT * 2.0 * Math.PI) * (1.0 - rawT * 2.0) * 0.3) : 0.0;
+    zoomState.wireframeOpacity = Math.max(0, (1.0 - rawT * 2.0) * 0.25);
 
     // Unit cell cage materializes
     zoomState.microOpacity = Math.pow(rawT, 0.65) * 0.95;
     zoomState.microScale = THREE.MathUtils.lerp(0.65, 1.0, s);
 
-    // Atoms start emerging from center
+    // Atoms emerge from center: smoothly reaches 0.72 at p = 0.55 (exact continuity with Phase 3!)
     zoomState.molecularOpacity = Math.max(0, (rawT - 0.4) / 0.6) * 0.65;
-    zoomState.molecularScale = THREE.MathUtils.lerp(0.35, 0.85, s);
+    zoomState.molecularScale = THREE.MathUtils.lerp(0.35, 0.72, s);
 
     // PiP: micro fully visible, nano thumbnail starts
     zoomState.pipMicroProgress = THREE.MathUtils.lerp(0.3, 1.0, s);
@@ -157,14 +169,14 @@ export function computeAndUpdateZoomState(distance: number) {
     const s = smootherstep(rawT);
 
     zoomState.macroOpacity = 0.0;
-    zoomState.macroScale = 1.0;
+    zoomState.macroScale = 1.12;
     zoomState.wireframeOpacity = 0.0;
 
     // Unit cell fades as atom lattice takes over
     zoomState.microOpacity = THREE.MathUtils.lerp(0.95, 0.15, s);
     zoomState.microScale = THREE.MathUtils.lerp(1.0, 1.25, s);
 
-    // Atom lattice expands from 0.55 to comfortable viewing scale
+    // Atom lattice expands seamlessly from 0.72 to 1.0 (Zero jump, butter smooth!)
     zoomState.molecularOpacity = THREE.MathUtils.lerp(0.65, 1.0, s);
     zoomState.molecularScale = THREE.MathUtils.lerp(0.72, 1.0, s);
 
@@ -180,7 +192,7 @@ export function computeAndUpdateZoomState(distance: number) {
     const s = smootherstep(rawT);
 
     zoomState.macroOpacity = 0.0;
-    zoomState.macroScale = 1.63;
+    zoomState.macroScale = 1.12;
     zoomState.wireframeOpacity = 0.0;
 
     zoomState.microOpacity = THREE.MathUtils.lerp(0.15, 0.0, s);

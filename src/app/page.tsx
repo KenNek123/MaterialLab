@@ -19,16 +19,18 @@ import {
   RotateCw,
   Search,
   SlidersHorizontal,
+  Square,
   X,
   Zap,
+  ChevronDown,
+  ChevronRight,
 } from 'lucide-react';
 import AtomInspectorModal from '@/components/ui/AtomInspectorModal';
-import CompareModal from '@/components/ui/CompareModal';
 import DetailModal from '@/components/ui/DetailModal';
 import MaterialBadge from '@/components/ui/MaterialBadge';
-import RightInfoPanel from '@/components/ui/RightInfoPanel';
+import RightActionDock from '@/components/ui/RightActionDock';
+import UnifiedBottomSheet from '@/components/ui/UnifiedBottomSheet';
 import TourOverlay from '@/components/ui/TourOverlay';
-import MobileZoomControls from '@/components/ui/MobileZoomControls';
 import { ZOOM_DIST } from '@/components/3d/zoomState';
 import { MATERIALS, MATERIAL_CATEGORIES, MATERIAL_MAP } from '@/data/materials';
 import { sound } from '@/lib/soundFx';
@@ -136,6 +138,7 @@ export default function HomePage() {
   const setZoomProgress = useStore((s: StoreState) => s.setZoomProgress);
   const setIsCompareOpen = useStore((s: StoreState) => s.setIsCompareOpen);
   const setIsDetailOpen = useStore((s: StoreState) => s.setIsDetailOpen);
+  const openDetailTab = useStore((s: StoreState) => s.openDetailTab);
   const isDual3DView = useStore((s: StoreState) => s.isDual3DView);
   const setIsDual3DView = useStore((s: StoreState) => s.setIsDual3DView);
   const isTourActive = useStore((s: StoreState) => s.isTourActive);
@@ -144,6 +147,7 @@ export default function HomePage() {
   const toggleAutoRotate = useStore((s: StoreState) => s.toggleAutoRotate);
   const graphicsQuality = useStore((s: StoreState) => s.graphicsQuality);
   const toggleGraphicsQuality = useStore((s: StoreState) => s.toggleGraphicsQuality);
+  const setGraphicsQuality = useStore((s: StoreState) => s.setGraphicsQuality);
   const triggerSnapshot = useStore((s: StoreState) => s.triggerSnapshot);
   const isCapturingSnapshot = useStore((s: StoreState) => s.isCapturingSnapshot);
   const cameraAngle = useStore((s: StoreState) => s.cameraAngle);
@@ -155,19 +159,36 @@ export default function HomePage() {
   const structureLayerCount = useStore((s: StoreState) => s.structureLayerCount);
   const setStructureLayerCount = useStore((s: StoreState) => s.setStructureLayerCount);
   const inspectedAtom = useStore((s: StoreState) => s.inspectedAtom);
+  const isZenMode = useStore((s: StoreState) => s.isZenMode);
 
   const [libraryOpen, setLibraryOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('all');
 
+  const compareMaterialA = useStore((s: StoreState) => s.compareMaterialA);
+  const compareMaterialB = useStore((s: StoreState) => s.compareMaterialB);
   const material = MATERIAL_MAP.get(selectedMaterial) ?? MATERIALS[0];
+  const matA = MATERIAL_MAP.get(compareMaterialA) ?? MATERIALS[0];
+  const matB = MATERIAL_MAP.get(compareMaterialB) ?? MATERIALS[1] ?? MATERIALS[0];
   const activeStage = STAGES.find((stage) => stage.id === activeLayer) ?? STAGES[0];
 
   // Protocol Rule: Central clean-up whenever selectedMaterial changes
   useEffect(() => {
     resetInteractionAndViewStates();
   }, [selectedMaterial, resetInteractionAndViewStates]);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('detail') === 'true') {
+        setIsDetailOpen(true);
+      }
+      if (params.get('zen') === 'true') {
+        useStore.getState().setIsZenMode(true);
+      }
+    }
+  }, [setIsDetailOpen]);
 
   const filteredMaterials = useMemo(() => {
     const keyword = search.trim().toLocaleLowerCase('vi');
@@ -217,147 +238,179 @@ export default function HomePage() {
       {/* 3D Scene */}
       <Scene3D />
 
-      {/* Top Header */}
-      <header className="app-header">
-        <div className="brand-lockup">
-          <span className="brand-mark">
+      {/* Top Header: Brand Lockup + Center Material Badge (Task 3) + 3 Action Buttons */}
+      <header className={`app-header ${isZenMode ? 'is-zen-hidden' : ''}`}>
+        {/* Full Brand Lockup: Digital Matter Lab & Nguyễn Văn Tài (Always fully visible on Desktop & Mobile) */}
+        <div className="brand-lockup shrink-0">
+          <span className="brand-mark shrink-0">
             <Atom size={22} />
           </span>
-          <div>
-            <h1>Digital Matter Lab</h1>
-            <p>Nguyễn Văn Tài</p>
+          <div className="brand-text">
+            <h1 className="brand-title">Digital Matter Lab</h1>
+            <p className="brand-author">Nguyễn Văn Tài</p>
           </div>
         </div>
 
-        <div className="header-context" aria-label="Ngữ cảnh vật liệu">
-          <MaterialBadge material={material} size="sm" />
-          <div>
-            <strong>{material.nameVi}</strong>
-            <small>
-              {activeStage.shortLabel} · {activeStage.scale}
-            </small>
-          </div>
+        {/* Center Container: Material Name Badge on Desktop (Header Centered) */}
+        <div className="header-material-center absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10 hidden min-[820px]:flex items-center justify-center max-w-[calc(100vw-360px)] md:max-w-[460px]">
+          {isDual3DView ? (
+            /* Dual / Compare View: 2 stacked rows with distinct color badges */
+            <div
+              onClick={() => {
+                sound.playClick();
+                setIsCompareOpen(true);
+              }}
+              className="flex flex-col items-center gap-0.5 bg-white/95 backdrop-blur-md px-3 py-1 rounded-xl border border-blue-200/90 shadow-sm cursor-pointer hover:border-blue-400 hover:shadow-md transition-all active:scale-95 pointer-events-auto"
+              title="Bấm để mở bảng so sánh đối chiếu"
+            >
+              <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-800">
+                <span className="inline-flex items-center px-1.5 py-0.2 text-[9px] font-extrabold rounded-full bg-blue-100 text-blue-800 border border-blue-300 shrink-0">
+                  A
+                </span>
+                <span className="truncate max-w-[120px] md:max-w-[180px]">{matA.nameVi}</span>
+                <span className="text-[10px] font-mono font-semibold text-blue-700 shrink-0">({matA.formula})</span>
+              </div>
+              <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-800">
+                <span className="inline-flex items-center px-1.5 py-0.2 text-[9px] font-extrabold rounded-full bg-indigo-100 text-indigo-800 border border-indigo-300 shrink-0">
+                  B
+                </span>
+                <span className="truncate max-w-[120px] md:max-w-[180px]">{matB.nameVi}</span>
+                <span className="text-[10px] font-mono font-semibold text-indigo-700 shrink-0">({matB.formula})</span>
+              </div>
+            </div>
+          ) : (
+            /* Single View: Material Name + Chemical Formula + Category Badge */
+            <div
+              onClick={() => {
+                sound.playClick();
+                setIsDetailOpen(true);
+              }}
+              className="flex items-center gap-1.5 md:gap-2 bg-white/95 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-blue-200/90 shadow-sm cursor-pointer hover:border-blue-400 hover:shadow-md transition-all active:scale-95 pointer-events-auto max-w-full"
+              title="Bấm để xem hồ sơ chi tiết vật liệu"
+            >
+              <span className="text-sm md:text-base select-none shrink-0">{material.icon}</span>
+              <span className="font-extrabold text-xs md:text-sm text-slate-900 truncate max-w-[120px] md:max-w-[220px]">
+                {material.nameVi}
+              </span>
+              <span className="font-mono text-[10px] md:text-[11px] font-bold text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-200/70 shrink-0">
+                {material.formula}
+              </span>
+              <span className="text-[10px] font-semibold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-full border border-slate-200 hidden lg:inline-block shrink-0">
+                {material.categoryLabel}
+              </span>
+              <ChevronRight size={14} className="text-blue-500 shrink-0 ml-0.5" />
+            </div>
+          )}
         </div>
 
+        {/* 3 Action Buttons on Top Bar: Vật liệu - Trình chiếu - Cài đặt */}
         <div className="header-actions">
+          {/* 1. Nút Vật liệu */}
           <button
-            className="header-button mobile-library-button"
-            onClick={() => setLibraryOpen(true)}
+            className={`header-button header-library-btn ${libraryOpen ? 'is-active' : ''}`}
+            onClick={() => {
+              sound.playClick();
+              setLibraryOpen((v) => !v);
+            }}
+            title="Mở thư viện 25 vật liệu"
             type="button"
+            aria-label="Vật liệu"
           >
-            <Library size={18} />
-            <span>Vật liệu ({MATERIALS.length})</span>
+            <Library size={18} className="text-blue-600 shrink-0" />
+            <span className="btn-label font-bold hidden md:inline">Vật liệu</span>
+            <span className="btn-count hidden lg:inline-block text-[10px] font-mono font-bold text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded-full border border-blue-200">
+              {MATERIALS.length}
+            </span>
           </button>
 
+          {/* 2. Nút Trình chiếu / Dừng */}
           <button
-            className={`header-button primary-action ${isTourActive ? 'is-playing' : ''}`}
+            className={`header-button header-tour-btn ${
+              isTourActive
+                ? 'is-tour-stop bg-rose-50 hover:bg-rose-100 text-rose-600 border-rose-200'
+                : ''
+            }`}
             onClick={() => {
               sound.playClick();
               toggleTour();
             }}
+            title={isTourActive ? 'Dừng chế độ trình chiếu (Thoát)' : 'Bật trình chiếu đa tầng'}
             type="button"
+            aria-label={isTourActive ? 'Dừng' : 'Trình chiếu'}
           >
-            {isTourActive ? <Pause size={18} /> : <Play size={18} />}
-            <span>{isTourActive ? 'Tạm dừng' : 'Trình chiếu'}</span>
+            {isTourActive ? (
+              <Square size={16} className="text-rose-600 fill-rose-600 shrink-0" />
+            ) : (
+              <Play size={18} className="text-blue-600 shrink-0" />
+            )}
+            <span className="btn-label font-bold hidden md:inline">
+              {isTourActive ? 'Dừng' : 'Trình chiếu'}
+            </span>
           </button>
 
-          {/* Settings button in top-right: strictly display configurations */}
-          <div className="tools-anchor">
-            <button
-              className={`icon-button ${settingsOpen ? 'is-active' : ''}`}
-              onClick={() => setSettingsOpen((v) => !v)}
-              title="Cài đặt hiển thị"
-              type="button"
-            >
-              <SlidersHorizontal size={19} />
-            </button>
-          </div>
+          {/* 3. Nút Cài đặt / Setting */}
+          <button
+            className={`header-button header-settings-btn ${settingsOpen ? 'is-active' : ''}`}
+            onClick={() => {
+              sound.playClick();
+              setSettingsOpen((v) => !v);
+            }}
+            title="Cài đặt hiển thị & Đồ họa"
+            type="button"
+            aria-label="Cài đặt"
+          >
+            <SlidersHorizontal size={18} className="text-slate-600 shrink-0" />
+            <span className="btn-label font-bold hidden md:inline">Cài đặt</span>
+          </button>
         </div>
       </header>
 
-      {/* Floating Action Dock (Requirement 4.2): Quick actions on left */}
-      <nav className="floating-action-dock" aria-label="Thanh công cụ nhanh">
-        <button
-          className="dock-action-btn"
-          onClick={() => {
-            sound.playClick();
-            setIsDetailOpen(true);
-          }}
-          title="Mở hồ sơ khoa học chi tiết & bản chất liên kết nguyên tử"
-          type="button"
-        >
-          <Info size={16} />
-          <span>Hồ sơ chi tiết & Liên kết</span>
-        </button>
-
-        <button
-          className="dock-action-btn"
-          onClick={() => {
-            sound.playClick();
-            setIsCompareOpen(true);
-          }}
-          title="Mở bảng so sánh đa tầng"
-          type="button"
-        >
-          <Columns2 size={16} />
-          <span>So sánh vật liệu</span>
-        </button>
-
-        <button
-          className={`dock-action-btn ${isDual3DView ? 'is-active' : ''}`}
-          onClick={() => {
-            sound.playClick();
-            setIsDual3DView(!isDual3DView);
-          }}
-          title="Xem hai mô hình 3D cùng lúc"
-          type="button"
-        >
-          <Box size={16} />
-          <span>Xem hai mô hình</span>
-        </button>
-
-        <button
-          className={`dock-action-btn ${isCapturingSnapshot ? 'opacity-70 cursor-wait' : ''}`}
-          disabled={isCapturingSnapshot}
-          onClick={() => {
-            if (isCapturingSnapshot) return;
-            sound.playClick();
-            triggerSnapshot();
-          }}
-          title="Chụp ảnh mô hình 3D độ phân giải cao"
-          type="button"
-        >
-          <Camera size={16} className={isCapturingSnapshot ? 'animate-pulse text-cyan-400' : ''} />
-          <span>{isCapturingSnapshot ? 'Đang chụp...' : 'Chụp mô hình'}</span>
-        </button>
-
-        <div className="dock-view-selector">
-          <span className="dock-view-label">Góc nhìn</span>
-          <div className="dock-view-group">
-            <button
-              className={`dock-view-btn ${cameraAngle === 'iso' ? 'is-active' : ''}`}
-              onClick={() => changeCameraAngle('iso')}
-              type="button"
-            >
-              Mô hình 3D
-            </button>
-            <button
-              className={`dock-view-btn ${cameraAngle === 'top' ? 'is-active' : ''}`}
-              onClick={() => changeCameraAngle('top')}
-              type="button"
-            >
-              Sơ đồ 2D
-            </button>
-            <button
-              className={`dock-view-btn ${cameraAngle === 'side' ? 'is-active' : ''}`}
-              onClick={() => changeCameraAngle('side')}
-              type="button"
-            >
-              Cạnh bên
-            </button>
+      {/* ── Mobile Floating Active Material Badge (Always visible on mobile < 820px) ── */}
+      <div
+        className={`fixed top-[62px] sm:top-[66px] left-3 sm:left-1/2 sm:-translate-x-1/2 z-20 flex min-[820px]:hidden items-center max-w-[calc(100vw-76px)] sm:max-w-md transition-all duration-300 ${
+          isZenMode ? 'opacity-0 pointer-events-none -translate-y-4' : 'opacity-100 pointer-events-auto translate-y-0'
+        }`}
+      >
+        {isDual3DView ? (
+          <div
+            onClick={() => {
+              sound.playClick();
+              setIsCompareOpen(true);
+            }}
+            className="flex items-center gap-2 bg-white/95 backdrop-blur-md px-3 py-1 rounded-full border border-blue-200/90 shadow-md cursor-pointer active:scale-95 transition-transform"
+            title="Bấm để mở bảng so sánh"
+          >
+            <span className="text-[11px] font-bold text-slate-800 truncate max-w-[100px]">{matA.nameVi}</span>
+            <span className="text-[10px] font-bold text-blue-600 font-mono">vs</span>
+            <span className="text-[11px] font-bold text-slate-800 truncate max-w-[100px]">{matB.nameVi}</span>
+            <ChevronRight size={13} className="text-blue-500 shrink-0" />
           </div>
-        </div>
-      </nav>
+        ) : (
+          <div
+            onClick={() => {
+              sound.playClick();
+              setIsDetailOpen(true);
+            }}
+            className="flex items-center gap-1.5 bg-white/95 backdrop-blur-md px-3 py-1 rounded-full border border-blue-200/90 shadow-md cursor-pointer active:scale-95 transition-transform"
+            title="Bấm để xem hồ sơ chi tiết vật liệu"
+          >
+            <span className="text-xs select-none shrink-0">{material.icon}</span>
+            <span className="font-extrabold text-xs text-slate-900 truncate max-w-[130px]">
+              {material.nameVi}
+            </span>
+            <span className="font-mono text-[10px] font-bold text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-200/70 shrink-0">
+              {material.formula}
+            </span>
+            <ChevronRight size={13} className="text-blue-500 shrink-0" />
+          </div>
+        )}
+      </div>
+
+      {/* ── Single Unified Right Action Dock (Requirement 2) ─────────────── */}
+      <RightActionDock
+        cameraAngle={cameraAngle}
+        onChangeCameraAngle={changeCameraAngle}
+      />
 
       {/* Settings Menu: ONLY Display Configurations (Requirement 4.2) */}
       {settingsOpen && (
@@ -389,15 +442,31 @@ export default function HomePage() {
                   toggleAutoRotate();
                 }}
               />
-              <SettingsRow
-                active={graphicsQuality === 'high'}
-                label={`Đồ họa ${graphicsQuality === 'high' ? 'cao' : 'mượt'}`}
-                icon={Zap}
-                onClick={() => {
-                  sound.playClick();
-                  toggleGraphicsQuality();
-                }}
-              />
+            </div>
+
+            {/* 3-Tier Graphics Quality Selector (Task 5) */}
+            <div className="tool-section">
+              <div className="flex items-center justify-between mb-2">
+                <span className="tool-section-label !mb-0">Chất lượng đồ họa</span>
+                <span className="text-[10px] font-bold text-sky-400">
+                  {graphicsQuality === 'high' ? 'SMAA · Bóng 2K' : graphicsQuality === 'medium' ? 'Cân bằng' : 'Tiết kiệm pin'}
+                </span>
+              </div>
+              <div className="segmented-control">
+                {(['high', 'medium', 'low'] as const).map((q) => (
+                  <button
+                    key={q}
+                    className={graphicsQuality === q ? 'is-active' : ''}
+                    onClick={() => {
+                      sound.playClick();
+                      setGraphicsQuality(q);
+                    }}
+                    type="button"
+                  >
+                    {q === 'high' ? 'Cao (SMAA)' : q === 'medium' ? 'Trung bình' : 'Tiết kiệm'}
+                  </button>
+                ))}
+              </div>
             </div>
 
             {activeLayer !== 'macro' && (
@@ -426,28 +495,30 @@ export default function HomePage() {
               </div>
             )}
 
-            {activeLayer === 'molecular' && (
-              <div className="tool-section">
-                <span className="tool-section-label">Số lớp cấu trúc</span>
-                <div className="segmented-control">
-                  {([1, 2, 3] as const).map((count) => (
-                    <button
-                      key={count}
-                      className={structureLayerCount === count ? 'is-active' : ''}
-                      onClick={() => setStructureLayerCount(count)}
-                      type="button"
-                    >
-                      {count} lớp
-                    </button>
-                  ))}
-                </div>
+            <div className="tool-section">
+              <span className="tool-section-label">Số lớp cấu trúc (Cấp độ Nano)</span>
+              <div className="segmented-control">
+                {([1, 2, 3] as const).map((count) => (
+                  <button
+                    key={count}
+                    className={structureLayerCount === count ? 'is-active' : ''}
+                    onClick={() => {
+                      sound.playClick();
+                      setStructureLayerCount(count);
+                    }}
+                    type="button"
+                  >
+                    {count} lớp
+                  </button>
+                ))}
               </div>
-            )}
+            </div>
           </div>
         </>
       )}
 
-      {/* Material Library Sidebar */}
+
+      {/* Material Library Slide-over Drawer (Requirement 1) */}
       <aside
         className={`material-library ${libraryOpen ? 'is-open' : ''}`}
         aria-label="Thư viện vật liệu"
@@ -505,13 +576,17 @@ export default function HomePage() {
               type="button"
             >
               <MaterialBadge material={item} size="md" />
-              <span className="material-name">
-                <strong>{item.nameVi}</strong>
-                <small>{item.categoryLabel}</small>
-              </span>
-              <span className="material-formula">{item.formula}</span>
+              <div className="flex-1 min-w-0 text-left">
+                <strong className="block text-xs font-bold text-slate-800 truncate">
+                  {item.nameVi}
+                </strong>
+                <small className="block text-[10px] text-slate-500 truncate">
+                  {item.categoryLabel}
+                </small>
+              </div>
+              <span className="material-formula shrink-0">{item.formula}</span>
               {item.id === selectedMaterial && (
-                <span className="selected-dot">
+                <span className="selected-dot shrink-0">
                   <Check size={12} />
                 </span>
               )}
@@ -524,70 +599,31 @@ export default function HomePage() {
       </aside>
 
       {libraryOpen && (
-        <button
-          className="mobile-backdrop"
-          onClick={() => setLibraryOpen(false)}
+        <div
+          className="drawer-backdrop fixed inset-0 z-40 bg-black/60 backdrop-blur-sm cursor-pointer"
+          onClick={() => {
+            sound.playClick();
+            setLibraryOpen(false);
+          }}
           aria-label="Đóng thư viện"
-          type="button"
         />
       )}
 
-      {/* Right Information Panel */}
-      {!inspectedAtom && (
-        <RightInfoPanel key={`right-panel-${selectedMaterial}`} material={material} activeStage={activeStage} />
-      )}
+      {/* ── Unified Bottom Sheet (Scale Navigator + Details + Actions) (Requirements 4 & 5) ── */}
+      <UnifiedBottomSheet
+        material={material}
+        activeStage={activeStage}
+        stages={STAGES}
+        onSelectStage={goToStage}
+        onOpenDetail={() => openDetailTab('bonds')}
+        onOpenCompare={() => openDetailTab('compare')}
+        isDual3DView={isDual3DView}
+        onToggleDual3DView={() => setIsDual3DView(!isDual3DView)}
+      />
 
-      {/* Bottom Scale Navigator */}
-      <nav className="scale-navigator" aria-label="Chọn cấp độ quan sát">
-        <div className="stage-intro">
-          <span>Cấp độ quan sát</span>
-          <strong>{activeStage.shortLabel}</strong>
-        </div>
-        <div className="stage-list">
-          {STAGES.map((stage, index) => {
-            const Icon = stage.icon;
-            const active = stage.id === activeLayer;
-            return (
-              <button
-                key={stage.id}
-                className={`stage-button ${active ? 'is-active' : ''}`}
-                onClick={() => goToStage(stage)}
-                type="button"
-              >
-                <span className="stage-number">{active ? <Icon size={17} /> : index + 1}</span>
-                <span className="stage-text">
-                  <strong>{stage.label}</strong>
-                  <small>{stage.caption}</small>
-                </span>
-                <span className="stage-scale">{stage.scale}</span>
-              </button>
-            );
-          })}
-        </div>
-        <div className="mobile-stage-help">
-          <CircleHelp size={15} />
-          <span>Chọn 1 trong 3 cấp độ để khám phá</span>
-        </div>
-      </nav>
-
-      {/* Mobile & Tablet Floating Zoom Controls (+ / -) */}
-      <MobileZoomControls />
-
-      {/* 2D Projection Mode Active Indicator */}
-      {cameraAngle === 'top' && (
-        <div className="absolute top-[132px] md:top-20 left-1/2 -translate-x-1/2 z-20 pointer-events-none flex items-center justify-center flex-wrap gap-1.5 md:gap-2 px-3.5 py-1.5 rounded-full bg-slate-900/95 border border-sky-400/60 backdrop-blur-md shadow-xl shadow-cyan-950/40 text-xs text-sky-200 max-w-[94vw] text-center">
-          <span className="w-2 h-2 rounded-full bg-sky-400 animate-ping shrink-0" />
-          <span className="font-bold text-white tracking-wide shrink-0">CHẾ ĐỘ SƠ ĐỒ 2D</span>
-          <span className="text-white/30 shrink-0">|</span>
-          <span className="text-sky-300 font-mono text-[11px] shrink-0">Hình chiếu trực diện (001)</span>
-          <span className="text-white/30 shrink-0 hidden sm:inline">|</span>
-          <span className="text-white/80 text-[11px] font-medium hidden sm:inline">{material.molecularInfo.latticeType}</span>
-        </div>
-      )}
 
       <AtomInspectorModal key={`atom-inspector-${selectedMaterial}`} />
       <TourOverlay />
-      <CompareModal />
       <DetailModal />
     </main>
   );

@@ -1,14 +1,16 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useCallback } from 'react';
 import { useStore, StoreState } from '@/store/useStore';
 import { MATERIAL_MAP } from '@/data/materials';
-import { Square, Film } from 'lucide-react';
+import { Pause, Play, Film, X } from 'lucide-react';
 import { sound } from '@/lib/soundFx';
 
 export default function TourOverlay() {
   const isTourActive = useStore((s: StoreState) => s.isTourActive);
   const setIsTourActive = useStore((s: StoreState) => s.setIsTourActive);
+  const isTourPaused = useStore((s: StoreState) => s.isTourPaused);
+  const toggleTourPause = useStore((s: StoreState) => s.toggleTourPause);
   const tourPhase = useStore((s: StoreState) => s.tourPhase);
   const tourProgress = useStore((s: StoreState) => s.tourProgress);
   const selectedMaterial = useStore((s: StoreState) => s.selectedMaterial);
@@ -28,6 +30,27 @@ export default function TourOverlay() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isTourActive, setIsTourActive]);
 
+  const handlePhaseClick = useCallback((phase: 'macro' | 'micro' | 'molecular') => {
+    sound.playClick();
+    window.dispatchEvent(
+      new CustomEvent('material-tour-seek', {
+        detail: { phase },
+      })
+    );
+  }, []);
+
+  const handleProgressClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const clickX = e.clientX - rect.left;
+    const progress = Math.max(0, Math.min(1, clickX / rect.width));
+    sound.playClick();
+    window.dispatchEvent(
+      new CustomEvent('material-tour-seek', {
+        detail: { progress },
+      })
+    );
+  }, []);
+
   if (!isTourActive || !material) return null;
 
   return (
@@ -45,73 +68,131 @@ export default function TourOverlay() {
                   <span className="hidden sm:inline">TRÌNH DIỄN ĐA TẦNG CINEMATIC</span>
                   <span className="sm:hidden">TRÌNH CHIẾU ĐA TẦNG</span>
                 </span>
-                <span className="w-1.5 h-1.5 rounded-full bg-[#58cc02] animate-ping shrink-0" />
+                <span
+                  className={`w-2 h-2 rounded-full shrink-0 ${
+                    isTourPaused ? 'bg-amber-400' : 'bg-[#58cc02] animate-ping'
+                  }`}
+                />
               </div>
-              <span className="text-[10px] sm:text-xs text-white/60 block font-bold truncate">
-                {material.nameVi} ({material.formula})
+              <span className="text-[10px] sm:text-xs text-white/70 block font-bold truncate">
+                {isTourPaused ? (
+                  <span className="text-amber-300 font-extrabold">
+                    Đang tạm dừng · Bạn có thể tự do dùng chuột/tay xoay ngắm 3D
+                  </span>
+                ) : (
+                  `${material.nameVi} (${material.formula})`
+                )}
               </span>
             </div>
           </div>
 
-          {/* Stop Button */}
-          <button
-            onClick={() => {
-              sound.playClick();
-              setIsTourActive(false);
-            }}
-            className="px-2.5 sm:px-3.5 py-1.5 rounded-xl bg-[#ff4b4b] border-2 border-[#ff4b4b] border-b-4 border-[#ea2b2b] text-white text-[11px] sm:text-xs font-extrabold flex items-center gap-1 sm:gap-1.5 transition-all active:translate-y-0.5 active:border-b-2 shadow-md shrink-0"
-            title="Dừng trình diễn tự động (ESC)"
-          >
-            <Square size={11} className="fill-white text-white" />
-            <span>Dừng</span>
-          </button>
+          {/* Action cluster: Nút Tạm dừng / Tiếp tục & Nút Đóng */}
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+            <button
+              onClick={() => {
+                sound.playClick();
+                toggleTourPause();
+              }}
+              className={`px-3 sm:px-4 py-1.5 rounded-xl border-2 border-b-4 text-white text-[11px] sm:text-xs font-extrabold flex items-center gap-1.5 transition-all active:translate-y-0.5 active:border-b-2 shadow-md cursor-pointer ${
+                isTourPaused
+                  ? 'bg-[#58cc02] border-[#58cc02] border-b-[#46a302] hover:bg-[#46a302]'
+                  : 'bg-[#ff9600] border-[#ff9600] border-b-[#e07b00] hover:bg-[#e07b00]'
+              }`}
+              title={
+                isTourPaused
+                  ? 'Tiếp tục trình chiếu (Camera bắt đầu lia & zoom tiếp)'
+                  : 'Tạm dừng để tự do xoay quanh ngắm mô hình'
+              }
+              type="button"
+            >
+              {isTourPaused ? (
+                <>
+                  <Play size={12} className="fill-white text-white" />
+                  <span>Tiếp tục</span>
+                </>
+              ) : (
+                <>
+                  <Pause size={12} className="fill-white text-white" />
+                  <span>Tạm dừng</span>
+                </>
+              )}
+            </button>
+
+            <button
+              onClick={() => {
+                sound.playClick();
+                setIsTourActive(false);
+              }}
+              className="p-1.5 sm:p-2 rounded-xl bg-slate-800/90 hover:bg-rose-600 border border-slate-700/80 hover:border-rose-600 text-slate-300 hover:text-white transition-all cursor-pointer"
+              title="Dừng trình chiếu (ESC)"
+              type="button"
+              aria-label="Dừng trình chiếu"
+            >
+              <X size={15} />
+            </button>
+          </div>
         </div>
 
-        {/* Phase Flow Indicator (Chunky 3D Badges) */}
+        {/* Phase Flow Indicator (Clickable Chunky 3D Badges) */}
         <div className="grid grid-cols-3 gap-1.5 sm:gap-2 text-center text-[10px] sm:text-xs">
-          <div
-            className={`py-1.5 sm:py-2 px-1 rounded-xl border-2 border-b-3 transition-all font-extrabold truncate ${
+          <button
+            type="button"
+            onClick={() => handlePhaseClick('macro')}
+            className={`py-1.5 sm:py-2 px-1 rounded-xl border-2 border-b-3 transition-all font-extrabold truncate cursor-pointer ${
               tourPhase === 'macro'
-                ? 'bg-[#1cb0f6] border-[#1cb0f6] border-b-[#1899d6] text-white shadow-md'
-                : 'bg-[#14232a] border-[#253945] border-b-[#19262e] text-white/40'
+                ? 'bg-[#1cb0f6] border-[#1cb0f6] border-b-[#1899d6] text-white shadow-md scale-102'
+                : 'bg-[#14232a] hover:bg-[#1c303a] border-[#253945] border-b-[#19262e] text-white/50'
             }`}
+            title="Chuyển đến Cấp độ 1: Vĩ mô"
           >
             <span className="hidden sm:inline">1. Vĩ mô (Macro)</span>
             <span className="sm:hidden">1. Vĩ mô</span>
-          </div>
+          </button>
 
-          <div
-            className={`py-1.5 sm:py-2 px-1 rounded-xl border-2 border-b-3 transition-all font-extrabold truncate ${
+          <button
+            type="button"
+            onClick={() => handlePhaseClick('micro')}
+            className={`py-1.5 sm:py-2 px-1 rounded-xl border-2 border-b-3 transition-all font-extrabold truncate cursor-pointer ${
               tourPhase === 'micro'
-                ? 'bg-[#ce82ff] border-[#ce82ff] border-b-[#a855f7] text-white shadow-md'
-                : 'bg-[#14232a] border-[#253945] border-b-[#19262e] text-white/40'
+                ? 'bg-[#ce82ff] border-[#ce82ff] border-b-[#a855f7] text-white shadow-md scale-102'
+                : 'bg-[#14232a] hover:bg-[#1c303a] border-[#253945] border-b-[#19262e] text-white/50'
             }`}
+            title="Chuyển đến Cấp độ 2: Ô mạng cơ sở"
           >
             <span className="hidden sm:inline">2. Tinh thể (Micro)</span>
             <span className="sm:hidden">2. Ô mạng</span>
-          </div>
+          </button>
 
-          <div
-            className={`py-1.5 sm:py-2 px-1 rounded-xl border-2 border-b-3 transition-all font-extrabold truncate ${
+          <button
+            type="button"
+            onClick={() => handlePhaseClick('molecular')}
+            className={`py-1.5 sm:py-2 px-1 rounded-xl border-2 border-b-3 transition-all font-extrabold truncate cursor-pointer ${
               tourPhase === 'molecular'
-                ? 'bg-[#58cc02] border-[#58cc02] border-b-[#46a302] text-white shadow-md'
-                : 'bg-[#14232a] border-[#253945] border-b-[#19262e] text-white/40'
+                ? 'bg-[#58cc02] border-[#58cc02] border-b-[#46a302] text-white shadow-md scale-102'
+                : 'bg-[#14232a] hover:bg-[#1c303a] border-[#253945] border-b-[#19262e] text-white/50'
             }`}
+            title="Chuyển đến Cấp độ 3: Cấp độ nguyên tử"
           >
             <span className="hidden sm:inline">3. Phân tử (Nano)</span>
             <span className="sm:hidden">3. Nguyên tử</span>
-          </div>
+          </button>
         </div>
 
-        {/* Chunky Duolingo Progress Bar */}
-        <div className="w-full duo-progress-track h-3 sm:h-3.5 border border-[#2b4452]">
+        {/* Chunky Duolingo Progress Bar - Interactive & Always Visible */}
+        <div
+          className="w-full h-3 sm:h-3.5 rounded-full bg-[#14232a] border border-[#2b4452] overflow-hidden relative cursor-pointer shadow-inner group"
+          onClick={handleProgressClick}
+          title="Nhấp vào thanh tiến trình để tua nhanh thời gian trình chiếu"
+        >
           <div
-            className="duo-progress-fill bg-gradient-to-r from-[#1cb0f6] via-[#ce82ff] to-[#58cc02] transition-all duration-150"
-            style={{ width: `${Math.round(tourProgress * 100)}%` }}
-          />
+            className="h-full rounded-full bg-gradient-to-r from-[#1cb0f6] via-[#ce82ff] to-[#58cc02] transition-[width] duration-150 relative shadow-sm"
+            style={{ width: `${Math.max(2, Math.min(100, Math.round(tourProgress * 100)))}%` }}
+          >
+            {/* Subtle animated highlight on progress fill */}
+            <div className="absolute inset-0 bg-white/20 animate-pulse" />
+          </div>
         </div>
       </div>
     </div>
   );
 }
-

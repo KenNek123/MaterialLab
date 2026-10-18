@@ -310,7 +310,7 @@ export function MolecularStructure({ material, opacity, scale }: MolecularStruct
     if (atomMeshRef.current?.material) {
       const m = atomMeshRef.current.material as THREE.Material;
       m.opacity = curOpacity;
-      m.transparent = curOpacity < 0.99;
+      m.transparent = true;
     }
     if (bondMeshRef.current?.material) {
       const m = bondMeshRef.current.material as THREE.Material;
@@ -432,6 +432,7 @@ export function MolecularStructure({ material, opacity, scale }: MolecularStruct
     <group ref={groupRef}>
       {/* Atom spheres - the ONLY interactive target */}
       <instancedMesh
+        key={`atoms-${material.id}-${structureLayerCount}-${atoms.length}`}
         ref={atomMeshRef}
         args={[undefined, undefined, atoms.length]}
         material={atomMat}
@@ -459,6 +460,7 @@ export function MolecularStructure({ material, opacity, scale }: MolecularStruct
       {/* Atom glow halos (high quality only) - ignore raycast */}
       {!isLow && (
         <instancedMesh
+          key={`glow-${material.id}-${structureLayerCount}-${atoms.length}`}
           ref={glowMeshRef}
           raycast={() => null}
           args={[undefined, undefined, atoms.length]}
@@ -472,6 +474,7 @@ export function MolecularStructure({ material, opacity, scale }: MolecularStruct
       {/* Bond cylinders - Bicolor Ball-and-Stick (2 half-bonds per bond) */}
       {enrichedBonds.length > 0 && (
         <instancedMesh
+          key={`bonds-${material.id}-${structureLayerCount}-${enrichedBonds.length}`}
           ref={bondMeshRef}
           raycast={() => null}
           args={[undefined, undefined, enrichedBonds.length * 2]}

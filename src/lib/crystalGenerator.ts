@@ -96,22 +96,22 @@ export function generateCrystalStructure(
   const a = structure.latticeConstant || 3.5;
   const rx = structure.repeatX || 2;
   const ry = structure.repeatY || 2;
-  const rz = structure.repeatZ || 2;
+  const rz = layerCount; // Dynamic structural layer count (1, 2, 3)
 
   let result: { atoms: AtomInstance[]; bonds: BondInstance[] };
 
   switch (structure.type) {
     case 'cnt':
-      result = generateCarbonNanotube(a, rx, ry, molecularInfo);
+      result = generateCarbonNanotube(a, rx, ry, layerCount, molecularInfo);
       break;
     case 'buckyball':
-      result = generateBuckyballC60(a, molecularInfo);
+      result = generateBuckyballC60(a, layerCount, molecularInfo);
       break;
     case 'perovskite':
       result = generatePerovskite(a, rx, ry, rz, molecularInfo);
       break;
     case 'aerogel':
-      result = generateAerogel(a, rx, ry, rz, molecularInfo);
+      result = generateAerogel(a, rx, ry, layerCount, molecularInfo);
       break;
     case 'nitinol':
       result = generateNitinolB2(a, rx, ry, rz, molecularInfo);
@@ -135,7 +135,7 @@ export function generateCrystalStructure(
       result = generateIce(a, rx, ry, rz, molecularInfo);
       break;
     case 'kevlar':
-      result = generateKevlar(a, rx, ry, molecularInfo);
+      result = generateKevlar(a, rx, ry, layerCount, molecularInfo);
       break;
     case 'fcc':
       result = generateFCC(a, rx, ry, rz, molecularInfo);
@@ -147,7 +147,7 @@ export function generateCrystalStructure(
       result = generateHCP(a, rx, ry, rz, molecularInfo);
       break;
     case 'teflon':
-      result = generateTeflon(a, rx, ry, molecularInfo);
+      result = generateTeflon(a, rx, ry, layerCount, molecularInfo);
       break;
     case 'battery':
       result = generateBatteryLCO(a, rx, ry, rz, molecularInfo);
@@ -156,7 +156,7 @@ export function generateCrystalStructure(
       result = generateAlumina(a, rx, ry, rz, molecularInfo);
       break;
     case 'polymer-rubber':
-      result = generateVulcanizedRubber(a, rx, ry, molecularInfo);
+      result = generateVulcanizedRubber(a, rx, ry, layerCount, molecularInfo);
       break;
     default:
       result = generateDiamond(a, rx, ry, rz, molecularInfo);
@@ -730,9 +730,10 @@ function generateHCP(
 
 // ── 9. Chống Dính Teflon (PTFE - Chuỗi Polyme Xoắn Bọc Flo) ─────────────────
 function generateTeflon(
-  a: number,
-  rx: number,
-  ry: number,
+  _a: number,
+  _rx: number,
+  _ry: number,
+  layers: number,
   info: MaterialData['molecularInfo']
 ): { atoms: AtomInstance[]; bonds: BondInstance[] } {
   const atoms: AtomInstance[] = [];
@@ -741,15 +742,21 @@ function generateTeflon(
   const fType = info.atomTypes.find((t) => t.element === 'F') || info.atomTypes[1] || cType;
   const bondColor = info.bonds.color;
 
-  const numChains = rx * ry;
+  const numChains = Math.min(Math.max(1, layers), 3);
   const chainLen = 8;
   const dCC = 1.54;
   const dCF = 1.35;
 
-  for (let ch = 0; ch < numChains; ch++) {
-    const xChain = (ch % rx - (rx - 1) / 2) * 2.8;
-    const zChain = (Math.floor(ch / rx) - (ry - 1) / 2) * 2.8;
+  // Chain bundles: 1 chain (monofilament), 2 chains (double bundle), 3 chains (trigonal crystal bundle)
+  const chainOffsets: [number, number][] =
+    layers === 1
+      ? [[0, 0]]
+      : layers === 2
+      ? [[-1.6, 0], [1.6, 0]]
+      : [[-1.6, -0.92], [1.6, -0.92], [0, 1.84]];
 
+  for (let ch = 0; ch < numChains; ch++) {
+    const [xChain, zChain] = chainOffsets[ch] || [0, 0];
     let prevC: THREE.Vector3 | null = null;
 
     for (let i = 0; i < chainLen; i++) {
@@ -884,9 +891,10 @@ function generateAlumina(
 
 // ── 12. Cao Su Lưu Hóa Đàn Hồi (Mạng Polyme Nối Chéo Cầu Lưu Huỳnh –S–S–) ────
 function generateVulcanizedRubber(
-  a: number,
-  rx: number,
-  ry: number,
+  _a: number,
+  _rx: number,
+  _ry: number,
+  layers: number,
   info: MaterialData['molecularInfo']
 ): { atoms: AtomInstance[]; bonds: BondInstance[] } {
   const atoms: AtomInstance[] = [];
@@ -895,20 +903,27 @@ function generateVulcanizedRubber(
   const sType = info.atomTypes.find((t) => t.element === 'S') || info.atomTypes[2] || cType;
   const bondColor = info.bonds.color;
 
-  const chainNodes: THREE.Vector3[][] = [];
-  const numChains = rx * ry;
+  const numChains = Math.min(Math.max(1, layers), 3);
   const nodesPerChain = 7;
+  const chainNodes: THREE.Vector3[][] = [];
+
+  // Chain arrangements: 1 chain (unvulcanized), 2 chains (1 bridge), 3 chains (elastic network)
+  const chainOffsets: [number, number][] =
+    layers === 1
+      ? [[0, 0]]
+      : layers === 2
+      ? [[-1.6, 0], [1.6, 0]]
+      : [[-2.5, 0], [0, 0], [2.5, 0]];
 
   for (let ch = 0; ch < numChains; ch++) {
-    const xBase = (ch % rx - (rx - 1) / 2) * 2.5;
-    const zBase = (Math.floor(ch / rx) - (ry - 1) / 2) * 2.5;
+    const [xBase, zBase] = chainOffsets[ch] || [0, 0];
     const currentChain: THREE.Vector3[] = [];
 
     let prevPos: THREE.Vector3 | null = null;
     for (let i = 0; i < nodesPerChain; i++) {
       const y = (i - nodesPerChain / 2) * 0.85;
-      const xWiggle = xBase + Math.sin(i * 1.6 + ch) * 0.5;
-      const zWiggle = zBase + Math.cos(i * 1.4 + ch) * 0.5;
+      const xWiggle = xBase + Math.sin(i * 1.6 + ch * 1.3) * 0.45;
+      const zWiggle = zBase + Math.cos(i * 1.4 + ch * 1.3) * 0.45;
       const pos = new THREE.Vector3(xWiggle, y, zWiggle);
 
       atoms.push({ position: pos, element: 'C', color: cType.color, radius: cType.radius });
@@ -922,14 +937,14 @@ function generateVulcanizedRubber(
     chainNodes.push(currentChain);
   }
 
-  // Crosslinking sulfur bridges –S–S– between adjacent chains
+  // Crosslinking sulfur bridges –S–S– between adjacent chains (layers 2 and 3)
   for (let ch = 0; ch < numChains - 1; ch++) {
     const chainA = chainNodes[ch];
     const chainB = chainNodes[ch + 1];
 
-    const midIdx = Math.floor(nodesPerChain / 2);
-    const pA = chainA[midIdx];
-    const pB = chainB[midIdx];
+    const connectIdx = ch % 2 === 0 ? 3 : 4;
+    const pA = chainA[connectIdx];
+    const pB = chainB[connectIdx];
 
     const s1 = pA.clone().lerp(pB, 0.35);
     const s2 = pA.clone().lerp(pB, 0.65);
@@ -945,11 +960,12 @@ function generateVulcanizedRubber(
   return { atoms, bonds };
 }
 
-// ── 13. Ống Nano Carbon Đơn Vách (SWCNT Armchair (6,6) Chuẩn Wikipedia) ─────
+// ── 13. Ống Nano Carbon Đơn/Đa Vách (SWCNT/DWCNT/MWCNT Armchair Chuẩn) ───────
 function generateCarbonNanotube(
   _a: number,
   rx: number,
   _ry: number,
+  layers: number,
   info: MaterialData['molecularInfo']
 ): { atoms: AtomInstance[]; bonds: BondInstance[] } {
   const atoms: AtomInstance[] = [];
@@ -957,42 +973,58 @@ function generateCarbonNanotube(
   const atomType = info.atomTypes[0];
   const bondColor = info.bonds.color;
 
-  const n = 6;
-  const numAtomsPerRing = n * 2; // 12 atoms around circumference
   const dCC = 1.42;
-  const radius = (n * Math.sqrt(3) * dCC) / (2 * Math.PI); // ≈ 2.35 Å
-  const numLayers = Math.max(10, rx * 5);
+  const numLayers = Math.max(9, rx * 4);
 
-  for (let l = 0; l < numLayers; l++) {
-    const yBase = (l - numLayers / 2) * (dCC * 0.866);
-    const isOdd = l % 2 === 1;
+  // Concentric walls configuration:
+  // 1 layer: SWCNT (Single-Walled, n=6, radius ≈ 2.35 Å)
+  // 2 layers: DWCNT (Double-Walled, n=11, radius ≈ 4.31 Å, Δr ≈ 1.96 Å)
+  // 3 layers: MWCNT (Multi-Walled, n=16, radius ≈ 6.27 Å, Δr ≈ 1.96 Å)
+  const wallConfigs = [
+    { n: 6, radius: 2.35 },
+    { n: 11, radius: 4.31 },
+    { n: 16, radius: 6.27 },
+  ];
 
-    for (let i = 0; i < numAtomsPerRing; i++) {
-      const angleOffset = isOdd ? Math.PI / numAtomsPerRing : 0;
-      const theta = (i * 2 * Math.PI) / numAtomsPerRing + angleOffset;
-      const x = radius * Math.cos(theta);
-      const z = radius * Math.sin(theta);
+  const totalWalls = Math.min(Math.max(1, layers), 3);
 
-      atoms.push({
-        position: new THREE.Vector3(x, yBase, z),
-        element: atomType.element,
-        color: atomType.color,
-        radius: atomType.radius,
-      });
-    }
-  }
+  for (let w = 0; w < totalWalls; w++) {
+    const { n, radius } = wallConfigs[w];
+    const numAtomsPerRing = n * 2;
+    const wallStartIdx = atoms.length;
 
-  // Connect nearest neighbors (bond distance ≈ 1.42 Å)
-  const cutoff = dCC * 1.25;
-  for (let i = 0; i < atoms.length; i++) {
-    for (let j = i + 1; j < atoms.length; j++) {
-      const dist = atoms[i].position.distanceTo(atoms[j].position);
-      if (dist > 0.1 && dist < cutoff) {
-        bonds.push({
-          start: atoms[i].position.clone(),
-          end: atoms[j].position.clone(),
-          color: bondColor,
+    for (let l = 0; l < numLayers; l++) {
+      const yBase = (l - numLayers / 2) * (dCC * 0.866);
+      const isOdd = l % 2 === 1;
+
+      for (let i = 0; i < numAtomsPerRing; i++) {
+        const angleOffset = isOdd ? Math.PI / numAtomsPerRing : 0;
+        const theta = (i * 2 * Math.PI) / numAtomsPerRing + angleOffset;
+        const x = radius * Math.cos(theta);
+        const z = radius * Math.sin(theta);
+
+        atoms.push({
+          position: new THREE.Vector3(x, yBase, z),
+          element: atomType.element,
+          color: atomType.color,
+          radius: atomType.radius,
         });
+      }
+    }
+
+    // Connect nearest neighbors within THIS wall only (cutoff ≈ 1.77 Å)
+    const wallEndIdx = atoms.length;
+    const cutoff = dCC * 1.25;
+    for (let i = wallStartIdx; i < wallEndIdx; i++) {
+      for (let j = i + 1; j < wallEndIdx; j++) {
+        const dist = atoms[i].position.distanceTo(atoms[j].position);
+        if (dist > 0.1 && dist < cutoff) {
+          bonds.push({
+            start: atoms[i].position.clone(),
+            end: atoms[j].position.clone(),
+            color: bondColor,
+          });
+        }
       }
     }
   }
@@ -1000,9 +1032,10 @@ function generateCarbonNanotube(
   return { atoms, bonds };
 }
 
-// ── 14. Buckyball Fullerene C₆₀ (Khối 20 Mặt Cụt Chuẩn Wikipedia) ───────────
+// ── 14. Buckyball Fullerene C₆₀ (Khối 20 Mặt Cụt & Cụm Tinh Thể Fullerite) ──
 function generateBuckyballC60(
   _a: number,
+  layers: number,
   info: MaterialData['molecularInfo']
 ): { atoms: AtomInstance[]; bonds: BondInstance[] } {
   const atoms: AtomInstance[] = [];
@@ -1010,65 +1043,84 @@ function generateBuckyballC60(
   const atomType = info.atomTypes[0];
   const bondColor = info.bonds.color;
 
-  const phi = (1 + Math.sqrt(5)) / 2; // Tỷ lệ vàng Golden Ratio ≈ 1.6180339887
-  const rawCoords: [number, number, number][] = [];
-  const signs = [-1, 1];
-
-  // Nhóm 1: Các hoán vị chẵn của (0, ±1, ±3phi) -> 12 đỉnh
-  for (const s1 of signs) {
-    for (const s2 of signs) {
-      rawCoords.push([0, s1 * 1, s2 * 3 * phi]);
-      rawCoords.push([s2 * 3 * phi, 0, s1 * 1]);
-      rawCoords.push([s1 * 1, s2 * 3 * phi, 0]);
-    }
-  }
-
-  // Nhóm 2: Các hoán vị chẵn của (±2, ±(1+2phi), ±phi) -> 24 đỉnh
-  for (const s1 of signs) {
-    for (const s2 of signs) {
-      for (const s3 of signs) {
-        rawCoords.push([s1 * 2, s2 * (1 + 2 * phi), s3 * phi]);
-        rawCoords.push([s3 * phi, s1 * 2, s2 * (1 + 2 * phi)]);
-        rawCoords.push([s2 * (1 + 2 * phi), s3 * phi, s1 * 2]);
-      }
-    }
-  }
-
-  // Nhóm 3: Các hoán vị chẵn của (±1, ±(2+phi), ±2phi) -> 24 đỉnh
-  for (const s1 of signs) {
-    for (const s2 of signs) {
-      for (const s3 of signs) {
-        rawCoords.push([s1 * 1, s2 * (2 + phi), s3 * 2 * phi]);
-        rawCoords.push([s3 * 2 * phi, s1 * 1, s2 * (2 + phi)]);
-        rawCoords.push([s2 * (2 + phi), s3 * 2 * phi, s1 * 1]);
-      }
-    }
-  }
-
-  // Bán kính phân tử C60 thực nghiệm theo crystallography = 3.54 Å
+  const phi = (1 + Math.sqrt(5)) / 2; // Golden Ratio ≈ 1.6180339887
   const baseNorm = Math.sqrt(1 + 9 * phi * phi);
   const scale = 3.54 / baseNorm;
+  const signs = [-1, 1];
 
-  for (const c of rawCoords) {
-    atoms.push({
-      position: new THREE.Vector3(c[0] * scale, c[1] * scale, c[2] * scale),
-      element: atomType.element,
-      color: atomType.color,
-      radius: atomType.radius,
-    });
+  // Base 60 truncated icosahedron coordinates
+  const singleCageCoords: THREE.Vector3[] = [];
+
+  // Group 1: Even permutations of (0, ±1, ±3phi) -> 12 vertices
+  for (const s1 of signs) {
+    for (const s2 of signs) {
+      singleCageCoords.push(new THREE.Vector3(0, s1 * 1, s2 * 3 * phi).multiplyScalar(scale));
+      singleCageCoords.push(new THREE.Vector3(s2 * 3 * phi, 0, s1 * 1).multiplyScalar(scale));
+      singleCageCoords.push(new THREE.Vector3(s1 * 1, s2 * 3 * phi, 0).multiplyScalar(scale));
+    }
   }
 
-  // Trong C60, mỗi nguyên tử liên kết với đúng 3 nguyên tử kề (khoảng cách 1.40 - 1.45 Å)
-  const cutoff = 1.62;
-  for (let i = 0; i < atoms.length; i++) {
-    for (let j = i + 1; j < atoms.length; j++) {
-      const dist = atoms[i].position.distanceTo(atoms[j].position);
-      if (dist > 0.1 && dist < cutoff) {
-        bonds.push({
-          start: atoms[i].position.clone(),
-          end: atoms[j].position.clone(),
-          color: bondColor,
-        });
+  // Group 2: Even permutations of (±2, ±(1+2phi), ±phi) -> 24 vertices
+  for (const s1 of signs) {
+    for (const s2 of signs) {
+      for (const s3 of signs) {
+        singleCageCoords.push(new THREE.Vector3(s1 * 2, s2 * (1 + 2 * phi), s3 * phi).multiplyScalar(scale));
+        singleCageCoords.push(new THREE.Vector3(s3 * phi, s1 * 2, s2 * (1 + 2 * phi)).multiplyScalar(scale));
+        singleCageCoords.push(new THREE.Vector3(s2 * (1 + 2 * phi), s3 * phi, s1 * 2).multiplyScalar(scale));
+      }
+    }
+  }
+
+  // Group 3: Even permutations of (±1, ±(2+phi), ±2phi) -> 24 vertices
+  for (const s1 of signs) {
+    for (const s2 of signs) {
+      for (const s3 of signs) {
+        singleCageCoords.push(new THREE.Vector3(s1 * 1, s2 * (2 + phi), s3 * 2 * phi).multiplyScalar(scale));
+        singleCageCoords.push(new THREE.Vector3(s3 * 2 * phi, s1 * 1, s2 * (2 + phi)).multiplyScalar(scale));
+        singleCageCoords.push(new THREE.Vector3(s2 * (2 + phi), s3 * 2 * phi, s1 * 1).multiplyScalar(scale));
+      }
+    }
+  }
+
+  // Cage arrangements:
+  // 1 layer: Monomer cage at origin
+  // 2 layers: Dimer cages separated by van der Waals gap (9.6 Å)
+  // 3 layers: Trimer cages in triangular packing (fullerite (111) face)
+  const cageCenters: THREE.Vector3[] =
+    layers === 1
+      ? [new THREE.Vector3(0, 0, 0)]
+      : layers === 2
+      ? [new THREE.Vector3(-4.8, 0, 0), new THREE.Vector3(4.8, 0, 0)]
+      : [
+          new THREE.Vector3(-4.8, -2.77, 0),
+          new THREE.Vector3(4.8, -2.77, 0),
+          new THREE.Vector3(0, 5.54, 0),
+        ];
+
+  for (const center of cageCenters) {
+    const cageStartIdx = atoms.length;
+    for (const pt of singleCageCoords) {
+      atoms.push({
+        position: pt.clone().add(center),
+        element: atomType.element,
+        color: atomType.color,
+        radius: atomType.radius,
+      });
+    }
+
+    // Connect C-C bonds within THIS cage only (cutoff = 1.62 Å)
+    const cageEndIdx = atoms.length;
+    const cutoff = 1.62;
+    for (let i = cageStartIdx; i < cageEndIdx; i++) {
+      for (let j = i + 1; j < cageEndIdx; j++) {
+        const dist = atoms[i].position.distanceTo(atoms[j].position);
+        if (dist > 0.1 && dist < cutoff) {
+          bonds.push({
+            start: atoms[i].position.clone(),
+            end: atoms[j].position.clone(),
+            color: bondColor,
+          });
+        }
       }
     }
   }
@@ -1141,7 +1193,7 @@ function generateAerogel(
   a: number,
   _rx: number,
   _ry: number,
-  _rz: number,
+  layers: number,
   info: MaterialData['molecularInfo']
 ): { atoms: AtomInstance[]; bonds: BondInstance[] } {
   const atoms: AtomInstance[] = [];
@@ -1150,14 +1202,15 @@ function generateAerogel(
   const oType = info.atomTypes.find((t) => t.element === 'O') || info.atomTypes[1] || siType;
   const bondColor = info.bonds.color;
 
+  const totalNodes = 14 * Math.min(Math.max(1, layers), 3);
   const nodes: THREE.Vector3[] = [];
-  const span = a * 2.2;
+  const span = a * (1.8 + layers * 0.35);
 
-  // Tạo khung mạng nano xốp fractal 3D bất đối xứng với khoảng rỗng lớn
-  for (let i = 0; i < 28; i++) {
+  // Fractal nanoporous silica 3D skeleton with density scaling with layers
+  for (let i = 0; i < totalNodes; i++) {
     const angle = i * 2.39996; // Golden angle spiral
-    const r = (0.65 + (i % 4) * 0.35) * span * 0.42;
-    const y = ((i - 14) / 14) * span * 0.6;
+    const r = (0.55 + (i % 4) * 0.35) * span * 0.42;
+    const y = ((i - totalNodes / 2) / (totalNodes / 2)) * span * 0.6;
     const x = r * Math.cos(angle);
     const z = r * Math.sin(angle);
     nodes.push(new THREE.Vector3(x, y, z));
@@ -1167,7 +1220,7 @@ function generateAerogel(
     atoms.push({ position: n.clone(), element: 'Si', color: siType.color, radius: siType.radius });
   }
 
-  const cutoff = span * 0.52;
+  const cutoff = span * 0.48;
   for (let i = 0; i < nodes.length; i++) {
     for (let j = i + 1; j < nodes.length; j++) {
       const dist = nodes[i].distanceTo(nodes[j]);
@@ -1308,8 +1361,9 @@ function generateIce(
 // ── 19. Sợi Siêu Bền Kevlar (Poly-para-phenylene terephthalamide) ────────────
 function generateKevlar(
   _a: number,
-  rx: number,
-  ry: number,
+  _rx: number,
+  _ry: number,
+  layers: number,
   info: MaterialData['molecularInfo']
 ): { atoms: AtomInstance[]; bonds: BondInstance[] } {
   const atoms: AtomInstance[] = [];
@@ -1319,14 +1373,25 @@ function generateKevlar(
   const oType = info.atomTypes.find((t) => t.element === 'O') || info.atomTypes[2] || cType;
   const bondColor = info.bonds.color || '#fde047';
 
-  const numChains = Math.max(2, rx * ry);
+  const numChains = Math.min(Math.max(1, layers), 3);
   const unitsPerChain = 3;
 
-  for (let ch = 0; ch < numChains; ch++) {
-    const xBase = (ch % rx - (rx - 1) / 2) * 3.2;
-    const zBase = (Math.floor(ch / rx) - (ry - 1) / 2) * 3.2;
+  // Chain arrangements: 1 chain (monofilament), 2 chains (with H-bonds), 3 chains (crystalline sheet)
+  const chainOffsets: [number, number][] =
+    layers === 1
+      ? [[0, 0]]
+      : layers === 2
+      ? [[-1.8, 0], [1.8, 0]]
+      : [[-3.2, 0], [0, 0], [3.2, 0]];
 
+  const chainNList: THREE.Vector3[][] = [];
+  const chainOList: THREE.Vector3[][] = [];
+
+  for (let ch = 0; ch < numChains; ch++) {
+    const [xBase, zBase] = chainOffsets[ch] || [0, 0];
     let prevNode: THREE.Vector3 | null = null;
+    const currentN: THREE.Vector3[] = [];
+    const currentO: THREE.Vector3[] = [];
 
     for (let u = 0; u < unitsPerChain; u++) {
       const yCenter = (u - (unitsPerChain - 1) / 2) * 2.8;
@@ -1348,6 +1413,7 @@ function generateKevlar(
       const nPos = new THREE.Vector3(xBase, yCenter + 1.1, zBase);
       atoms.push({ position: nPos, element: 'N', color: nType.color, radius: nType.radius });
       bonds.push({ start: ringAtoms[1].clone(), end: nPos.clone(), color: bondColor });
+      currentN.push(nPos);
 
       const cAmide = new THREE.Vector3(xBase, yCenter - 1.1, zBase);
       const oPos = new THREE.Vector3(xBase + 0.5, yCenter - 1.3, zBase);
@@ -1355,11 +1421,28 @@ function generateKevlar(
       atoms.push({ position: oPos, element: 'O', color: oType.color, radius: oType.radius });
       bonds.push({ start: ringAtoms[4].clone(), end: cAmide.clone(), color: bondColor });
       bonds.push({ start: cAmide.clone(), end: oPos.clone(), color: '#ef4444' });
+      currentO.push(oPos);
 
       if (prevNode) {
         bonds.push({ start: prevNode.clone(), end: cAmide.clone(), color: bondColor });
       }
       prevNode = nPos;
+    }
+    chainNList.push(currentN);
+    chainOList.push(currentO);
+  }
+
+  // Inter-chain hydrogen bonding N···O between adjacent Kevlar chains (layers 2 & 3)
+  for (let ch = 0; ch < numChains - 1; ch++) {
+    const listA = chainNList[ch];
+    const listB = chainOList[ch + 1];
+    const minLen = Math.min(listA.length, listB.length);
+    for (let u = 0; u < minLen; u++) {
+      bonds.push({
+        start: listA[u].clone(),
+        end: listB[u].clone(),
+        color: '#38bdf8', // Hydrogen bond color
+      });
     }
   }
 

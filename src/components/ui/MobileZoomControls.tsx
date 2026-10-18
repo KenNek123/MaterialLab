@@ -7,7 +7,10 @@ import { ZOOM_DIST } from '@/components/3d/zoomState';
 import { sound } from '@/lib/soundFx';
 
 export default function MobileZoomControls() {
-  const setCameraDistance = useStore((s: StoreState) => s.setCameraDistance);
+  const isToolbarOpen = useStore((s: StoreState) => s.isToolbarOpen);
+  const showZoomControls = useStore((s: StoreState) => s.showZoomControls);
+  const isZenMode = useStore((s: StoreState) => s.isZenMode);
+
   const zoomTargetRef = useRef<number | null>(null);
   const holdTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const holdIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -26,6 +29,7 @@ export default function MobileZoomControls() {
   const handleZoom = useCallback(
     (direction: 'in' | 'out') => {
       sound.playClick();
+      // Read current real-time camera distance from store, or smooth cumulative target
       const currentDist = useStore.getState().cameraDistance || 8.0;
       const baseDist = zoomTargetRef.current !== null ? zoomTargetRef.current : currentDist;
       const step = 1.35;
@@ -41,14 +45,8 @@ export default function MobileZoomControls() {
           detail: { distance: nextDist, immediate: false },
         })
       );
-      setCameraDistance(nextDist);
-
-      // Reset zoomTargetRef after animation settles
-      setTimeout(() => {
-        zoomTargetRef.current = null;
-      }, 450);
     },
-    [setCameraDistance]
+    []
   );
 
   const startZoom = useCallback(
@@ -66,11 +64,32 @@ export default function MobileZoomControls() {
   );
 
   useEffect(() => {
-    return () => stopZoom();
+    const handleCancel = () => {
+      zoomTargetRef.current = null;
+    };
+    window.addEventListener('material-zoom-cancel', handleCancel);
+    window.addEventListener('material-zoom-settled', handleCancel);
+    window.addEventListener('material-user-camera-change', handleCancel);
+    window.addEventListener('wheel', handleCancel, { passive: true });
+    window.addEventListener('touchstart', handleCancel, { passive: true });
+
+    return () => {
+      window.removeEventListener('material-zoom-cancel', handleCancel);
+      window.removeEventListener('material-zoom-settled', handleCancel);
+      window.removeEventListener('material-user-camera-change', handleCancel);
+      window.removeEventListener('wheel', handleCancel);
+      window.removeEventListener('touchstart', handleCancel);
+      stopZoom();
+    };
   }, [stopZoom]);
 
+  if (isZenMode || !showZoomControls) return null;
+
   return (
-    <div className="mobile-zoom-controls" aria-label="Điều khiển phóng to thu nhỏ 3D">
+    <div
+      className={`mobile-zoom-controls ${isToolbarOpen ? 'is-toolbar-shifted' : ''}`}
+      aria-label="Điều khiển phóng to thu nhỏ 3D"
+    >
       <button
         type="button"
         className="zoom-btn zoom-in-btn"
