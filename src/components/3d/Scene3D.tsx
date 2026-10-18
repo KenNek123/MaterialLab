@@ -717,7 +717,7 @@ function SnapshotManager() {
         ctx.textAlign = 'left';
         ctx.font = `bold ${fontSizeTitle}px sans-serif`;
         ctx.fillStyle = '#38bdf8';
-        ctx.fillText('DIGITAL MATTER LAB', padX, topBannerHeight * 0.44, exportCanvas.width - padX * 2);
+        ctx.fillText('DIGITAL MATTERIALS LAB', padX, topBannerHeight * 0.44, exportCanvas.width - padX * 2);
 
         ctx.font = `${fontSizeSub}px sans-serif`;
         ctx.fillStyle = 'rgba(255, 255, 255, 0.78)';
@@ -727,7 +727,7 @@ function SnapshotManager() {
         ctx.textAlign = 'right';
         ctx.font = `bold ${fontSizeTitle}px sans-serif`;
         ctx.fillStyle = '#38bdf8';
-        ctx.fillText('DIGITAL MATTER LAB', exportCanvas.width - padX, exportCanvas.height - bannerHeight * 0.44);
+        ctx.fillText('DIGITAL MATTERIALS LAB', exportCanvas.width - padX, exportCanvas.height - bannerHeight * 0.44);
 
         ctx.font = `${fontSizeSub}px sans-serif`;
         ctx.fillStyle = 'rgba(255, 255, 255, 0.75)';
@@ -748,7 +748,7 @@ function SnapshotManager() {
         ? 'SoSanh'
         : (mat?.nameVi || selectedMaterial || 'VatLieu');
       const safeMatName = sanitize(rawMatName) || 'VatLieu';
-      const fileName = `DigitalMatterLab_${safeMatName}_${activeLayer}_${Date.now()}.png`;
+      const fileName = `DigitalMatterialsLab_${safeMatName}_${activeLayer}_${Date.now()}.png`;
 
       // 5. Export as pristine PNG image with guaranteed filename and .png extension
       const triggerDownload = (url: string) => {

@@ -66,7 +66,7 @@ export default function MaterialSelector() {
                     </div>
                     <div>
                       <h2 className="text-base font-extrabold text-white tracking-wide">
-                        Digital Matter Lab
+                        Digital Matterials Lab
                       </h2>
                       <p className="text-xs text-sky-400 font-bold">
                         Nguyễn Văn Tài

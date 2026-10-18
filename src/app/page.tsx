@@ -240,13 +240,13 @@ export default function HomePage() {
 
       {/* Top Header: Brand Lockup + Center Material Badge (Task 3) + 3 Action Buttons */}
       <header className={`app-header ${isZenMode ? 'is-zen-hidden' : ''}`}>
-        {/* Full Brand Lockup: Digital Matter Lab & Nguyễn Văn Tài (Always fully visible on Desktop & Mobile) */}
+        {/* Full Brand Lockup: Digital Matterials Lab & Nguyễn Văn Tài (Always fully visible on Desktop & Mobile) */}
         <div className="brand-lockup shrink-0">
           <span className="brand-mark shrink-0">
             <Atom size={22} />
           </span>
           <div className="brand-text">
-            <h1 className="brand-title">Digital Matter Lab</h1>
+            <h1 className="brand-title">Digital Matterials Lab</h1>
             <p className="brand-author">Nguyễn Văn Tài</p>
           </div>
         </div>

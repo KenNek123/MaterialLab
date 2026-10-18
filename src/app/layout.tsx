@@ -10,13 +10,48 @@ const montserrat = Montserrat({
 });
 
 export const metadata: Metadata = {
-  title: "Digital Matter Lab | Nguyễn Văn Tài",
-  description: "Phòng thí nghiệm số trực quan hóa vật chất & cấu trúc nguyên tử 3D. Nguyễn Văn Tài.",
-  keywords: ["Digital Matter Lab", "material science", "3D", "molecular", "crystal structure", "WebGL", "Three.js"],
+  metadataBase: new URL("https://digitalmateriallab.netlify.app"),
+  title: "Digital Matterials Lab | Nguyễn Văn Tài",
+  description: "Phòng thí nghiệm số trực quan hóa và khám phá khoa học vật liệu 3D đa thang đo. Nguyễn Văn Tài.",
+  keywords: [
+    "Digital Matterials Lab",
+    "Nguyễn Văn Tài",
+    "Digital Materials Lab",
+    "material science",
+    "3D",
+    "molecular",
+    "crystal structure",
+    "WebGL",
+    "Three.js"
+  ],
+  authors: [{ name: "Nguyễn Văn Tài" }],
+  creator: "Nguyễn Văn Tài",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "Digital Matter Lab",
+    title: "Digital Matterials Lab | Nguyễn Văn Tài",
+  },
+  openGraph: {
+    title: "Digital Matterials Lab | Nguyễn Văn Tài",
+    description: "Phòng thí nghiệm số trực quan hóa và khám phá khoa học vật liệu 3D đa thang đo. Nguyễn Văn Tài.",
+    siteName: "Digital Matterials Lab | Nguyễn Văn Tài",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Digital Matterials Lab | Nguyễn Văn Tài",
+      },
+    ],
+    locale: "vi_VN",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Digital Matterials Lab | Nguyễn Văn Tài",
+    description: "Phòng thí nghiệm số trực quan hóa và khám phá khoa học vật liệu 3D đa thang đo. Nguyễn Văn Tài.",
+    images: ["/og-image.png"],
+    creator: "Nguyễn Văn Tài",
   },
 };
 
