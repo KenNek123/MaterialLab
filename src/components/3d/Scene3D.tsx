@@ -686,22 +686,7 @@ function SnapshotManager() {
         ? exportCanvas.width - padX * 2
         : Math.max(200, exportCanvas.width * 0.55);
 
-      ctx.fillText(titleText, padX, exportCanvas.height - bannerHeight * 0.44, bottomMaxTextWidth);
-
-      ctx.font = `600 ${fontSizeSub}px monospace`;
-      ctx.fillStyle = '#38bdf8';
-      const scaleText =
-        activeLayer === 'macro'
-          ? 'THANG ĐO: VĨ MÔ (VẬT THỂ)'
-          : activeLayer === 'micro'
-          ? 'THANG ĐO: Ô MẠNG TINH THỂ'
-          : 'THANG ĐO: NGUYÊN TỬ & PHÂN TỬ';
-      ctx.fillText(
-        `${scaleText} • CẤU TRÚC 3D KHOA HỌC CHUẨN XÁC`,
-        padX,
-        exportCanvas.height - bannerHeight * 0.16,
-        bottomMaxTextWidth
-      );
+      ctx.fillText(titleText, padX, exportCanvas.height - bannerHeight * 0.28, bottomMaxTextWidth);
 
       if (isMobileOrPortrait) {
         // Mobile / Portrait view: Place branding at the top-left with smooth gradient banner

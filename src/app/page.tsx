@@ -242,9 +242,18 @@ export default function HomePage() {
       <header className={`app-header ${isZenMode ? 'is-zen-hidden' : ''}`}>
         {/* Full Brand Lockup: Digital Matterials Lab & Nguyễn Văn Tài (Always fully visible on Desktop & Mobile) */}
         <div className="brand-lockup shrink-0">
-          <span className="brand-mark shrink-0">
+          <button
+            type="button"
+            onClick={() => {
+              sound.playClick();
+              window.location.reload();
+            }}
+            className="brand-mark shrink-0 cursor-pointer border-none p-0 outline-none hover:scale-105 active:scale-95 transition-transform"
+            title="Tải lại trang"
+            aria-label="Tải lại trang"
+          >
             <Atom size={22} />
-          </span>
+          </button>
           <div className="brand-text">
             <h1 className="brand-title">Digital Matterials Lab</h1>
             <p className="brand-author">Nguyễn Văn Tài</p>
