@@ -235,12 +235,7 @@ export default function ZoomScrubber() {
                   </span>
                   <div className="flex items-center gap-1">
                     {([1, 2, 3] as const).map((num) => {
-                      const label =
-                        selectedMaterial === 'cnt'
-                          ? `${num}V`
-                          : ['teflon', 'rubber', 'kevlar'].includes(selectedMaterial)
-                          ? `${num}S`
-                          : `${num}L`;
+                      const label = `${num}`;
 
                       const isActive = structureLayerCount === num;
                       const unitName =
