@@ -12,13 +12,30 @@ import { zoomState } from './zoomState';
  * NOTE: 3D coordinate axes, arrows, and floating axis HTML tags are completely removed
  * to eliminate obstruction over atom spheres and UI panels.
  */
+import { MATERIAL_MAP } from '@/data/materials';
+
 export function CrystallographyOverlays() {
+  const selectedMaterial = useStore((s: StoreState) => s.selectedMaterial);
   const activeLayer = useStore((s: StoreState) => s.activeLayer);
   const showLatticeCage = useStore((s: StoreState) => s.showLatticeCage);
   const showMillerPlanes = useStore((s: StoreState) => s.showMillerPlanes);
   const groupRef = useRef<THREE.Group>(null);
 
-  const isVisible = (activeLayer === 'micro' || activeLayer === 'molecular') && (showLatticeCage || showMillerPlanes);
+  const mat = MATERIAL_MAP.get(selectedMaterial);
+  const isNonCrystalline =
+    !mat ||
+    mat.id === 'glass' ||
+    mat.id === 'aerogel' ||
+    mat.id === 'rubber' ||
+    mat.id === 'teflon' ||
+    mat.id === 'kevlar' ||
+    mat.id === 'buckyball' ||
+    mat.id === 'cnt';
+
+  const isVisible =
+    !isNonCrystalline &&
+    (activeLayer === 'micro' || activeLayer === 'molecular') &&
+    (showLatticeCage || showMillerPlanes);
 
   const cageSize = 2.4;
   const half = cageSize / 2;

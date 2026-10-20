@@ -3,8 +3,8 @@ import { MaterialData } from '@/store/useStore';
 // ── 15. Cao Su Đàn Hồi Lưu Hóa ─────────────────────────────────────────────
 export const rubberMaterial: MaterialData = {
     id: 'rubber',
-    name: 'Vulcanized Rubber',
-    nameVi: 'Cao Su Đàn Hồi Lưu Hóa',
+    name: 'Rubber',
+    nameVi: 'Cao Su',
     formula: '(C₅H₈)ₙ · S',
     category: 'molecular',
     categoryLabel: 'Cấu trúc Phân tử',
@@ -51,7 +51,7 @@ export const rubberMaterial: MaterialData = {
         color: '#fde047',
         hybridization: 'sp³ kết hợp nối đôi sp² cục bộ',
         coordinationGeometry: 'Chuỗi xoắn tự do nối chéo không gian',
-        bondEnergy: 'C–C: 348 kJ/mol; C–S: 272 kJ/mol; S–S: 226 kJ/mol',
+        bondEnergy: '348 kJ/mol (C–C)',
         interlayerForce: 'Hiệu ứng entropy đàn hồi: khi kéo dãn chuỗi duỗi thẳng, thả ra tự co xoắn',
         descriptionVi:
           'Cao su tự nhiên gồm các chuỗi phân tử dài ngoằng cuộn xoắn như đống dây thừng. Khi Charles Goodyear phát minh ra phương pháp "lưu hóa" (nấu với lưu huỳnh), các nguyên tử Lưu huỳnh tạo thành các cây cầu nối –S–S– bắc ngang giữa các chuỗi kề nhau. Khi lốp xe bị kéo căng, các chuỗi duỗi ra; khi lực thôi tác dụng, các cây cầu lưu huỳnh lập tức kéo giật các chuỗi co xoắn về vị trí cũ, tạo nên tính đàn hồi bền bỉ cho lốp xe.',

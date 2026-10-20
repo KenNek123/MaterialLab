@@ -36,37 +36,54 @@ export function createMxeneCapacitorGeometry(): THREE.BufferGeometry {
   return merged;
 }
 
-// ── 2. Ống Nano Carbon Đơn Vách: Bó Sợi Đồng Trục Nano Siêu Bền (SWCNT) ────
+// ── 2. Ống Nano Carbon Đơn Vách: Mô Hình Trụ Rỗng Hexagonal SWCNT ──────────
 export function createNanotubeCoilGeometry(): THREE.BufferGeometry {
   const parts: THREE.BufferGeometry[] = [];
 
-  // Ống trụ nano trung tâm (Inner Core Tube)
-  const innerTube = new THREE.CylinderGeometry(0.42, 0.42, 2.5, 32, 1, true);
-  parts.push(innerTube);
+  const radiusOuter = 0.85;
+  const radiusInner = 0.79;
+  const length = 3.4;
 
-  // Vỏ trụ nano đồng trục bên ngoài (Outer Sheath)
-  const outerTube = new THREE.CylinderGeometry(0.82, 0.82, 2.7, 32, 1, true);
+  // 1. Vỏ trụ ngoài rỗng 2 đầu với 16 phân đoạn chu vi & 12 phân đoạn chiều dài
+  // Giúp EdgesGeometry trong MacroObject hiển thị khung lưới tổ ong nano sắc nét
+  const outerTube = new THREE.CylinderGeometry(radiusOuter, radiusOuter, length, 16, 12, true);
   parts.push(outerTube);
 
-  // 7 Vòng gân chiral nano quấn quanh thân ống
-  for (let i = 0; i < 7; i++) {
-    const y = -1.05 + i * 0.35;
-    const ring = new THREE.TorusGeometry(0.85, 0.045, 12, 32);
-    ring.rotateX(Math.PI / 2);
-    ring.translate(0, y, 0);
-    parts.push(ring);
+  // 2. Thành lòng ống bên trong rỗng 2 đầu (tạo độ dày thành ống thực tế)
+  const innerTube = new THREE.CylinderGeometry(radiusInner, radiusInner, length, 16, 12, true);
+  parts.push(innerTube);
+
+  // 3. Vành miệng ống tròn mượt ở 2 đầu (hở hoàn toàn, nhìn xuyên thấu lõi ống)
+  const rimRadius = (radiusOuter + radiusInner) * 0.5;
+  const rimThickness = (radiusOuter - radiusInner) * 0.5;
+
+  const topRim = new THREE.TorusGeometry(rimRadius, rimThickness, 12, 32);
+  topRim.rotateX(Math.PI / 2);
+  topRim.translate(0, length * 0.5, 0);
+  parts.push(topRim);
+
+  const botRim = new THREE.TorusGeometry(rimRadius, rimThickness, 12, 32);
+  botRim.rotateX(Math.PI / 2);
+  botRim.translate(0, -length * 0.5, 0);
+  parts.push(botRim);
+
+  // 4. Các vòng gân liên kết cộng hóa trị chu vi (Chiral Honeycomb Ribs)
+  const numRibs = 10;
+  for (let i = 0; i < numRibs; i++) {
+    const y = -length * 0.45 + (i * length * 0.9) / (numRibs - 1);
+    const rib = new THREE.TorusGeometry(radiusOuter + 0.006, 0.016, 8, 32);
+    rib.rotateX(Math.PI / 2);
+    rib.translate(0, y, 0);
+    parts.push(rib);
   }
 
-  // Khuyên khóa từ tính nano ở 2 đầu cáp
-  const capTop = new THREE.CylinderGeometry(0.92, 0.92, 0.22, 32, 1);
-  capTop.translate(0, 1.35, 0);
-  parts.push(capTop);
+  const merged = mergeGeometries(parts) || outerTube;
 
-  const capBot = new THREE.CylinderGeometry(0.92, 0.92, 0.22, 32, 1);
-  capBot.translate(0, -1.35, 0);
-  parts.push(capBot);
+  // Xoay ngang và nghiêng phối cảnh đồng nhất với mô hình nguyên tử (Molecular Layer)
+  merged.rotateZ(Math.PI / 2);
+  merged.rotateY(-0.36);
+  merged.rotateZ(0.14);
 
-  const merged = mergeGeometries(parts) || innerTube;
   merged.center();
   return merged;
 }

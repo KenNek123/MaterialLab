@@ -4,7 +4,7 @@ import { MaterialData } from '@/store/useStore';
 export const batteryLcoMaterial: MaterialData = {
     id: 'battery-lco',
     name: 'Lithium Battery Material',
-    nameVi: 'Vật Liệu Pin Lithium (LCO)',
+    nameVi: 'Pin Lithium',
     formula: 'LiCoO₂',
     category: 'molecular',
     categoryLabel: 'Cấu trúc Phân tử',
@@ -51,7 +51,7 @@ export const batteryLcoMaterial: MaterialData = {
         color: '#6ee7b7',
         hybridization: 'Lai hóa d²sp³ của kim loại chuyển tiếp Coban',
         coordinationGeometry: 'Bát diện đều xếp lớp xen kẽ',
-        bondEnergy: 'Phối trí Co-O: 420 kJ/mol; Lực giữ ion Li⁺: ~200 kJ/mol',
+        bondEnergy: '420 kJ/mol (Co–O)',
         interlayerForce: 'Lớp Liti có thể trượt thoát ra và chui vào trở lại khi cắm sạc',
         descriptionVi:
           'LiCoO₂ có cấu trúc bánh kẹp nhiều lớp: tầng trên là các bát diện CoO₂ vững chắc, ở giữa là một xa lộ cho các ion Liti (Li⁺). Khi bạn cắm sạc điện thoại, các ion Li⁺ tách khỏi lớp này chạy sang cực âm than chì tích trữ điện; khi bạn dùng điện thoại lướt mạng, các ion Li⁺ chạy ngược trở về giải phóng dòng điện nuôi máy.',

@@ -3,8 +3,8 @@ import { MaterialData } from '@/store/useStore';
 // ── 24. Siêu Hợp Kim Inconel 718 (Ni–Cr–Fe) ───────────────────────────────
 export const inconelMaterial: MaterialData = {
     id: 'inconel',
-    name: 'Inconel 718 Superalloy',
-    nameVi: 'Siêu Hợp Kim Inconel 718',
+    name: 'Inconel 718',
+    nameVi: 'Inconel 718',
     formula: 'Ni–Cr–Fe',
     category: 'metal',
     categoryLabel: 'Kim loại & Hợp kim',
@@ -51,7 +51,7 @@ export const inconelMaterial: MaterialData = {
         color: '#cbd5e1',
         hybridization: 'Xen phủ obitan dải d kim loại chuyển tiếp nhiệt độ cao',
         coordinationGeometry: 'Phối trí lập phương tâm diện 12 hạt (CN=12)',
-        bondEnergy: '430 kJ/mol (Giữ nguyên cấu trúc tinh thể tới 1300°C)',
+        bondEnergy: '430 kJ/mol',
         interlayerForce: 'Các hạt nano kết tủa γ″ ghim chặt chuyển vị khiến mạng không thể trượt',
         descriptionVi:
           'Inconel 718 là siêu hợp kim gốc Niken chế tạo buồng đốt tên lửa vũ trụ. Bí quyết sức mạnh của nó nằm ở cơ chế gia cường kết tủa (Precipitation Hardening): pha liên kim nano γ″ (Ni₃Nb) phân tán đều đặn ghim chặt các mặt trượt tinh thể của nền Niken FCC. Nhờ đó, vật liệu không bị mềm hóa, chảy dẻo hay rão rão ngay cả khi đỏ lửa ở nhiệt độ hơn 700°C trong luồng khí phụt tên lửa.',

@@ -3,8 +3,8 @@ import { MaterialData } from '@/store/useStore';
 // ── 11. Silic Vi Mạch Bán Dẫn (Si) ──────────────────────────────────────────
 export const siliconMaterial: MaterialData = {
     id: 'silicon',
-    name: 'Semiconductor Silicon',
-    nameVi: 'Silic Vi Mạch Bán Dẫn (Si)',
+    name: 'Silicon',
+    nameVi: 'Silic',
     formula: 'Si',
     category: 'crystal',
     categoryLabel: 'Gốm & Tinh thể',

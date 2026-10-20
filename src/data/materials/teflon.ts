@@ -3,8 +3,8 @@ import { MaterialData } from '@/store/useStore';
 // ── 12. Chống Dính Teflon (PTFE) ───────────────────────────────────────────
 export const teflonMaterial: MaterialData = {
     id: 'teflon',
-    name: 'Teflon PTFE',
-    nameVi: 'Chống Dính Teflon (PTFE)',
+    name: 'Teflon',
+    nameVi: 'Teflon',
     formula: '(C₂F₄)ₙ',
     category: 'molecular',
     categoryLabel: 'Cấu trúc Phân tử',
@@ -50,7 +50,7 @@ export const teflonMaterial: MaterialData = {
         color: '#a7f3d0',
         hybridization: 'Lai hóa sp³ mạch thẳng xoắn ốc',
         coordinationGeometry: 'Trục Carbon bọc kín bởi các nguyên tử Flo bán kính nhỏ',
-        bondEnergy: '485 kJ/mol (Cực kỳ khó bị bẻ gãy)',
+        bondEnergy: '485 kJ/mol',
         interlayerForce: 'Lực hút giữa các chuỗi polyme gần như bằng 0, không dính thứ gì',
         descriptionVi:
           'Teflon gồm một xương sống các nguyên tử Carbon liên kết với nhau, và mỗi Carbon được gắn với hai nguyên tử Flo. Vì nguyên tử Flo có độ âm điện cực cao và bán kính nhỏ gọn, chúng xếp kín xung quanh trục carbon tạo thành một "áo giáp điện tử âm tính" đồng nhất. Lớp áo này đẩy lùi mọi phân tử thức ăn, dầu mỡ và nước, khiến thức ăn không bao giờ dính chặt vào đáy chảo.',

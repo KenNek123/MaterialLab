@@ -2,8 +2,6 @@ import { MaterialData } from '@/store/useStore';
 
 import { diamondMaterial } from './diamond';
 import { graphiteMaterial } from './graphite';
-import { saltMaterial } from './salt';
-import { quartzMaterial } from './quartz';
 import { mxeneMaterial } from './mxene';
 import { goldMaterial } from './gold';
 import { copperMaterial } from './copper';
@@ -20,21 +18,26 @@ import { buckyballMaterial } from './buckyball';
 import { perovskiteMaterial } from './perovskite';
 import { aerogelMaterial } from './aerogel';
 import { nitinolMaterial } from './nitinol';
-import { iceMaterial } from './ice';
 import { grapheneMaterial } from './graphene';
 import { kevlarMaterial } from './kevlar';
 import { inconelMaterial } from './inconel';
 import { glassMaterial } from './glass';
+import { steelMaterial } from './steel';
+import { stainlessSteelMaterial } from './stainlessSteel';
+import { duraluminMaterial } from './duralumin';
+import { tungstenCarbideMaterial } from './tungstenCarbide';
 
 export const MATERIALS: MaterialData[] = [
   diamondMaterial,
   graphiteMaterial,
-  saltMaterial,
-  quartzMaterial,
   mxeneMaterial,
   goldMaterial,
   copperMaterial,
   ironMaterial,
+  steelMaterial,
+  stainlessSteelMaterial,
+  duraluminMaterial,
+  tungstenCarbideMaterial,
   aluminumMaterial,
   titaniumMaterial,
   siliconMaterial,
@@ -47,7 +50,6 @@ export const MATERIALS: MaterialData[] = [
   perovskiteMaterial,
   aerogelMaterial,
   nitinolMaterial,
-  iceMaterial,
   grapheneMaterial,
   kevlarMaterial,
   inconelMaterial,
@@ -65,8 +67,6 @@ export const MATERIAL_CATEGORIES = [
 
 export * from './diamond';
 export * from './graphite';
-export * from './salt';
-export * from './quartz';
 export * from './mxene';
 export * from './gold';
 export * from './copper';
@@ -83,8 +83,11 @@ export * from './buckyball';
 export * from './perovskite';
 export * from './aerogel';
 export * from './nitinol';
-export * from './ice';
 export * from './graphene';
 export * from './kevlar';
 export * from './inconel';
 export * from './glass';
+export * from './steel';
+export * from './stainlessSteel';
+export * from './duralumin';
+export * from './tungstenCarbide';

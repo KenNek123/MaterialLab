@@ -121,7 +121,7 @@ export default function CompareModal() {
           <ChevronUp size={18} className="text-blue-600 shrink-0 ml-1" />
         </motion.div>
       ) : (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 md:p-6 bg-slate-900/40 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-3 md:p-5 bg-slate-900/40 backdrop-blur-sm">
           {/* Backdrop dismiss */}
           <div
             className="fixed inset-0 -z-10"
@@ -136,27 +136,27 @@ export default function CompareModal() {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 14 }}
             transition={{ type: 'spring', damping: 26, stiffness: 320 }}
-            className="relative w-full max-w-5xl max-h-[92dvh] flex flex-col overflow-hidden shadow-2xl shadow-blue-900/15 z-10 border-2 border-blue-200/90 bg-white rounded-2xl sm:rounded-3xl"
+            className="relative w-[96%] sm:w-[93%] md:w-[90%] lg:w-[86%] max-w-6xl max-h-[min(90dvh,92%)] flex flex-col overflow-hidden shadow-2xl shadow-blue-900/15 z-10 border-2 border-blue-200/90 bg-white rounded-2xl sm:rounded-3xl"
           >
             {/* Top highlight bar */}
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-600 via-sky-500 to-indigo-600 z-10" />
 
             {/* Header */}
-            <div className="flex items-center justify-between px-3.5 sm:px-6 py-3 border-b border-slate-200 bg-slate-50 shrink-0 gap-2">
+            <div className="flex items-center justify-between px-3.5 sm:px-6 py-2.5 sm:py-3 border-b border-slate-200 bg-slate-50 shrink-0 gap-2">
               <div className="flex items-center gap-2.5 sm:gap-3.5 min-w-0 flex-1">
                 <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-blue-50 border border-blue-200 text-blue-600 flex items-center justify-center shrink-0 shadow-sm">
                   <Atom size={20} />
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
-                    <h2 className="text-sm sm:text-base md:text-lg font-black text-slate-900 tracking-wide truncate">
+                    <h2 className="text-sm sm:text-base md:text-lg font-black text-slate-900 tracking-wide break-words">
                       Bảng So Sánh Vật Liệu & Liên Kết
                     </h2>
                     <span className="text-[9px] sm:text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200 whitespace-nowrap">
                       Dual Matrix
                     </span>
                   </div>
-                  <p className="text-[10px] sm:text-xs text-slate-500 truncate mt-0.5 hidden xs:block">
+                  <p className="text-[10px] sm:text-xs text-slate-500 break-words mt-0.5 hidden xs:block">
                     Đối chiếu cấu trúc mạng nguyên tử, bản chất liên kết hóa học và cơ tính
                   </p>
                 </div>
@@ -226,7 +226,7 @@ export default function CompareModal() {
                       <span className="text-[9px] uppercase font-mono tracking-widest text-blue-700 font-black">
                         VẬT LIỆU A
                       </span>
-                      <span className="text-[9px] px-2 py-0.2 rounded-full bg-blue-100 text-blue-800 border border-blue-200 font-bold truncate">
+                      <span className="text-[9px] px-2 py-0.2 rounded-full bg-blue-100 text-blue-800 border border-blue-200 font-bold break-words">
                         {matA.categoryLabel}
                       </span>
                     </div>
@@ -236,7 +236,7 @@ export default function CompareModal() {
                         sound.playClick();
                         setCompareMaterialA(e.target.value);
                       }}
-                      className="w-full bg-white text-slate-800 font-bold text-xs sm:text-sm focus:outline-none cursor-pointer mt-1 px-2 py-1 rounded-lg border border-slate-200 truncate"
+                      className="w-full bg-white text-slate-800 font-bold text-xs sm:text-sm focus:outline-none cursor-pointer mt-1 px-2 py-1 rounded-lg border border-slate-200"
                     >
                       {MATERIALS.map((m) => (
                         <option key={`opt-a-${m.id}`} value={m.id} className="text-slate-800 font-bold">
@@ -285,7 +285,7 @@ export default function CompareModal() {
                       <span className="text-[9px] uppercase font-mono tracking-widest text-indigo-700 font-black">
                         VẬT LIỆU B
                       </span>
-                      <span className="text-[9px] px-2 py-0.2 rounded-full bg-indigo-100 text-indigo-800 border border-indigo-200 font-bold truncate">
+                      <span className="text-[9px] px-2 py-0.2 rounded-full bg-indigo-100 text-indigo-800 border border-indigo-200 font-bold break-words">
                         {matB.categoryLabel}
                       </span>
                     </div>
@@ -295,7 +295,7 @@ export default function CompareModal() {
                         sound.playClick();
                         setCompareMaterialB(e.target.value);
                       }}
-                      className="w-full bg-white text-slate-800 font-bold text-xs sm:text-sm focus:outline-none cursor-pointer mt-1 px-2 py-1 rounded-lg border border-slate-200 truncate"
+                      className="w-full bg-white text-slate-800 font-bold text-xs sm:text-sm focus:outline-none cursor-pointer mt-1 px-2 py-1 rounded-lg border border-slate-200"
                     >
                       {MATERIALS.map((m) => (
                         <option key={`opt-b-${m.id}`} value={m.id} className="text-slate-800 font-bold">
@@ -329,70 +329,70 @@ export default function CompareModal() {
                   ĐỐI CHIẾU BẢN CHẤT LIÊN KẾT HÓA HỌC & MẠNG TINH THỂ
                 </h3>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* Material A Bonding Card */}
-                  <div className="p-3.5 sm:p-4 rounded-2xl bg-white border border-blue-200/80 space-y-3 shadow-sm min-w-0">
-                    <div className="flex items-center justify-between pb-2.5 border-b border-slate-100">
-                      <div className="flex items-center gap-2 min-w-0 flex-1">
+                  <div className="p-4 rounded-2xl bg-white border border-blue-200/80 space-y-3 shadow-sm min-w-0">
+                    <div className="flex items-center justify-between gap-2.5 pb-3 border-b border-slate-100">
+                      <div className="flex items-center gap-2.5 min-w-0 flex-1">
                         <MaterialBadge material={matA} size="sm" />
                         <div className="min-w-0 flex-1">
-                          <div className="text-xs sm:text-sm font-black text-slate-900 truncate">
+                          <span className="text-sm font-black text-slate-900 block truncate whitespace-nowrap leading-tight">
                             {matA.nameVi}
-                          </div>
-                          <div className="text-[10px] text-slate-500 font-mono truncate">
+                          </span>
+                          <span className="text-[11px] text-slate-500 font-mono block truncate mt-0.5">
                             {matA.formula} · {matA.categoryLabel}
-                          </div>
+                          </span>
                         </div>
                       </div>
                       {matA.molecularInfo.bonds.bondEnergy && (
-                        <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-xl bg-blue-50 text-blue-700 border border-blue-200 shrink-0 ml-1">
-                          {matA.molecularInfo.bonds.bondEnergy}
+                        <span className="text-[11px] font-mono font-bold px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 border border-blue-200 shrink-0 whitespace-nowrap">
+                          {matA.molecularInfo.bonds.bondEnergy.split('(')[0].trim()}
                         </span>
                       )}
                     </div>
 
-                    <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200">
+                    <div className="p-3 rounded-xl bg-slate-50/80 border border-slate-200/80">
                       <span className="text-[9px] uppercase font-mono tracking-wider text-blue-600 font-extrabold block">
                         Kiểu liên kết hóa học cốt lõi
                       </span>
-                      <span className="text-xs sm:text-sm text-slate-800 font-bold mt-0.5 block break-words">
+                      <strong className="text-xs sm:text-sm text-slate-800 block mt-1 leading-snug break-words">
                         {matA.molecularInfo.bonds.type}
-                      </span>
+                      </strong>
                     </div>
 
                     <div className="grid grid-cols-2 gap-2 text-xs">
-                      <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200 min-w-0">
-                        <span className="text-[9px] text-slate-500 uppercase font-mono font-bold block truncate">
+                      <div className="bg-slate-50/80 p-2.5 rounded-xl border border-slate-200/80 min-w-0">
+                        <span className="text-[9px] text-slate-400 uppercase font-mono font-bold block tracking-wider leading-tight">
                           Kiểu mạng tinh thể
                         </span>
-                        <strong className="text-slate-800 font-bold mt-0.5 block text-[11px] sm:text-xs leading-snug break-words">
+                        <strong className="text-slate-800 block mt-1 text-xs font-semibold leading-snug break-words">
                           {matA.molecularInfo.latticeType}
                         </strong>
                       </div>
 
-                      <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200 min-w-0">
-                        <span className="text-[9px] text-slate-500 uppercase font-mono font-bold block truncate">
+                      <div className="bg-slate-50/80 p-2.5 rounded-xl border border-slate-200/80 min-w-0">
+                        <span className="text-[9px] text-slate-400 uppercase font-mono font-bold block tracking-wider leading-tight">
                           Hệ tinh thể
                         </span>
-                        <strong className="text-slate-800 font-bold mt-0.5 block text-[11px] sm:text-xs leading-snug break-words">
+                        <strong className="text-slate-800 block mt-1 text-xs font-semibold leading-snug break-words">
                           {matA.molecularInfo.crystalSystem}
                         </strong>
                       </div>
 
-                      <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200 min-w-0">
-                        <span className="text-[9px] text-slate-500 uppercase font-mono font-bold block truncate">
+                      <div className="bg-slate-50/80 p-2.5 rounded-xl border border-slate-200/80 min-w-0">
+                        <span className="text-[9px] text-slate-400 uppercase font-mono font-bold block tracking-wider leading-tight">
                           Độ dài liên kết
                         </span>
-                        <span className="font-mono text-blue-700 font-bold mt-0.5 block text-[11px] sm:text-xs truncate">
+                        <span className="font-mono text-blue-700 font-bold block mt-1 text-xs leading-snug break-words">
                           {matA.molecularInfo.bondLength}
                         </span>
                       </div>
 
-                      <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200 min-w-0">
-                        <span className="text-[9px] text-slate-500 uppercase font-mono font-bold block truncate">
+                      <div className="bg-slate-50/80 p-2.5 rounded-xl border border-slate-200/80 min-w-0">
+                        <span className="text-[9px] text-slate-400 uppercase font-mono font-bold block tracking-wider leading-tight">
                           Góc liên kết
                         </span>
-                        <span className="font-mono text-blue-700 font-bold mt-0.5 block text-[11px] sm:text-xs truncate">
+                        <span className="font-mono text-blue-700 font-bold block mt-1 text-xs leading-snug break-words">
                           {matA.molecularInfo.bondAngle}
                         </span>
                       </div>
@@ -400,68 +400,68 @@ export default function CompareModal() {
                   </div>
 
                   {/* Material B Bonding Card */}
-                  <div className="p-3.5 sm:p-4 rounded-2xl bg-white border border-indigo-200/80 space-y-3 shadow-sm min-w-0">
-                    <div className="flex items-center justify-between pb-2.5 border-b border-slate-100">
-                      <div className="flex items-center gap-2 min-w-0 flex-1">
+                  <div className="p-4 rounded-2xl bg-white border border-indigo-200/80 space-y-3 shadow-sm min-w-0">
+                    <div className="flex items-center justify-between gap-2.5 pb-3 border-b border-slate-100">
+                      <div className="flex items-center gap-2.5 min-w-0 flex-1">
                         <MaterialBadge material={matB} size="sm" />
                         <div className="min-w-0 flex-1">
-                          <div className="text-xs sm:text-sm font-black text-slate-900 truncate">
+                          <span className="text-sm font-black text-slate-900 block truncate whitespace-nowrap leading-tight">
                             {matB.nameVi}
-                          </div>
-                          <div className="text-[10px] text-slate-500 font-mono truncate">
+                          </span>
+                          <span className="text-[11px] text-slate-500 font-mono block truncate mt-0.5">
                             {matB.formula} · {matB.categoryLabel}
-                          </div>
+                          </span>
                         </div>
                       </div>
                       {matB.molecularInfo.bonds.bondEnergy && (
-                        <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-xl bg-indigo-50 text-indigo-700 border border-indigo-200 shrink-0 ml-1">
-                          {matB.molecularInfo.bonds.bondEnergy}
+                        <span className="text-[11px] font-mono font-bold px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-700 border border-indigo-200 shrink-0 whitespace-nowrap">
+                          {matB.molecularInfo.bonds.bondEnergy.split('(')[0].trim()}
                         </span>
                       )}
                     </div>
 
-                    <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200">
+                    <div className="p-3 rounded-xl bg-slate-50/80 border border-slate-200/80">
                       <span className="text-[9px] uppercase font-mono tracking-wider text-indigo-600 font-extrabold block">
                         Kiểu liên kết hóa học cốt lõi
                       </span>
-                      <span className="text-xs sm:text-sm text-slate-800 font-bold mt-0.5 block break-words">
+                      <strong className="text-xs sm:text-sm text-slate-800 block mt-1 leading-snug break-words">
                         {matB.molecularInfo.bonds.type}
-                      </span>
+                      </strong>
                     </div>
 
                     <div className="grid grid-cols-2 gap-2 text-xs">
-                      <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200 min-w-0">
-                        <span className="text-[9px] text-slate-500 uppercase font-mono font-bold block truncate">
+                      <div className="bg-slate-50/80 p-2.5 rounded-xl border border-slate-200/80 min-w-0">
+                        <span className="text-[9px] text-slate-400 uppercase font-mono font-bold block tracking-wider leading-tight">
                           Kiểu mạng tinh thể
                         </span>
-                        <strong className="text-slate-800 font-bold mt-0.5 block text-[11px] sm:text-xs leading-snug break-words">
+                        <strong className="text-slate-800 block mt-1 text-xs font-semibold leading-snug break-words">
                           {matB.molecularInfo.latticeType}
                         </strong>
                       </div>
 
-                      <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200 min-w-0">
-                        <span className="text-[9px] text-slate-500 uppercase font-mono font-bold block truncate">
+                      <div className="bg-slate-50/80 p-2.5 rounded-xl border border-slate-200/80 min-w-0">
+                        <span className="text-[9px] text-slate-400 uppercase font-mono font-bold block tracking-wider leading-tight">
                           Hệ tinh thể
                         </span>
-                        <strong className="text-slate-800 font-bold mt-0.5 block text-[11px] sm:text-xs leading-snug break-words">
+                        <strong className="text-slate-800 block mt-1 text-xs font-semibold leading-snug break-words">
                           {matB.molecularInfo.crystalSystem}
                         </strong>
                       </div>
 
-                      <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200 min-w-0">
-                        <span className="text-[9px] text-slate-500 uppercase font-mono font-bold block truncate">
+                      <div className="bg-slate-50/80 p-2.5 rounded-xl border border-slate-200/80 min-w-0">
+                        <span className="text-[9px] text-slate-400 uppercase font-mono font-bold block tracking-wider leading-tight">
                           Độ dài liên kết
                         </span>
-                        <span className="font-mono text-indigo-700 font-bold mt-0.5 block text-[11px] sm:text-xs truncate">
+                        <span className="font-mono text-indigo-700 font-bold block mt-1 text-xs leading-snug break-words">
                           {matB.molecularInfo.bondLength}
                         </span>
                       </div>
 
-                      <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200 min-w-0">
-                        <span className="text-[9px] text-slate-500 uppercase font-mono font-bold block truncate">
+                      <div className="bg-slate-50/80 p-2.5 rounded-xl border border-slate-200/80 min-w-0">
+                        <span className="text-[9px] text-slate-400 uppercase font-mono font-bold block tracking-wider leading-tight">
                           Góc liên kết
                         </span>
-                        <span className="font-mono text-indigo-700 font-bold mt-0.5 block text-[11px] sm:text-xs truncate">
+                        <span className="font-mono text-indigo-700 font-bold block mt-1 text-xs leading-snug break-words">
                           {matB.molecularInfo.bondAngle}
                         </span>
                       </div>
@@ -486,12 +486,12 @@ export default function CompareModal() {
                     return (
                       <div
                         key={`metric-${metric.key}`}
-                        className="p-3 sm:p-4 rounded-2xl bg-white border border-slate-200 space-y-2.5 shadow-sm min-w-0"
+                        className="p-3.5 sm:p-4 rounded-2xl bg-white border border-slate-200 space-y-2.5 shadow-sm min-w-0"
                       >
                         <div className="flex items-center justify-between text-xs min-w-0 gap-2">
                           <div className="flex items-center gap-2 min-w-0">
                             <Icon size={16} className="text-slate-500 shrink-0" />
-                            <span className="font-bold text-slate-800 truncate">{metric.label}</span>
+                            <span className="font-bold text-slate-800">{metric.label}</span>
                           </div>
                           {winner !== 'EQUAL' && (
                             <span
@@ -507,12 +507,12 @@ export default function CompareModal() {
                         </div>
 
                         {/* Dual Bar Comparison */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                           {/* Bar A */}
-                          <div className="space-y-1">
-                            <div className="flex items-center justify-between text-[11px]">
+                          <div className="space-y-1.5 min-w-0">
+                            <div className="flex items-center justify-between text-[11px] gap-2">
                               <span className="text-slate-700 font-semibold truncate">{matA.nameVi}</span>
-                              <span className="font-mono font-bold text-blue-700">{metric.valA} / 100</span>
+                              <span className="font-mono font-bold text-blue-700 shrink-0">{metric.valA} / 100</span>
                             </div>
                             <div className="h-2 rounded-full bg-slate-100 overflow-hidden border border-slate-200">
                               <motion.div
@@ -522,14 +522,14 @@ export default function CompareModal() {
                                 className="h-full rounded-full bg-blue-600"
                               />
                             </div>
-                            <div className="text-[10px] text-slate-500 truncate">{metric.textA}</div>
+                            <div className="text-[10px] text-slate-500 break-words leading-snug">{metric.textA}</div>
                           </div>
 
                           {/* Bar B */}
-                          <div className="space-y-1">
-                            <div className="flex items-center justify-between text-[11px]">
+                          <div className="space-y-1.5 min-w-0">
+                            <div className="flex items-center justify-between text-[11px] gap-2">
                               <span className="text-slate-700 font-semibold truncate">{matB.nameVi}</span>
-                              <span className="font-mono font-bold text-indigo-700">{metric.valB} / 100</span>
+                              <span className="font-mono font-bold text-indigo-700 shrink-0">{metric.valB} / 100</span>
                             </div>
                             <div className="h-2 rounded-full bg-slate-100 overflow-hidden border border-slate-200">
                               <motion.div
@@ -539,7 +539,7 @@ export default function CompareModal() {
                                 className="h-full rounded-full bg-indigo-600"
                               />
                             </div>
-                            <div className="text-[10px] text-slate-500 truncate">{metric.textB}</div>
+                            <div className="text-[10px] text-slate-500 break-words leading-snug">{metric.textB}</div>
                           </div>
                         </div>
                       </div>
@@ -556,7 +556,7 @@ export default function CompareModal() {
                 </h3>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-                  <div className="p-3.5 rounded-2xl bg-white border border-blue-200/80 space-y-2 shadow-sm">
+                  <div className="p-3.5 sm:p-4 rounded-2xl bg-white border border-blue-200/80 space-y-2.5 shadow-sm min-w-0">
                     <span className="text-[11px] font-black text-blue-700 uppercase font-mono block">
                       Ứng dụng của {matA.nameVi}
                     </span>
@@ -564,13 +564,13 @@ export default function CompareModal() {
                       {matA.macroInfo.applications.map((app, idx) => (
                         <li key={`app-a-${idx}`} className="flex items-start gap-2">
                           <CheckCircle2 size={13} className="text-blue-600 shrink-0 mt-0.5" />
-                          <span>{app}</span>
+                          <span className="leading-snug break-words">{app}</span>
                         </li>
                       ))}
                     </ul>
                   </div>
 
-                  <div className="p-3.5 rounded-2xl bg-white border border-indigo-200/80 space-y-2 shadow-sm">
+                  <div className="p-3.5 sm:p-4 rounded-2xl bg-white border border-indigo-200/80 space-y-2.5 shadow-sm min-w-0">
                     <span className="text-[11px] font-black text-indigo-700 uppercase font-mono block">
                       Ứng dụng của {matB.nameVi}
                     </span>
@@ -578,7 +578,7 @@ export default function CompareModal() {
                       {matB.macroInfo.applications.map((app, idx) => (
                         <li key={`app-b-${idx}`} className="flex items-start gap-2">
                           <CheckCircle2 size={13} className="text-indigo-600 shrink-0 mt-0.5" />
-                          <span>{app}</span>
+                          <span className="leading-snug break-words">{app}</span>
                         </li>
                       ))}
                     </ul>

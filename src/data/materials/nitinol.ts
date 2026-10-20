@@ -3,8 +3,8 @@ import { MaterialData } from '@/store/useStore';
 // ── 20. Hợp Kim Nhớ Hình Nitinol (NiTi) ────────────────────────────────────
 export const nitinolMaterial: MaterialData = {
     id: 'nitinol',
-    name: 'Shape Memory Nitinol',
-    nameVi: 'Hợp Kim Nhớ Hình Nitinol (NiTi)',
+    name: 'Nitinol',
+    nameVi: 'Nitinol',
     formula: 'NiTi',
     category: 'metal',
     categoryLabel: 'Kim loại & Hợp kim',

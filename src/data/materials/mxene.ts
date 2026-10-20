@@ -3,8 +3,8 @@ import { MaterialData } from '@/store/useStore';
 // ── 5. Vật Liệu Siêu Tích Điện MXene (Ti₃C₂Tₓ) ─────────────────────────────
 export const mxeneMaterial: MaterialData = {
     id: 'mxene',
-    name: 'Titanium Carbide MXene',
-    nameVi: 'Siêu Tụ Điện MXene (Ti₃C₂)',
+    name: 'MXene',
+    nameVi: 'MXene',
     formula: 'Ti₃C₂Tₓ',
     category: 'nano',
     categoryLabel: 'Vật liệu Nano & Tương lai',
@@ -24,10 +24,10 @@ export const mxeneMaterial: MaterialData = {
         'Màng mỏng chắn sóng điện từ (EMI Shielding) bảo vệ vi mạch 5G và thiết bị hàng không',
         'Cảm biến sinh học độ nhạy cao và màng lọc nano khử muối nước biển',
       ],
-      mechanicalStrength: 'Độ bền kéo siêu cao ~570 GPa, dẻo dai gấp uốn hàng triệu lần',
-      thermalConductivity: '55 W/(m·K) (Dẫn nhiệt kim loại vượt bậc)',
-      electricalConductivity: '15,000 S/cm (Dẫn điện ngang kim loại đồng nguyên chất)',
-      density: '3.2 g/cm³ (Khối lượng riêng nhẹ hơn nhôm và đồng)',
+      mechanicalStrength: 'Mô-đun đàn hồi đơn lớp ~330 GPa (Độ bền màng ~570 MPa), dẻo dai gấp uốn hàng triệu lần',
+      thermalConductivity: '55 W/(m·K) (Dẫn nhiệt kim loại nội lớp)',
+      electricalConductivity: '1.5 × 10⁶ S/m (15,000 S/cm, độ dẫn điện cao nhất trong các vật liệu 2D gia công ướt)',
+      density: '3.1 – 3.2 g/cm³',
     },
     metrics: {
       hardness: 88,
@@ -50,7 +50,7 @@ export const mxeneMaterial: MaterialData = {
         color: '#22d3ee',
         hybridization: 'Lai hóa d²sp³ của Titan (Ti) xen phủ orbital 2p của Cacbon (C)',
         coordinationGeometry: 'Bát diện 6 phối trí: mỗi nguyên tử Carbon nằm ở tâm bát diện tạo bởi 6 nguyên tử Titan',
-        bondEnergy: 'Liên kết Ti–C cộng hóa trị siêu mạnh: ~760 kJ/mol',
+        bondEnergy: '~760 kJ/mol (Ti–C)',
         interlayerForce: 'Tương tác Van der Waals và cầu liên kết hydro giữa các tầng 2D',
         descriptionVi:
           'MXene Ti₃C₂ được tạo ra bằng cách khắc bóc tách hóa học lớp Nhôm khỏi pha MAX (Ti₃AlC₂). Cấu trúc gồm 5 tầng nguyên tử xếp chặt theo trật tự Ti-C-Ti-C-Ti: các nguyên tử Carbon nằm lọt trong các hốc bát diện giữa hai tấm Titan kim loại. Cấu trúc độc nhất vô nhị này kết hợp hoàn hảo tính dẫn điện cực nhanh của kim loại với diện tích bề mặt khổng lồ của vật liệu 2D, mở đường cho pin và siêu tụ điện sạc đầy trong chớp mắt.',

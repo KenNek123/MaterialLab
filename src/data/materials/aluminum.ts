@@ -3,13 +3,13 @@ import { MaterialData } from '@/store/useStore';
 // ── 9. Nhôm Hàng Không (Al) ─────────────────────────────────────────────────
 export const aluminumMaterial: MaterialData = {
     id: 'aluminum',
-    name: 'Aviation Aluminum',
-    nameVi: 'Nhôm Hàng Không (Al)',
+    name: 'Aluminum',
+    nameVi: 'Nhôm',
     formula: 'Al',
     category: 'metal',
     categoryLabel: 'Kim loại & Hợp kim',
-    objectName: 'Aircraft Winglet & MacBook Shell',
-    objectNameVi: 'Vỏ Máy Bay & Khung MacBook',
+    objectName: 'Aircraft Winglet & Metal Shell',
+    objectNameVi: 'Vỏ Máy Bay & Khung Hợp Kim',
     icon: '✈️',
     color: '#e2e8f0',
     roughness: 0.25,
