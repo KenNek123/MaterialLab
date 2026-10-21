@@ -77,10 +77,21 @@ export default function RightActionDock({
         <button
           type="button"
           className={`dock-tool-btn dock-zen-btn zen-btn ${isZenMode ? 'is-zen-active is-active-zen' : ''}`}
-          onClick={(e) => {
+          onClick={async (e) => {
             e.stopPropagation();
             sound.playClick();
-            toggleZenMode();
+
+            try {
+              if (!document.fullscreenElement) {
+                await document.documentElement.requestFullscreen();
+                useStore.getState().setIsZenMode(true);
+              } else {
+                await document.exitFullscreen();
+                useStore.getState().setIsZenMode(false);
+              }
+            } catch (error) {
+              console.error('Không thể chuyển chế độ toàn màn hình:', error);
+            }
           }}
           title={
             isZenMode

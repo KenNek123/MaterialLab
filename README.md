@@ -2,7 +2,7 @@
 
 Phòng thí nghiệm số trực quan hóa và khám phá khoa học vật liệu 3D đa thang đo từ **Vật thể Vĩ mô (Macro)**, **Ô mạng Tinh thể (Micro)** đến **Cấu trúc Nguyên tử & Liên kết Hóa học (Molecular)**.
 
-🌐 **Website trực tuyến**: [digitalmateriallab.netlify.app](https://digitalmateriallab.netlify.app)
+🌐 **Website trực tuyến**: [digitalmatterialslab.netlify.app](https://digitalmatterialslab.netlify.app/)
 
 ---
 
