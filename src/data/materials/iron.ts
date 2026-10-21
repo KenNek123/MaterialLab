@@ -3,8 +3,8 @@ import { MaterialData } from '@/store/useStore';
 // ── 8. Sắt & Thép Xây Dựng (Fe) ─────────────────────────────────────────────
 export const ironMaterial: MaterialData = {
     id: 'iron',
-    name: 'Iron & Structural Steel',
-    nameVi: 'Sắt & Thép Xây Dựng (Fe)',
+    name: 'Iron',
+    nameVi: 'Sắt',
     formula: 'Fe',
     category: 'metal',
     categoryLabel: 'Kim loại & Hợp kim',

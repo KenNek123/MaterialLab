@@ -75,6 +75,10 @@ export interface MaterialData {
       | 'hcp'
       | 'fcc'
       | 'bcc'
+      | 'steel'
+      | 'stainless-steel'
+      | 'duralumin'
+      | 'tungsten-carbide'
       | 'diamond'
       | 'hexagonal'
       | 'nacl'
@@ -109,6 +113,10 @@ export interface MaterialData {
     | 'topological-crystal'
     | 'solid-battery'
     | 'turbine-blade'
+    | 'steel-gear'
+    | 'stainless-flange'
+    | 'duralumin-wing'
+    | 'carbide-insert'
     | 'diamond-gem'
     | 'graphite-pencil'
     | 'salt-cube'
@@ -328,7 +336,7 @@ export const useStore = create<StoreState>((set) => ({
   inspectedAtom: null,
 
   // Overlays Initial State (clean, no coordinate axes)
-  showLatticeCage: true,
+  showLatticeCage: false,
   showMillerPlanes: false,
 
   // Snapshot Initial State
@@ -350,6 +358,7 @@ export const useStore = create<StoreState>((set) => ({
       inspectedAtom: null,
       isTourActive: false,
       isTourPaused: false,
+      isZenMode: false,
       isDetailOpen: false,
       detailTab: 'bonds',
     }),
@@ -364,6 +373,7 @@ export const useStore = create<StoreState>((set) => ({
       isDetailOpen: false,
       isTourActive: false,
       isTourPaused: false,
+      isZenMode: false,
       detailTab: 'bonds',
     }),
 
@@ -446,7 +456,19 @@ export const useStore = create<StoreState>((set) => ({
     }),
 
   // Tour
-  setIsTourActive: (v) => set({ isTourActive: v, isTourPaused: false }),
+  setIsTourActive: (v) =>
+    set((state) => ({
+      isTourActive: v,
+      isTourPaused: false,
+      tourProgress: 0,
+      tourPhase: 'macro',
+      autoRotate: v ? false : state.userAutoRotate,
+      isZenMode: v ? true : false,
+      isBottomSheetOpen: false,
+      isDetailOpen: false,
+      isCompareOpen: false,
+      isRightDockHidden: false,
+    })),
   setIsTourPaused: (v) => set({ isTourPaused: v }),
   toggleTourPause: () => set((state) => ({ isTourPaused: !state.isTourPaused })),
   toggleTour: () =>
@@ -458,6 +480,11 @@ export const useStore = create<StoreState>((set) => ({
         tourProgress: 0,
         tourPhase: 'macro',
         autoRotate: next ? false : state.userAutoRotate,
+        isZenMode: next ? true : false,
+        isBottomSheetOpen: false,
+        isDetailOpen: false,
+        isCompareOpen: false,
+        isRightDockHidden: false,
       };
     }),
   setTourPhase: (phase) => set({ tourPhase: phase }),

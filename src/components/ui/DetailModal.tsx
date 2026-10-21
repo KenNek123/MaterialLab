@@ -185,7 +185,7 @@ export default function DetailModal() {
           <ChevronUp size={18} className="text-blue-600 shrink-0 ml-1" />
         </motion.div>
       ) : (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-2.5 sm:p-5">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4">
           {/* Dim backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
@@ -204,33 +204,33 @@ export default function DetailModal() {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 14 }}
             transition={{ type: 'spring', damping: 28, stiffness: 350 }}
-            className={`relative w-full max-w-4xl max-h-[92dvh] flex flex-col overflow-hidden z-10 shadow-2xl shadow-blue-900/15 border-2 ${theme.border} bg-white rounded-2xl sm:rounded-3xl`}
+            className={`relative w-[95%] sm:w-[92%] md:w-[88%] lg:w-[84%] max-w-5xl max-h-[min(90dvh,92%)] flex flex-col overflow-hidden z-10 shadow-2xl shadow-blue-900/15 border-2 ${theme.border} bg-white rounded-2xl sm:rounded-3xl`}
           >
             {/* Top candy highlight line */}
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-600 via-sky-400 to-indigo-600 z-10" />
 
             {/* Modal Header */}
             <div
-              className={`px-3.5 sm:px-6 py-3.5 border-b border-slate-200/80 bg-gradient-to-r ${theme.banner} flex items-center justify-between shrink-0 gap-2`}
+              className={`px-3.5 sm:px-6 py-2.5 sm:py-3.5 border-b border-slate-200/80 bg-gradient-to-r ${theme.banner} flex items-center justify-between shrink-0 gap-2`}
             >
               <div className="flex items-center gap-2.5 sm:gap-4 min-w-0 flex-1">
                 <MaterialBadge material={material} size="md" showSub />
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
-                    <h2 className="text-sm sm:text-lg md:text-xl font-black text-slate-900 tracking-wide truncate">
+                    <h2 className="text-sm sm:text-lg md:text-xl font-black text-slate-900 tracking-wide break-words">
                       {material.nameVi}
                     </h2>
-                    <span className="text-[10px] sm:text-xs font-mono font-black px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200 shadow-sm whitespace-nowrap">
+                    <span className="text-[10px] sm:text-xs font-mono font-black px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200 shadow-sm whitespace-nowrap shrink-0">
                       {material.formula}
                     </span>
                     <span
-                      className={`text-[9px] sm:text-xs px-2.5 py-0.5 rounded-full font-bold border shadow-sm truncate hidden xs:inline ${theme.badge}`}
+                      className={`text-[9px] sm:text-xs px-2.5 py-0.5 rounded-full font-bold border shadow-sm break-words hidden xs:inline ${theme.badge}`}
                     >
                       {material.categoryLabel}
                     </span>
                   </div>
-                  <div className="flex items-center gap-2 text-[10px] sm:text-xs text-slate-600 mt-0.5 truncate">
-                    <span className="truncate">
+                  <div className="flex items-center gap-2 text-[10px] sm:text-xs text-slate-600 mt-0.5 flex-wrap">
+                    <span className="break-words">
                       Mô hình: <strong className="text-blue-700 font-bold">{material.objectNameVi}</strong>
                     </span>
                   </div>
@@ -330,7 +330,7 @@ export default function DetailModal() {
                           <Atom size={22} />
                         </div>
                         <div className="min-w-0 flex-1">
-                          <span className="text-[11px] font-mono uppercase tracking-wider text-blue-600 font-bold block truncate">
+                          <span className="text-[11px] font-mono uppercase tracking-wider text-blue-600 font-bold block break-words">
                             Bản chất liên kết hóa học cốt lõi
                           </span>
                           <h4 className="text-sm sm:text-base font-extrabold text-slate-900 leading-snug break-words">
@@ -354,7 +354,7 @@ export default function DetailModal() {
                             <Orbit size={18} />
                           </div>
                           <div className="min-w-0 flex-1">
-                            <div className="text-[10px] uppercase font-mono tracking-wider text-slate-500 font-bold truncate">
+                            <div className="text-[10px] uppercase font-mono tracking-wider text-slate-500 font-bold break-words leading-tight">
                               Trạng thái lai hóa orbital
                             </div>
                             <div className="text-xs font-bold text-slate-800 mt-0.5 break-words">
@@ -370,7 +370,7 @@ export default function DetailModal() {
                             <Compass size={18} />
                           </div>
                           <div className="min-w-0 flex-1">
-                            <div className="text-[10px] uppercase font-mono tracking-wider text-slate-500 font-bold truncate">
+                            <div className="text-[10px] uppercase font-mono tracking-wider text-slate-500 font-bold break-words leading-tight">
                               Hình học phối trí (Geometry)
                             </div>
                             <div className="text-xs font-bold text-slate-800 mt-0.5 break-words">
@@ -386,7 +386,7 @@ export default function DetailModal() {
                             <Layers3 size={18} />
                           </div>
                           <div className="min-w-0 flex-1">
-                            <div className="text-[10px] uppercase font-mono tracking-wider text-slate-500 font-bold truncate">
+                            <div className="text-[10px] uppercase font-mono tracking-wider text-slate-500 font-bold break-words leading-tight">
                               Lực liên kết giữa các tầng lớp (Interlayer Force)
                             </div>
                             <div className="text-xs font-semibold text-slate-700 mt-0.5 leading-relaxed break-words">
@@ -684,63 +684,63 @@ export default function DetailModal() {
                   </div>
 
                   {/* SECTION 1: Bond & Lattice Matrix */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {/* Material A Card */}
-                    <div className="p-3.5 sm:p-4 rounded-2xl bg-white border border-blue-200/80 space-y-3 min-w-0 shadow-sm">
-                      <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
-                        <div className="flex items-center gap-2 min-w-0">
+                    <div className="p-4 rounded-2xl bg-white border border-blue-200/80 space-y-3 min-w-0 shadow-sm">
+                      <div className="flex items-center justify-between gap-2.5 border-b border-slate-100 pb-3">
+                        <div className="flex items-center gap-2.5 min-w-0 flex-1">
                           <MaterialBadge material={matA} size="sm" />
-                          <div className="min-w-0">
-                            <span className="text-xs font-black text-slate-900 block truncate">{matA.nameVi}</span>
-                            <span className="text-[10px] font-mono text-slate-500 block truncate">{matA.formula} · {matA.categoryLabel}</span>
+                          <div className="min-w-0 flex-1">
+                            <span className="text-sm font-black text-slate-900 block truncate whitespace-nowrap leading-tight">{matA.nameVi}</span>
+                            <span className="text-[11px] font-mono text-slate-500 block truncate mt-0.5">{matA.formula} · {matA.categoryLabel}</span>
                           </div>
                         </div>
                         {matA.molecularInfo.bonds.bondEnergy && (
-                          <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-lg bg-blue-50 text-blue-700 border border-blue-200 shrink-0 ml-1">
-                            {matA.molecularInfo.bonds.bondEnergy}
+                          <span className="text-[11px] font-mono font-bold px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 border border-blue-200 shrink-0 whitespace-nowrap">
+                            {matA.molecularInfo.bonds.bondEnergy.split('(')[0].trim()}
                           </span>
                         )}
                       </div>
 
-                      <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200">
+                      <div className="p-3 rounded-xl bg-slate-50/80 border border-slate-200/80">
                         <span className="text-[9px] uppercase font-mono tracking-wider text-blue-600 font-extrabold block">
                           Kiểu liên kết cốt lõi
                         </span>
-                        <strong className="text-xs sm:text-sm text-slate-800 block mt-0.5 break-words">
+                        <strong className="text-xs sm:text-sm text-slate-800 block mt-1 leading-snug break-words">
                           {matA.molecularInfo.bonds.type}
                         </strong>
                       </div>
 
                       <div className="grid grid-cols-2 gap-2 text-xs">
-                        <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200 min-w-0">
-                          <span className="text-[9px] text-slate-500 uppercase font-mono font-bold block truncate">
+                        <div className="bg-slate-50/80 p-2.5 rounded-xl border border-slate-200/80 min-w-0">
+                          <span className="text-[9px] text-slate-400 uppercase font-mono font-bold block tracking-wider leading-tight">
                             Kiểu mạng
                           </span>
-                          <strong className="text-slate-800 block mt-0.5 text-[11px] sm:text-xs break-words">
+                          <strong className="text-slate-800 block mt-1 text-xs font-semibold leading-snug break-words">
                             {matA.molecularInfo.latticeType}
                           </strong>
                         </div>
-                        <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200 min-w-0">
-                          <span className="text-[9px] text-slate-500 uppercase font-mono font-bold block truncate">
+                        <div className="bg-slate-50/80 p-2.5 rounded-xl border border-slate-200/80 min-w-0">
+                          <span className="text-[9px] text-slate-400 uppercase font-mono font-bold block tracking-wider leading-tight">
                             Hệ tinh thể
                           </span>
-                          <strong className="text-slate-800 block mt-0.5 text-[11px] sm:text-xs break-words">
+                          <strong className="text-slate-800 block mt-1 text-xs font-semibold leading-snug break-words">
                             {matA.molecularInfo.crystalSystem}
                           </strong>
                         </div>
-                        <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200 min-w-0">
-                          <span className="text-[9px] text-slate-500 uppercase font-mono font-bold block truncate">
+                        <div className="bg-slate-50/80 p-2.5 rounded-xl border border-slate-200/80 min-w-0">
+                          <span className="text-[9px] text-slate-400 uppercase font-mono font-bold block tracking-wider leading-tight">
                             Độ dài liên kết
                           </span>
-                          <span className="font-mono text-blue-700 font-bold block mt-0.5 text-[11px] sm:text-xs truncate">
+                          <span className="font-mono text-blue-700 font-bold block mt-1 text-xs leading-snug break-words">
                             {matA.molecularInfo.bondLength}
                           </span>
                         </div>
-                        <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200 min-w-0">
-                          <span className="text-[9px] text-slate-500 uppercase font-mono font-bold block truncate">
+                        <div className="bg-slate-50/80 p-2.5 rounded-xl border border-slate-200/80 min-w-0">
+                          <span className="text-[9px] text-slate-400 uppercase font-mono font-bold block tracking-wider leading-tight">
                             Góc liên kết
                           </span>
-                          <span className="font-mono text-blue-700 font-bold block mt-0.5 text-[11px] sm:text-xs truncate">
+                          <span className="font-mono text-blue-700 font-bold block mt-1 text-xs leading-snug break-words">
                             {matA.molecularInfo.bondAngle}
                           </span>
                         </div>
@@ -748,61 +748,61 @@ export default function DetailModal() {
                     </div>
 
                     {/* Material B Card */}
-                    <div className="p-3.5 sm:p-4 rounded-2xl bg-white border border-indigo-200/80 space-y-3 min-w-0 shadow-sm">
-                      <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
-                        <div className="flex items-center gap-2 min-w-0">
+                    <div className="p-4 rounded-2xl bg-white border border-indigo-200/80 space-y-3 min-w-0 shadow-sm">
+                      <div className="flex items-center justify-between gap-2.5 border-b border-slate-100 pb-3">
+                        <div className="flex items-center gap-2.5 min-w-0 flex-1">
                           <MaterialBadge material={matB} size="sm" />
-                          <div className="min-w-0">
-                            <span className="text-xs font-black text-slate-900 block truncate">{matB.nameVi}</span>
-                            <span className="text-[10px] font-mono text-slate-500 block truncate">{matB.formula} · {matB.categoryLabel}</span>
+                          <div className="min-w-0 flex-1">
+                            <span className="text-sm font-black text-slate-900 block truncate whitespace-nowrap leading-tight">{matB.nameVi}</span>
+                            <span className="text-[11px] font-mono text-slate-500 block truncate mt-0.5">{matB.formula} · {matB.categoryLabel}</span>
                           </div>
                         </div>
                         {matB.molecularInfo.bonds.bondEnergy && (
-                          <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-lg bg-indigo-50 text-indigo-700 border border-indigo-200 shrink-0 ml-1">
-                            {matB.molecularInfo.bonds.bondEnergy}
+                          <span className="text-[11px] font-mono font-bold px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-700 border border-indigo-200 shrink-0 whitespace-nowrap">
+                            {matB.molecularInfo.bonds.bondEnergy.split('(')[0].trim()}
                           </span>
                         )}
                       </div>
 
-                      <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200">
+                      <div className="p-3 rounded-xl bg-slate-50/80 border border-slate-200/80">
                         <span className="text-[9px] uppercase font-mono tracking-wider text-indigo-600 font-extrabold block">
                           Kiểu liên kết cốt lõi
                         </span>
-                        <strong className="text-xs sm:text-sm text-slate-800 block mt-0.5 break-words">
+                        <strong className="text-xs sm:text-sm text-slate-800 block mt-1 leading-snug break-words">
                           {matB.molecularInfo.bonds.type}
                         </strong>
                       </div>
 
                       <div className="grid grid-cols-2 gap-2 text-xs">
-                        <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200 min-w-0">
-                          <span className="text-[9px] text-slate-500 uppercase font-mono font-bold block truncate">
+                        <div className="bg-slate-50/80 p-2.5 rounded-xl border border-slate-200/80 min-w-0">
+                          <span className="text-[9px] text-slate-400 uppercase font-mono font-bold block tracking-wider leading-tight">
                             Kiểu mạng
                           </span>
-                          <strong className="text-slate-800 block mt-0.5 text-[11px] sm:text-xs break-words">
+                          <strong className="text-slate-800 block mt-1 text-xs font-semibold leading-snug break-words">
                             {matB.molecularInfo.latticeType}
                           </strong>
                         </div>
-                        <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200 min-w-0">
-                          <span className="text-[9px] text-slate-500 uppercase font-mono font-bold block truncate">
+                        <div className="bg-slate-50/80 p-2.5 rounded-xl border border-slate-200/80 min-w-0">
+                          <span className="text-[9px] text-slate-400 uppercase font-mono font-bold block tracking-wider leading-tight">
                             Hệ tinh thể
                           </span>
-                          <strong className="text-slate-800 block mt-0.5 text-[11px] sm:text-xs break-words">
+                          <strong className="text-slate-800 block mt-1 text-xs font-semibold leading-snug break-words">
                             {matB.molecularInfo.crystalSystem}
                           </strong>
                         </div>
-                        <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200 min-w-0">
-                          <span className="text-[9px] text-slate-500 uppercase font-mono font-bold block truncate">
+                        <div className="bg-slate-50/80 p-2.5 rounded-xl border border-slate-200/80 min-w-0">
+                          <span className="text-[9px] text-slate-400 uppercase font-mono font-bold block tracking-wider leading-tight">
                             Độ dài liên kết
                           </span>
-                          <span className="font-mono text-indigo-700 font-bold block mt-0.5 text-[11px] sm:text-xs truncate">
+                          <span className="font-mono text-indigo-700 font-bold block mt-1 text-xs leading-snug break-words">
                             {matB.molecularInfo.bondLength}
                           </span>
                         </div>
-                        <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200 min-w-0">
-                          <span className="text-[9px] text-slate-500 uppercase font-mono font-bold block truncate">
+                        <div className="bg-slate-50/80 p-2.5 rounded-xl border border-slate-200/80 min-w-0">
+                          <span className="text-[9px] text-slate-400 uppercase font-mono font-bold block tracking-wider leading-tight">
                             Góc liên kết
                           </span>
-                          <span className="font-mono text-indigo-700 font-bold block mt-0.5 text-[11px] sm:text-xs truncate">
+                          <span className="font-mono text-indigo-700 font-bold block mt-1 text-xs leading-snug break-words">
                             {matB.molecularInfo.bondAngle}
                           </span>
                         </div>
@@ -819,36 +819,36 @@ export default function DetailModal() {
                       const Icon = metric.icon;
                       const delta = metric.valA - metric.valB;
                       return (
-                        <div key={`compare-metric-${metric.key}`} className="p-3.5 rounded-xl bg-white border border-slate-200 space-y-2 shadow-sm">
+                        <div key={`compare-metric-${metric.key}`} className="p-3.5 rounded-xl bg-white border border-slate-200 space-y-2.5 shadow-sm">
                           <div className="flex items-center justify-between text-xs">
                             <div className="flex items-center gap-2">
-                              <Icon size={15} className="text-slate-500" />
+                              <Icon size={15} className="text-slate-500 shrink-0" />
                               <span className="font-bold text-slate-800">{metric.label}</span>
                             </div>
-                            <span className="text-[10px] font-mono text-slate-500">
+                            <span className="text-[10px] font-mono text-slate-500 shrink-0">
                               Chênh lệch: <strong className={delta > 0 ? 'text-blue-600' : delta < 0 ? 'text-indigo-600' : 'text-slate-500'}>{Math.abs(delta)} điểm</strong>
                             </span>
                           </div>
-                          <div className="grid grid-cols-2 gap-2 text-xs">
-                            <div className="space-y-1">
-                              <div className="flex justify-between text-[11px] text-slate-700">
-                                <span className="truncate font-semibold">{matA.nameVi}</span>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                            <div className="space-y-1.5 min-w-0">
+                              <div className="flex justify-between text-[11px] text-slate-700 gap-2">
+                                <span className="font-semibold truncate">{matA.nameVi}</span>
                                 <span className="font-mono font-bold shrink-0 text-blue-700">{metric.valA}</span>
                               </div>
                               <div className="h-2 rounded-full bg-slate-100 overflow-hidden border border-slate-200">
                                 <div className="h-full rounded-full bg-blue-600" style={{ width: `${metric.valA}%` }} />
                               </div>
-                              <div className="text-[9px] text-slate-500 truncate">{metric.textA}</div>
+                              <div className="text-[10px] text-slate-500 break-words leading-snug">{metric.textA}</div>
                             </div>
-                            <div className="space-y-1">
-                              <div className="flex justify-between text-[11px] text-slate-700">
-                                <span className="truncate font-semibold">{matB.nameVi}</span>
+                            <div className="space-y-1.5 min-w-0">
+                              <div className="flex justify-between text-[11px] text-slate-700 gap-2">
+                                <span className="font-semibold truncate">{matB.nameVi}</span>
                                 <span className="font-mono font-bold shrink-0 text-indigo-700">{metric.valB}</span>
                               </div>
                               <div className="h-2 rounded-full bg-slate-100 overflow-hidden border border-slate-200">
                                 <div className="h-full rounded-full bg-indigo-600" style={{ width: `${metric.valB}%` }} />
                               </div>
-                              <div className="text-[9px] text-slate-500 truncate">{metric.textB}</div>
+                              <div className="text-[10px] text-slate-500 break-words leading-snug">{metric.textB}</div>
                             </div>
                           </div>
                         </div>
@@ -862,7 +862,7 @@ export default function DetailModal() {
                       ỨNG DỤNG THỰC TIỄN & ĐỘT PHÁ CÔNG NGHỆ
                     </span>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                      <div className="p-3.5 rounded-2xl bg-white border border-blue-200/80 space-y-2 shadow-sm">
+                      <div className="p-3.5 rounded-2xl bg-white border border-blue-200/80 space-y-2 shadow-sm min-w-0">
                         <span className="text-[11px] font-black text-blue-700 uppercase font-mono block">
                           Ứng dụng của {matA.nameVi}
                         </span>
@@ -870,13 +870,13 @@ export default function DetailModal() {
                           {matA.macroInfo.applications.map((app, idx) => (
                             <li key={`app-a-${idx}`} className="flex items-start gap-2">
                               <CheckCircle2 size={13} className="text-blue-600 shrink-0 mt-0.5" />
-                              <span className="leading-snug">{app}</span>
+                              <span className="leading-snug break-words">{app}</span>
                             </li>
                           ))}
                         </ul>
                       </div>
 
-                      <div className="p-3.5 rounded-2xl bg-white border border-indigo-200/80 space-y-2 shadow-sm">
+                      <div className="p-3.5 rounded-2xl bg-white border border-indigo-200/80 space-y-2 shadow-sm min-w-0">
                         <span className="text-[11px] font-black text-indigo-700 uppercase font-mono block">
                           Ứng dụng của {matB.nameVi}
                         </span>
@@ -884,7 +884,7 @@ export default function DetailModal() {
                           {matB.macroInfo.applications.map((app, idx) => (
                             <li key={`app-b-${idx}`} className="flex items-start gap-2">
                               <CheckCircle2 size={13} className="text-indigo-600 shrink-0 mt-0.5" />
-                              <span className="leading-snug">{app}</span>
+                              <span className="leading-snug break-words">{app}</span>
                             </li>
                           ))}
                         </ul>
@@ -978,13 +978,13 @@ function SpecCard({
 }) {
   return (
     <div
-      className="p-3.5 rounded-2xl bg-white border border-slate-200/90 flex items-start gap-3 shadow-sm min-w-0"
+      className="p-3.5 rounded-2xl bg-white border border-slate-200/90 flex items-start gap-3 shadow-sm min-w-0 h-full"
     >
       <div className={`w-9 h-9 rounded-xl ${iconBg} ${iconColor} flex items-center justify-center shrink-0 shadow-sm`}>
         <Icon size={19} />
       </div>
       <div className="min-w-0 flex-1">
-        <span className="text-[10px] uppercase font-mono tracking-wider text-slate-500 font-bold block truncate">
+        <span className="text-[10px] uppercase font-mono tracking-wider text-slate-500 font-bold block break-words leading-tight">
           {label}
         </span>
         <strong className="text-xs sm:text-sm text-slate-800 font-bold block mt-0.5 leading-snug break-words">
@@ -1011,7 +1011,7 @@ function MetricRow({
   return (
     <div className="space-y-1.5 min-w-0">
       <div className="flex items-center justify-between text-xs min-w-0 gap-2">
-        <span className="text-slate-800 font-bold truncate">{label}</span>
+        <span className="text-slate-800 font-bold break-words">{label}</span>
         <span className={`font-mono font-black shrink-0 ${textColor}`}>
           {score}
           <span className="text-slate-400 font-normal text-[10px]"> / 100</span>

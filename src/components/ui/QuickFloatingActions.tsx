@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Eye, EyeOff, Camera } from 'lucide-react';
+import { Minimize2, Maximize2, Camera } from 'lucide-react';
 import { useStore, StoreState } from '@/store/useStore';
 import { sound } from '@/lib/soundFx';
 
@@ -40,7 +40,7 @@ export default function QuickFloatingActions() {
         </button>
       )}
 
-      {/* Zen Mode Eye Button (Requirement 3) */}
+      {/* Zen Mode Button (Exit Fullscreen / Collapse) */}
       <button
         type="button"
         className={`quick-action-btn zen-btn ${isZenMode ? 'is-active-zen' : ''}`}
@@ -52,9 +52,9 @@ export default function QuickFloatingActions() {
         aria-label={isZenMode ? 'Thoát Zen Mode' : 'Bật Zen Mode'}
       >
         {isZenMode ? (
-          <EyeOff size={22} className="text-cyan-300 animate-pulse" />
+          <Maximize2 size={20} className="text-cyan-300 animate-pulse" />
         ) : (
-          <Eye size={20} className="text-cyan-400" />
+          <Minimize2 size={20} className="text-cyan-400" />
         )}
         {isZenMode && <span className="zen-hint-label">Thoát Zen</span>}
       </button>

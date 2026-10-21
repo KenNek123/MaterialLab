@@ -10,7 +10,7 @@ import {
   Columns2,
   Box,
   Camera,
-  Eye,
+  Minimize2,
   Sliders,
   ZoomIn,
 } from 'lucide-react';
@@ -278,8 +278,8 @@ export default function LeftToolbarDrawer({
                 }}
               >
                 <div className="flex items-center gap-2.5">
-                  <Eye size={16} className="text-cyan-400" />
-                  <span>Chế độ Zen Mode (Toàn màn hình)</span>
+                  <Minimize2 size={16} className="text-cyan-400" />
+                  <span>Chế độ Zen Mode (Thu gọn / Toàn màn hình)</span>
                 </div>
                 <span className="drawer-toggle-badge">
                   {isZenMode ? 'Bật' : 'Tắt'}

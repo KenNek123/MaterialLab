@@ -3,13 +3,13 @@ import { MaterialData } from '@/store/useStore';
 // ── 19. Khói Đông Lạnh Aerogel (Silica Aerogel) ────────────────────────────
 export const aerogelMaterial: MaterialData = {
     id: 'aerogel',
-    name: 'Silica Aerogel (Frozen Smoke)',
-    nameVi: 'Khói Đông Lạnh Aerogel (Siêu Nhẹ)',
-    formula: 'SiO₂ · Air (99.8%)',
+    name: 'Silica Aerogel',
+    nameVi: 'Aerogel',
+    formula: 'SiO₂ (Khung nano xốp)',
     category: 'nano',
     categoryLabel: 'Vật liệu Nano & Tương lai',
-    objectName: 'Frozen Smoke Aerogel Insulation Block',
-    objectNameVi: 'Khối Khói Đông Lạnh Cách Nhiệt NASA',
+    objectName: 'Aerogel Insulation Block',
+    objectNameVi: 'Khối Vật Liệu Cách Nhiệt Aerogel',
     icon: '🌫️',
     color: '#e0f2fe',
     roughness: 0.08,

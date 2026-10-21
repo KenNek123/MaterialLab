@@ -3,8 +3,8 @@ import { MaterialData } from '@/store/useStore';
 // ── 7. Đồng Đỏ Dẫn Điện (Cu) ────────────────────────────────────────────────
 export const copperMaterial: MaterialData = {
     id: 'copper',
-    name: 'Electrolytic Copper',
-    nameVi: 'Đồng Đỏ Dẫn Điện (Cu)',
+    name: 'Copper',
+    nameVi: 'Đồng',
     formula: 'Cu',
     category: 'metal',
     categoryLabel: 'Kim loại & Hợp kim',

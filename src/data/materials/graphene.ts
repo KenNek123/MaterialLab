@@ -3,8 +3,8 @@ import { MaterialData } from '@/store/useStore';
 // ── 22. Graphene Đơn Lớp (2D) ─────────────────────────────────────────────
 export const grapheneMaterial: MaterialData = {
     id: 'graphene',
-    name: 'Monolayer Graphene',
-    nameVi: 'Graphene Đơn Lớp (2D)',
+    name: 'Graphene',
+    nameVi: 'Graphene',
     formula: 'C (sp² 2D)',
     category: 'nano',
     categoryLabel: 'Vật liệu Nano & Tương lai',
@@ -41,13 +41,13 @@ export const grapheneMaterial: MaterialData = {
       bondLength: 'C–C: 1.42 Å (Liên kết cộng hóa trị sp² siêu ngắn)',
       bondAngle: '120.0° (Góc tam giác phẳng hoàn mỹ)',
       crystalSystem: 'Lục giác 2D (Hexagonal P6/mmm)',
-      atomTypes: [{ element: 'C', color: '#38bdf8', radius: 0.32 }],
+      atomTypes: [{ element: 'C', color: '#38bdf8', radius: 0.35 }],
       bonds: {
         type: 'Cộng hóa trị σ nội mạng cực mạnh kết hợp đám mây obitan π giải tỏa tự do',
         color: '#7dd3fc',
         hybridization: 'Lai hóa sp² tam giác phẳng đối xứng tuyệt đối',
         coordinationGeometry: 'Phối trí 3 tọa độ phẳng (CN=3)',
-        bondEnergy: '524 kJ/mol (Cần lực xé khổng lồ để làm rách mạng lưới)',
+        bondEnergy: '524 kJ/mol',
         interlayerForce: 'Đơn lớp nguyên tử độc lập (Single Atomic Sheet)',
         descriptionVi:
           'Đoạt giải Nobel Vật lý 2010, Graphene là vật liệu 2 chiều đầu tiên được khám phá trong lịch sử nhân loại. Chỉ dày duy nhất một lớp nguyên tử Carbon xếp theo hình tổ ong, các electron di chuyển trong mạng tinh thể này như những hạt phi khối lượng (Dirac Fermions) với tốc độ đạt 1/300 vận tốc ánh sáng, tạo nên độ dẫn điện và dẫn nhiệt vô địch vũ trụ.',

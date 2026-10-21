@@ -15,6 +15,10 @@ import {
   createTitaniumImplantGeometry,
   createNitinolStentGeometry,
   createTurbineBladeGeometry,
+  createSteelGearGeometry,
+  createStainlessSteelFlangeGeometry,
+  createDuraluminWingGeometry,
+  createCarbideInsertGeometry,
 } from './metals';
 import {
   createMxeneCapacitorGeometry,
@@ -52,6 +56,10 @@ const REGISTRY: Record<string, GeometryBuilder> = {
   'titanium-implant': createTitaniumImplantGeometry,
   'nitinol-stent': createNitinolStentGeometry,
   'turbine-blade': createTurbineBladeGeometry,
+  'steel-gear': createSteelGearGeometry,
+  'stainless-flange': createStainlessSteelFlangeGeometry,
+  'duralumin-wing': createDuraluminWingGeometry,
+  'carbide-insert': createCarbideInsertGeometry,
 
   // Advanced Nanotech & 2D Materials
   'mxene-capacitor': createMxeneCapacitorGeometry,

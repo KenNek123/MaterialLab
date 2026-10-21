@@ -80,7 +80,7 @@ export function MacroObject({ material, opacity, wireframeOpacity }: MacroObject
       opacity: 1,
       side: THREE.DoubleSide,
       envMapIntensity: 1.8,
-      ior: material.id === 'diamond' ? 2.42 : material.id === 'ice' ? 1.31 : 1.5,
+      ior: material.id === 'diamond' ? 2.42 : 1.5,
       ...(material.emissive
         ? {
             emissive: material.emissive,

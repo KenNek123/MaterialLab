@@ -3,8 +3,8 @@ import { MaterialData } from '@/store/useStore';
 // ── 23. Sợi Kevlar Chống Đạn (Aramid) ───────────────────────────────────────
 export const kevlarMaterial: MaterialData = {
     id: 'kevlar',
-    name: 'Kevlar Aramid Fiber',
-    nameVi: 'Sợi Kevlar Chống Đạn (Aramid)',
+    name: 'Kevlar',
+    nameVi: 'Kevlar',
     formula: '(C₁₄H₁₀N₂O₂)ₙ',
     category: 'molecular',
     categoryLabel: 'Cấu trúc Phân tử',
@@ -52,7 +52,7 @@ export const kevlarMaterial: MaterialData = {
         color: '#facc15',
         hybridization: 'Lai hóa sp² vòng thơm liên hợp xen phủ nhóm amit phẳng',
         coordinationGeometry: 'Chuỗi mạch thẳng duỗi thẳng hàng song song tuyệt đối',
-        bondEnergy: 'Xương sống C–C/C–N: 420 kJ/mol; Cầu liên kết Hydro: 25 kJ/mol',
+        bondEnergy: '420 kJ/mol (C–C)',
         interlayerForce: 'Cầu liên kết Hydro N–H···O=C ken đặc khóa chặt các chuỗi song song',
         descriptionVi:
           'Kevlar (poly-paraphenylene terephthalamide) có cấu trúc phân tử mạch thẳng gồm các vòng benzen cứng nhắc xen kẽ nhóm liên kết amit. Nhờ quá trình kéo sợi từ dung dịch tinh thể lỏng, các chuỗi polymer sắp xếp song song thẳng tắp và được "hàn chặt" với nhau bởi vô số cầu liên kết hydro cực kỳ dày đặc. Khi đầu đạn chạm vào, mạng lưới này phân tán động năng xung kích tức thì ra toàn bộ diện tích bề mặt, ngăn chặn viên đạn xuyên qua.',

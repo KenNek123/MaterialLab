@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { mergeGeometries, createStrutBetween } from './geometryUtils';
 
-// ── 1. Vàng Ròng 24K: Thỏi Vàng Đúc Chuẩn (Fine Gold 999.9) ───────────────────
+// ── 1. Vàng: Thỏi Vàng Đúc Chuẩn (Fine Gold 999.9) ───────────────────────────
 export function createGoldIngotGeometry(): THREE.BufferGeometry {
   const parts: THREE.BufferGeometry[] = [];
 
@@ -350,3 +350,232 @@ export function createTurbineBladeGeometry(): THREE.BufferGeometry {
   merged.center();
   return merged;
 }
+
+// ── 8. Thép Carbon C45: Bánh Răng Cơ Khí & Trục Truyền Động Công Nghiệp ──────
+export function createSteelGearGeometry(): THREE.BufferGeometry {
+  const parts: THREE.BufferGeometry[] = [];
+
+  // Vành bánh răng chính (Gear Rim)
+  const rim = new THREE.CylinderGeometry(1.65, 1.65, 0.6, 40);
+  parts.push(rim);
+
+  // 16 Răng nghiêng ăn khớp cơ khí xung quanh chu vi (16 Helical/Spur Gear Teeth)
+  const numTeeth = 16;
+  for (let i = 0; i < numTeeth; i++) {
+    const angle = (i * 2 * Math.PI) / numTeeth;
+    const tooth = new THREE.BoxGeometry(0.28, 0.6, 0.48);
+    // Vát góc côn đầu răng
+    tooth.rotateY(angle);
+    tooth.translate(Math.cos(angle) * 1.76, 0, Math.sin(angle) * 1.76);
+    parts.push(tooth);
+  }
+
+  // Moay-ơ trục trung tâm lồi cao (Axle Hub)
+  const hub = new THREE.CylinderGeometry(0.72, 0.72, 0.95, 32);
+  parts.push(hub);
+
+  // Vành gờ khóa trục
+  const hubCollar = new THREE.TorusGeometry(0.72, 0.08, 12, 32);
+  hubCollar.rotateX(Math.PI / 2);
+  hubCollar.translate(0, 0.42, 0);
+  parts.push(hubCollar);
+
+  // Lỗ xỏ trục máy (Bore)
+  const boreBevel = new THREE.TorusGeometry(0.38, 0.04, 10, 24);
+  boreBevel.rotateX(Math.PI / 2);
+  boreBevel.translate(0, 0.48, 0);
+  const boreBevelBot = new THREE.TorusGeometry(0.38, 0.04, 10, 24);
+  boreBevelBot.rotateX(Math.PI / 2);
+  boreBevelBot.translate(0, -0.48, 0);
+  parts.push(boreBevel, boreBevelBot);
+
+  // Rãnh then truyền mô-men xoắn (Shaft Keyway)
+  const keyway = new THREE.BoxGeometry(0.12, 0.98, 0.16);
+  keyway.translate(0.36, 0, 0);
+  parts.push(keyway);
+
+  // 4 Lỗ khoét giảm khối lượng trên thân bánh răng (4 Lightening Holes)
+  for (let k = 0; k < 4; k++) {
+    const holeAngle = (k * Math.PI) / 2 + Math.PI / 4;
+    const hx = Math.cos(holeAngle) * 1.18;
+    const hz = Math.sin(holeAngle) * 1.18;
+    const holeRing = new THREE.TorusGeometry(0.22, 0.05, 10, 24);
+    holeRing.rotateX(Math.PI / 2);
+    holeRing.translate(hx, 0.28, hz);
+    const holeRingBot = new THREE.TorusGeometry(0.22, 0.05, 10, 24);
+    holeRingBot.rotateX(Math.PI / 2);
+    holeRingBot.translate(hx, -0.28, hz);
+    parts.push(holeRing, holeRingBot);
+  }
+
+  const merged = mergeGeometries(parts) || rim;
+  merged.center();
+  return merged;
+}
+
+// ── 9. Thép Không Gỉ Inox 304: Mặt Bích Cao Áp & Van Đường Ống Công Nghiệp ────
+export function createStainlessSteelFlangeGeometry(): THREE.BufferGeometry {
+  const parts: THREE.BufferGeometry[] = [];
+
+  // Thân ống dẫn chính Inox
+  const mainPipe = new THREE.CylinderGeometry(0.68, 0.68, 2.4, 36);
+  parts.push(mainPipe);
+
+  // Mặt bích đĩa đúc chịu lực cao áp (Flange Disc)
+  const flangeDisc = new THREE.CylinderGeometry(1.68, 1.68, 0.38, 40);
+  flangeDisc.translate(0, 0.25, 0);
+  parts.push(flangeDisc);
+
+  // Gờ làm kín lắp gioăng đệm làm kín chống rò rỉ (Raised Face Gasket Ring)
+  const gasketFace = new THREE.CylinderGeometry(1.15, 1.15, 0.12, 36);
+  gasketFace.translate(0, 0.48, 0);
+  parts.push(gasketFace);
+
+  // 8 Bu-lông siết đai ốc đối xứng cường độ cao (8 Bolt Studs & Nuts)
+  const numBolts = 8;
+  for (let b = 0; b < numBolts; b++) {
+    const bAngle = (b * 2 * Math.PI) / numBolts;
+    const bx = Math.cos(bAngle) * 1.42;
+    const bz = Math.sin(bAngle) * 1.42;
+    // Thân bu lông
+    const stud = new THREE.CylinderGeometry(0.08, 0.08, 0.68, 16);
+    stud.translate(bx, 0.35, bz);
+    // Đai ốc lục giác đúc Inox
+    const nut = new THREE.CylinderGeometry(0.14, 0.14, 0.16, 6);
+    nut.translate(bx, 0.52, bz);
+    parts.push(stud, nut);
+  }
+
+  // Cổ hàn côn chịu ứng suất uốn (Welding Neck)
+  const weldNeck = new THREE.CylinderGeometry(0.74, 1.15, 0.45, 36);
+  weldNeck.translate(0, -0.15, 0);
+  parts.push(weldNeck);
+
+  // Tay gạt van khóa dòng chảy (Valve Actuator Wheel)
+  const wheelHub = new THREE.CylinderGeometry(0.18, 0.18, 0.4, 16);
+  wheelHub.rotateZ(Math.PI / 2);
+  wheelHub.translate(0.85, 0.85, 0);
+  const handwheel = new THREE.TorusGeometry(0.55, 0.06, 12, 32);
+  handwheel.rotateY(Math.PI / 2);
+  handwheel.translate(1.15, 0.85, 0);
+  parts.push(wheelHub, handwheel);
+
+  const merged = mergeGeometries(parts) || mainPipe;
+  merged.center();
+  return merged;
+}
+
+// ── 10. Hợp Kim Duralumin Nhôm Hàng Không: Cánh Quạt Tuabin Phản Lực & Sườn Cánh ─
+export function createDuraluminWingGeometry(): THREE.BufferGeometry {
+  const parts: THREE.BufferGeometry[] = [];
+
+  // Chân đế mộng mang cá cài đĩa tuabin (Fir-tree Dovetail Root)
+  const rootBase = new THREE.BoxGeometry(0.95, 0.5, 0.75);
+  rootBase.translate(0, -1.2, 0);
+  parts.push(rootBase);
+
+  // Rãnh mộng chống tuột ly tâm hàng không
+  const tooth1 = new THREE.BoxGeometry(1.15, 0.1, 0.72);
+  tooth1.translate(0, -1.25, 0);
+  const tooth2 = new THREE.BoxGeometry(1.08, 0.1, 0.72);
+  tooth2.translate(0, -1.05, 0);
+  parts.push(tooth1, tooth2);
+
+  // Mặt nền cách nhiệt (Airfoil Platform)
+  const platform = new THREE.BoxGeometry(1.45, 0.14, 1.15);
+  platform.translate(0, -0.88, 0);
+  parts.push(platform);
+
+  // Thân cánh khí động học uốn xoắn 3D (Twisted Aerodynamic Airfoil Blade)
+  const numSlices = 12;
+  for (let i = 0; i < numSlices; i++) {
+    const t = i / (numSlices - 1);
+    const y = -0.78 + t * 2.2;
+    const twistAngle = 0.48 - t * 0.75; // Góc xoắn khí động học tối ưu dòng khí
+    const chord = 1.25 - t * 0.42;     // Thuôn dần về phía đầu mút cánh
+    const thickness = 0.18 - t * 0.09; // Dày ở gốc, mỏng ở đầu mút
+
+    const slice = new THREE.BoxGeometry(chord, 0.22, thickness);
+    slice.rotateY(twistAngle);
+    // Độ cong profile cánh hút lực nâng
+    slice.translate(Math.sin(t * Math.PI * 0.5) * 0.18, y, 0);
+    parts.push(slice);
+  }
+
+  // Đầu mút cánh khí động học có gờ giảm xoáy (Wingtip Shroud Winglet)
+  const tipShroud = new THREE.BoxGeometry(0.78, 0.08, 0.45);
+  tipShroud.rotateY(-0.25);
+  tipShroud.translate(0.18, 1.48, 0);
+  parts.push(tipShroud);
+
+  const merged = mergeGeometries(parts) || rootBase;
+  merged.center();
+  return merged;
+}
+
+// ── 11. Hợp Kim Cứng Vonfram Cacbua (WC): Mảnh Dao Tiện Phay CNC & Mũi Khoan Địa Chất ─
+export function createCarbideInsertGeometry(): THREE.BufferGeometry {
+  const parts: THREE.BufferGeometry[] = [];
+
+  // Mảnh dao tiện hợp kim cứng tam giác Trigon (WNMG/TNMG Indexable Cutting Insert)
+  // Thân chính hình lăng trụ tam giác đều bo tròn 3 góc cắt
+  const basePrism = new THREE.CylinderGeometry(1.5, 1.5, 0.55, 3);
+  basePrism.rotateY(Math.PI / 6);
+  parts.push(basePrism);
+
+  // 3 Mũi dao cắt định hình chính xác tại 3 góc (3 Cutting Tool Nose Radii)
+  for (let c = 0; c < 3; c++) {
+    const cornerAngle = (c * 2 * Math.PI) / 3;
+    const cx = Math.cos(cornerAngle) * 1.32;
+    const cz = Math.sin(cornerAngle) * 1.32;
+    // Mũi dao bo tròn R0.8mm gia công tinh chịu va đập
+    const nose = new THREE.CylinderGeometry(0.24, 0.24, 0.55, 16);
+    nose.translate(cx, 0, cz);
+    parts.push(nose);
+  }
+
+  // Lỗ xỏ vít kẹp tâm định vị mâm dao tiện CNC (Countersunk Center Clamping Hole)
+  const holeRim = new THREE.TorusGeometry(0.48, 0.06, 12, 32);
+  holeRim.rotateX(Math.PI / 2);
+  holeRim.translate(0, 0.28, 0);
+  const holeRimBot = new THREE.TorusGeometry(0.48, 0.06, 12, 32);
+  holeRimBot.rotateX(Math.PI / 2);
+  holeRimBot.translate(0, -0.28, 0);
+  parts.push(holeRim, holeRimBot);
+
+  // Côn kẹp vít định vị (Conical Seat)
+  const coneSeat = new THREE.CylinderGeometry(0.38, 0.52, 0.18, 24);
+  coneSeat.translate(0, 0.22, 0);
+  parts.push(coneSeat);
+
+  // 3 Rãnh thoát phoi tạo góc cắt dương uốn gãy phoi kim loại (3 Chipbreaker Grooves)
+  for (let g = 0; g < 3; g++) {
+    const grooveAngle = (g * 2 * Math.PI) / 3 + Math.PI / 3;
+    const gx = Math.cos(grooveAngle) * 0.78;
+    const gz = Math.sin(grooveAngle) * 0.78;
+    const groove = new THREE.BoxGeometry(0.65, 0.08, 0.14);
+    groove.rotateY(grooveAngle);
+    groove.translate(gx, 0.28, gz);
+    const grooveBot = new THREE.BoxGeometry(0.65, 0.08, 0.14);
+    grooveBot.rotateY(grooveAngle);
+    grooveBot.translate(gx, -0.28, gz);
+    parts.push(groove, grooveBot);
+  }
+
+  // 3 Chấu bẻ phoi chống dập nát bề mặt chi tiết (Chip Bumps)
+  for (let m = 0; m < 3; m++) {
+    const mAngle = (m * 2 * Math.PI) / 3;
+    const mx = Math.cos(mAngle) * 1.05;
+    const mz = Math.sin(mAngle) * 1.05;
+    const bump = new THREE.SphereGeometry(0.08, 12, 12);
+    bump.translate(mx, 0.29, mz);
+    const bumpBot = new THREE.SphereGeometry(0.08, 12, 12);
+    bumpBot.translate(mx, -0.29, mz);
+    parts.push(bump, bumpBot);
+  }
+
+  const merged = mergeGeometries(parts) || basePrism;
+  merged.center();
+  return merged;
+}
+

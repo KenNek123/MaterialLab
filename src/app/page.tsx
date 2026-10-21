@@ -14,17 +14,15 @@ import {
   Info,
   Layers3,
   Library,
-  Pause,
-  Play,
   RotateCw,
   Search,
   SlidersHorizontal,
-  Square,
   X,
   Zap,
   ChevronDown,
   ChevronRight,
 } from 'lucide-react';
+import AboutModal from '@/components/ui/AboutModal';
 import AtomInspectorModal from '@/components/ui/AtomInspectorModal';
 import DetailModal from '@/components/ui/DetailModal';
 import MaterialBadge from '@/components/ui/MaterialBadge';
@@ -163,6 +161,7 @@ export default function HomePage() {
 
   const [libraryOpen, setLibraryOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [aboutOpen, setAboutOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('all');
 
@@ -240,28 +239,48 @@ export default function HomePage() {
 
       {/* Top Header: Brand Lockup + Center Material Badge (Task 3) + 3 Action Buttons */}
       <header className={`app-header ${isZenMode ? 'is-zen-hidden' : ''}`}>
-        {/* Full Brand Lockup: Digital Matterials Lab & Nguyễn Văn Tài (Always fully visible on Desktop & Mobile) */}
-        <div className="brand-lockup shrink-0">
+        {/* Left Section: Brand Lockup + Nút Vật liệu bên cạnh */}
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+          <div className="brand-lockup shrink-0">
+            <button
+              type="button"
+              onClick={() => {
+                sound.playClick();
+                window.location.reload();
+              }}
+              className="brand-mark shrink-0 cursor-pointer border-none p-0 outline-none hover:scale-105 active:scale-95 transition-transform"
+              title="Tải lại trang"
+              aria-label="Tải lại trang"
+            >
+              <Atom size={22} />
+            </button>
+            <div className="brand-text">
+              <h1 className="brand-title">Digital Matterials Lab</h1>
+              <p className="brand-author">Nguyễn Văn Tài</p>
+            </div>
+          </div>
+
+          {/* Nút Vật liệu (nằm bên trái, kế bên chữ Digital Matterials Lab) */}
           <button
-            type="button"
+            className={`header-button header-library-btn ${libraryOpen ? 'is-active' : ''}`}
             onClick={() => {
               sound.playClick();
-              window.location.reload();
+              setLibraryOpen((v) => !v);
             }}
-            className="brand-mark shrink-0 cursor-pointer border-none p-0 outline-none hover:scale-105 active:scale-95 transition-transform"
-            title="Tải lại trang"
-            aria-label="Tải lại trang"
+            title={`Mở thư viện ${MATERIALS.length} vật liệu`}
+            type="button"
+            aria-label="Vật liệu"
           >
-            <Atom size={22} />
+            <Library size={18} className="text-blue-600 shrink-0" />
+            <span className="btn-label font-bold hidden sm:inline">Vật liệu</span>
+            <span className="btn-count hidden md:inline-block text-[10px] font-mono font-bold text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded-full border border-blue-200">
+              {MATERIALS.length}
+            </span>
           </button>
-          <div className="brand-text">
-            <h1 className="brand-title">Digital Matterials Lab</h1>
-            <p className="brand-author">Nguyễn Văn Tài</p>
-          </div>
         </div>
 
         {/* Center Container: Material Name Badge on Desktop (Header Centered) */}
-        <div className="header-material-center absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10 hidden min-[820px]:flex items-center justify-center max-w-[calc(100vw-360px)] md:max-w-[460px]">
+        <div className="header-material-center absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10 hidden min-[920px]:flex items-center justify-center pointer-events-none">
           {isDual3DView ? (
             /* Dual / Compare View: 2 stacked rows with distinct color badges */
             <div
@@ -276,14 +295,14 @@ export default function HomePage() {
                 <span className="inline-flex items-center px-1.5 py-0.2 text-[9px] font-extrabold rounded-full bg-blue-100 text-blue-800 border border-blue-300 shrink-0">
                   A
                 </span>
-                <span className="truncate max-w-[120px] md:max-w-[180px]">{matA.nameVi}</span>
+                <span className="font-bold whitespace-nowrap">{matA.nameVi}</span>
                 <span className="text-[10px] font-mono font-semibold text-blue-700 shrink-0">({matA.formula})</span>
               </div>
               <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-800">
                 <span className="inline-flex items-center px-1.5 py-0.2 text-[9px] font-extrabold rounded-full bg-indigo-100 text-indigo-800 border border-indigo-300 shrink-0">
                   B
                 </span>
-                <span className="truncate max-w-[120px] md:max-w-[180px]">{matB.nameVi}</span>
+                <span className="font-bold whitespace-nowrap">{matB.nameVi}</span>
                 <span className="text-[10px] font-mono font-semibold text-indigo-700 shrink-0">({matB.formula})</span>
               </div>
             </div>
@@ -294,17 +313,17 @@ export default function HomePage() {
                 sound.playClick();
                 setIsDetailOpen(true);
               }}
-              className="flex items-center gap-1.5 md:gap-2 bg-white/95 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-blue-200/90 shadow-sm cursor-pointer hover:border-blue-400 hover:shadow-md transition-all active:scale-95 pointer-events-auto max-w-full"
+              className="flex items-center gap-1.5 md:gap-2 bg-white/95 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-blue-200/90 shadow-sm cursor-pointer hover:border-blue-400 hover:shadow-md transition-all active:scale-95 pointer-events-auto max-w-[min(44vw,520px)]"
               title="Bấm để xem hồ sơ chi tiết vật liệu"
             >
               <span className="text-sm md:text-base select-none shrink-0">{material.icon}</span>
-              <span className="font-extrabold text-xs md:text-sm text-slate-900 truncate max-w-[120px] md:max-w-[220px]">
+              <span className="font-extrabold text-xs md:text-sm text-slate-900 truncate max-w-[260px]">
                 {material.nameVi}
               </span>
               <span className="font-mono text-[10px] md:text-[11px] font-bold text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-200/70 shrink-0">
                 {material.formula}
               </span>
-              <span className="text-[10px] font-semibold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-full border border-slate-200 hidden lg:inline-block shrink-0">
+              <span className="text-[10px] font-semibold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-full border border-slate-200 hidden xl:inline-block shrink-0">
                 {material.categoryLabel}
               </span>
               <ChevronRight size={14} className="text-blue-500 shrink-0 ml-0.5" />
@@ -312,52 +331,24 @@ export default function HomePage() {
           )}
         </div>
 
-        {/* 3 Action Buttons on Top Bar: Vật liệu - Trình chiếu - Cài đặt */}
+        {/* Action Buttons on Top Bar Right: About us & Cài đặt */}
         <div className="header-actions">
-          {/* 1. Nút Vật liệu */}
+          {/* Nút About us */}
           <button
-            className={`header-button header-library-btn ${libraryOpen ? 'is-active' : ''}`}
+            className={`header-button header-about-btn ${aboutOpen ? 'is-active' : ''}`}
             onClick={() => {
               sound.playClick();
-              setLibraryOpen((v) => !v);
+              setAboutOpen(true);
             }}
-            title="Mở thư viện 25 vật liệu"
+            title="Giới thiệu tác giả, dự án & Nguồn tài liệu khoa học"
             type="button"
-            aria-label="Vật liệu"
+            aria-label="About us"
           >
-            <Library size={18} className="text-blue-600 shrink-0" />
-            <span className="btn-label font-bold hidden md:inline">Vật liệu</span>
-            <span className="btn-count hidden lg:inline-block text-[10px] font-mono font-bold text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded-full border border-blue-200">
-              {MATERIALS.length}
-            </span>
+            <Info size={18} className="text-blue-600 shrink-0" />
+            <span className="btn-label font-bold hidden sm:inline">About us</span>
           </button>
 
-          {/* 2. Nút Trình chiếu / Dừng */}
-          <button
-            className={`header-button header-tour-btn ${
-              isTourActive
-                ? 'is-tour-stop bg-rose-50 hover:bg-rose-100 text-rose-600 border-rose-200'
-                : ''
-            }`}
-            onClick={() => {
-              sound.playClick();
-              toggleTour();
-            }}
-            title={isTourActive ? 'Dừng chế độ trình chiếu (Thoát)' : 'Bật trình chiếu đa tầng'}
-            type="button"
-            aria-label={isTourActive ? 'Dừng' : 'Trình chiếu'}
-          >
-            {isTourActive ? (
-              <Square size={16} className="text-rose-600 fill-rose-600 shrink-0" />
-            ) : (
-              <Play size={18} className="text-blue-600 shrink-0" />
-            )}
-            <span className="btn-label font-bold hidden md:inline">
-              {isTourActive ? 'Dừng' : 'Trình chiếu'}
-            </span>
-          </button>
-
-          {/* 3. Nút Cài đặt / Setting */}
+          {/* Nút Cài đặt / Setting */}
           <button
             className={`header-button header-settings-btn ${settingsOpen ? 'is-active' : ''}`}
             onClick={() => {
@@ -374,10 +365,10 @@ export default function HomePage() {
         </div>
       </header>
 
-      {/* ── Mobile Floating Active Material Badge (Always visible on mobile < 820px) ── */}
+      {/* ── Mobile Floating Active Material Badge (Always centered on mobile < 920px, hidden in Zen & Tour) ── */}
       <div
-        className={`fixed top-[62px] sm:top-[66px] left-3 sm:left-1/2 sm:-translate-x-1/2 z-20 flex min-[820px]:hidden items-center max-w-[calc(100vw-76px)] sm:max-w-md transition-all duration-300 ${
-          isZenMode ? 'opacity-0 pointer-events-none -translate-y-4' : 'opacity-100 pointer-events-auto translate-y-0'
+        className={`fixed top-[70px] sm:top-[74px] left-1/2 -translate-x-1/2 z-20 flex min-[920px]:hidden items-center justify-center w-max max-w-[calc(100vw-24px)] transition-all duration-300 ${
+          isZenMode || isTourActive ? 'opacity-0 pointer-events-none -translate-y-4' : 'opacity-100 pointer-events-auto translate-y-0'
         }`}
       >
         {isDual3DView ? (
@@ -386,13 +377,13 @@ export default function HomePage() {
               sound.playClick();
               setIsCompareOpen(true);
             }}
-            className="flex items-center gap-2 bg-white/95 backdrop-blur-md px-3 py-1 rounded-full border border-blue-200/90 shadow-md cursor-pointer active:scale-95 transition-transform"
+            className="flex items-center gap-2 bg-white/95 backdrop-blur-md px-4 py-2 rounded-full border border-blue-200/90 shadow-md cursor-pointer active:scale-95 transition-transform max-w-full"
             title="Bấm để mở bảng so sánh"
           >
-            <span className="text-[11px] font-bold text-slate-800 truncate max-w-[100px]">{matA.nameVi}</span>
-            <span className="text-[10px] font-bold text-blue-600 font-mono">vs</span>
-            <span className="text-[11px] font-bold text-slate-800 truncate max-w-[100px]">{matB.nameVi}</span>
-            <ChevronRight size={13} className="text-blue-500 shrink-0" />
+            <span className="text-xs font-extrabold text-slate-800 truncate max-w-[110px]">{matA.nameVi}</span>
+            <span className="text-[10px] font-bold text-blue-600 font-mono shrink-0">vs</span>
+            <span className="text-xs font-extrabold text-slate-800 truncate max-w-[110px]">{matB.nameVi}</span>
+            <ChevronRight size={14} className="text-blue-500 shrink-0" />
           </div>
         ) : (
           <div
@@ -400,17 +391,20 @@ export default function HomePage() {
               sound.playClick();
               setIsDetailOpen(true);
             }}
-            className="flex items-center gap-1.5 bg-white/95 backdrop-blur-md px-3 py-1 rounded-full border border-blue-200/90 shadow-md cursor-pointer active:scale-95 transition-transform"
+            className="flex items-center gap-2 bg-white/95 backdrop-blur-md px-4 py-2 rounded-full border border-blue-200/90 shadow-md cursor-pointer active:scale-95 transition-transform max-w-full"
             title="Bấm để xem hồ sơ chi tiết vật liệu"
           >
-            <span className="text-xs select-none shrink-0">{material.icon}</span>
-            <span className="font-extrabold text-xs text-slate-900 truncate max-w-[130px]">
+            <span className="text-sm select-none shrink-0">{material.icon}</span>
+            <span className="font-extrabold text-xs sm:text-sm text-slate-900 truncate max-w-[180px] sm:max-w-xs">
               {material.nameVi}
             </span>
-            <span className="font-mono text-[10px] font-bold text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-200/70 shrink-0">
+            <span className="font-mono text-[10px] sm:text-[11px] font-bold text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-200/70 shrink-0">
               {material.formula}
             </span>
-            <ChevronRight size={13} className="text-blue-500 shrink-0" />
+            <span className="text-[10.5px] font-semibold text-slate-600 bg-slate-100 px-2.5 py-0.5 rounded-full border border-slate-200 hidden sm:inline-block shrink-0">
+              {material.categoryLabel}
+            </span>
+            <ChevronRight size={14} className="text-blue-500 shrink-0" />
           </div>
         )}
       </div>
@@ -556,10 +550,22 @@ export default function HomePage() {
           />
         </label>
 
-        <div className="category-tabs" role="tablist" aria-label="Nhóm vật liệu">
+        <div
+          className="category-tabs"
+          role="tablist"
+          aria-label="Nhóm vật liệu"
+          onWheel={(e) => {
+            if (e.deltaY !== 0 && e.currentTarget.scrollWidth > e.currentTarget.clientWidth) {
+              e.currentTarget.scrollLeft += e.deltaY;
+            }
+          }}
+        >
           <button
             className={category === 'all' ? 'is-active' : ''}
-            onClick={() => setCategory('all')}
+            onClick={() => {
+              sound.playClick();
+              setCategory('all');
+            }}
             type="button"
           >
             Tất cả
@@ -568,7 +574,10 @@ export default function HomePage() {
             <button
               key={item.key}
               className={category === item.key ? 'is-active' : ''}
-              onClick={() => setCategory(item.key)}
+              onClick={() => {
+                sound.playClick();
+                setCategory(item.key);
+              }}
               type="button"
             >
               {CATEGORY_LABELS[item.key] ?? item.label}
@@ -634,6 +643,7 @@ export default function HomePage() {
       <AtomInspectorModal key={`atom-inspector-${selectedMaterial}`} />
       <TourOverlay />
       <DetailModal />
+      <AboutModal isOpen={aboutOpen} onClose={() => setAboutOpen(false)} />
     </main>
   );
 }

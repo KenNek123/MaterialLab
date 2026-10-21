@@ -3,8 +3,11 @@
 import React from 'react';
 import {
   Camera,
-  Eye,
-  EyeOff,
+  Minimize2,
+  Maximize2,
+  Play,
+  Pause,
+  X,
   Box,
   Layers,
   Columns,
@@ -30,16 +33,21 @@ export default function RightActionDock({
   const isBottomSheetOpen = useStore((s: StoreState) => s.isBottomSheetOpen);
   const isRightDockHidden = useStore((s: StoreState) => s.isRightDockHidden);
   const setIsRightDockHidden = useStore((s: StoreState) => s.setIsRightDockHidden);
+  const isTourActive = useStore((s: StoreState) => s.isTourActive);
+  const setIsTourActive = useStore((s: StoreState) => s.setIsTourActive);
+  const isTourPaused = useStore((s: StoreState) => s.isTourPaused);
+  const toggleTour = useStore((s: StoreState) => s.toggleTour);
+  const toggleTourPause = useStore((s: StoreState) => s.toggleTourPause);
 
   return (
     <>
       <aside
-        className={`right-action-dock ${isZenMode ? 'is-zen' : ''} ${
-          isRightDockHidden ? 'is-dock-hidden' : ''
+        className={`right-action-dock ${isZenMode || isTourActive ? 'is-zen' : ''} ${
+          isRightDockHidden && !isTourActive ? 'is-dock-hidden' : ''
         }`}
         aria-label="Thanh điều khiển 3D trực quan"
       >
-        {/* ── 1. Nút Máy ảnh (Screenshot Tool) - Luôn hiển thị kể cả trong Chế độ xem (Zen Mode) ── */}
+        {/* ── 1. Nút Máy ảnh (Screenshot Tool) - Luôn hiển thị kể cả trong Chế độ xem & Trình chiếu ── */}
         <button
           type="button"
           className={`dock-tool-btn dock-camera-btn ${
@@ -65,29 +73,105 @@ export default function RightActionDock({
           />
         </button>
 
-        {/* ── 2. Nút Chế độ xem mở rộng (Zen Mode) ── */}
+        {/* ── 2. Nút Chế độ xem mở rộng / Ẩn hiện UI (Zen Mode - Collapse / Expand) ── */}
         <button
           type="button"
-          className={`dock-tool-btn dock-zen-btn ${isZenMode ? 'is-zen-active' : ''}`}
-          onClick={(e) => {
+          className={`dock-tool-btn dock-zen-btn zen-btn ${isZenMode ? 'is-zen-active is-active-zen' : ''}`}
+          onClick={async (e) => {
             e.stopPropagation();
             sound.playClick();
-            toggleZenMode();
+
+            try {
+              if (!document.fullscreenElement) {
+                await document.documentElement.requestFullscreen();
+                useStore.getState().setIsZenMode(true);
+              } else {
+                await document.exitFullscreen();
+                useStore.getState().setIsZenMode(false);
+              }
+            } catch (error) {
+              console.error('Không thể chuyển chế độ toàn màn hình:', error);
+            }
           }}
-          title={isZenMode ? 'Thoát chế độ xem (Hiện lại bảng điều khiển)' : 'Chế độ xem toàn màn hình (Ẩn các bảng)'}
-          aria-label="Chế độ xem mở rộng"
+          title={
+            isZenMode
+              ? 'Hiện lại giao diện điều khiển (Mở rộng UI)'
+              : 'Ẩn bớt giao diện (Thu gọn UI / Chế độ xem)'
+          }
+          aria-label={isZenMode ? 'Hiện lại giao diện' : 'Ẩn giao diện'}
         >
           {isZenMode ? (
-            <EyeOff size={18} className="text-blue-600" />
+            <Maximize2 size={18} className="text-blue-600" />
           ) : (
-            <Eye size={18} className="text-slate-700" />
+            <Minimize2 size={18} className="text-slate-700" />
           )}
         </button>
 
-        {/* ── Chỉ hiển thị cụm góc nhìn khi không ở Zen mode và bottom sheet đang đóng ── */}
-        {!isZenMode && !isBottomSheetOpen && (
+        {/* ── 3. Nút Trình chiếu (Play / Pause) - Tự động đổi biểu tượng mũi tên Play và Pause theo trạng thái phát ── */}
+        <button
+          type="button"
+          className={`dock-tool-btn dock-tour-btn ${
+            isTourActive ? (isTourPaused ? 'is-paused' : 'is-playing') : ''
+          }`}
+          onClick={(e) => {
+            e.stopPropagation();
+            sound.playClick();
+            if (!isTourActive) {
+              toggleTour();
+            } else {
+              toggleTourPause();
+            }
+          }}
+          title={
+            !isTourActive
+              ? 'Bắt đầu trình chiếu đa tầng'
+              : isTourPaused
+              ? 'Tiếp tục trình chiếu (Đang tạm dừng)'
+              : 'Tạm dừng trình chiếu (Dừng để xoay ngắm)'
+          }
+          aria-label={
+            !isTourActive
+              ? 'Trình chiếu'
+              : isTourPaused
+              ? 'Tiếp tục'
+              : 'Tạm dừng'
+          }
+        >
+          {isTourActive && !isTourPaused ? (
+            <Pause size={18} className="text-amber-500 fill-amber-500" />
+          ) : (
+            <Play
+              size={18}
+              className={
+                isTourActive
+                  ? 'text-emerald-500 fill-emerald-500 ml-0.5'
+                  : 'text-blue-600 fill-blue-600 ml-0.5'
+              }
+            />
+          )}
+        </button>
+
+        {/* ── 3b. Nút Thoát Trình chiếu (Dấu X) trong cụm nút phải ── */}
+        {isTourActive && (
+          <button
+            type="button"
+            className="dock-tool-btn dock-tour-exit-btn"
+            onClick={(e) => {
+              e.stopPropagation();
+              sound.playClick();
+              setIsTourActive(false);
+            }}
+            title="Thoát trình chiếu (ESC)"
+            aria-label="Thoát trình chiếu"
+          >
+            <X size={19} strokeWidth={2.4} className="text-rose-500" />
+          </button>
+        )}
+
+        {/* ── Chỉ hiển thị cụm góc nhìn khi không ở Zen mode, không trình chiếu và bottom sheet đang đóng ── */}
+        {!isZenMode && !isTourActive && !isBottomSheetOpen && (
           <>
-            {/* ── 3. Đường phân cách mờ (Divider) ────────────────────────────── */}
+            {/* ── 4. Đường phân cách mờ (Divider) ────────────────────────────── */}
             <div className="dock-divider" role="separator" />
 
             {/* ── Cụm Góc nhìn 3D & 2D chuẩn (Presets) ────────────────────────── */}
@@ -138,7 +222,7 @@ export default function RightActionDock({
               </button>
             </div>
 
-            {/* ── 4. Nút độc lập: Ẩn thanh sang phải ─────────────────────────── */}
+            {/* ── 5. Nút độc lập: Ẩn thanh sang phải ─────────────────────────── */}
             <div className="dock-divider" role="separator" />
             <button
               type="button"
@@ -158,7 +242,7 @@ export default function RightActionDock({
       </aside>
 
       {/* ── Nút khôi phục khi Thanh 2 (Right action dock) trượt ẩn sang phải ── */}
-      {isRightDockHidden && !isZenMode && (
+      {isRightDockHidden && !isZenMode && !isTourActive && (
         <button
           type="button"
           className="right-dock-restore-tab"

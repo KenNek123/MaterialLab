@@ -3,13 +3,13 @@ import { MaterialData } from '@/store/useStore';
 // ── 6. Vàng Ròng 24K (Au) ───────────────────────────────────────────────────
 export const goldMaterial: MaterialData = {
     id: 'gold',
-    name: 'Pure Gold 24K',
-    nameVi: 'Vàng Ròng 24K (Au)',
+    name: 'Gold',
+    nameVi: 'Vàng',
     formula: 'Au',
     category: 'metal',
     categoryLabel: 'Kim loại & Hợp kim',
     objectName: 'Fine Gold Bullion Bar',
-    objectNameVi: 'Thỏi Vàng Đúc SJC Sáng Bóng',
+    objectNameVi: 'Thỏi Vàng Đúc Sáng Bóng',
     icon: '🪙',
     color: '#fbbf24',
     roughness: 0.18,

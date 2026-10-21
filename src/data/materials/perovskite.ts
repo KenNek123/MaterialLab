@@ -3,8 +3,8 @@ import { MaterialData } from '@/store/useStore';
 // ── 18. Tinh Thể Perovskite Pin Mặt Trời (CH₃NH₃PbI₃) ───────────────────────
 export const perovskiteMaterial: MaterialData = {
     id: 'perovskite',
-    name: 'Perovskite Solar Material',
-    nameVi: 'Tinh Thể Perovskite Pin Mặt Trời',
+    name: 'Perovskite',
+    nameVi: 'Perovskite',
     formula: 'CH₃NH₃PbI₃',
     category: 'nano',
     categoryLabel: 'Vật liệu Nano & Tương lai',
@@ -51,7 +51,7 @@ export const perovskiteMaterial: MaterialData = {
         color: '#fde047',
         hybridization: 'Lai hóa obitan 6p của Pb và 5p của I xen phủ trực tiếp',
         coordinationGeometry: 'Bát diện [PbI₆] phối trí 6 đỉnh bao bọc cation hữu cơ MA⁺ ở tâm khối',
-        bondEnergy: 'Pb–I: 230 kJ/mol (Tương tác ion mềm linh động)',
+        bondEnergy: '230 kJ/mol (Pb–I)',
         interlayerForce: 'Khung 3D lập phương nối tiếp vô tận',
         descriptionVi:
           'Vật liệu Perovskite MAPbI₃ tạo nên cuộc cách mạng năng lượng xanh lớn nhất thế kỷ 21. Khung tinh thể được xây dựng từ các bát diện [PbI₆]⁴⁻ nối đỉnh nhau ở 8 góc, ở chính giữa là cation hữu cơ Methylammonium (CH₃NH₃⁺). Cấu trúc độc đáo này giúp vật liệu hấp thụ ánh sáng mặt trời mạnh gấp 10 lần silicon và giải phóng các cặp electron-lỗ trống tự do gần như không có rào cản năng lượng.',

@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { mergeGeometries } from './geometryUtils';
 
-// ── 1. Kim Cương Tự Nhiên: Giác Cắt Tròn Rực Rỡ (Brilliant Cut 16 Cạnh) ──────
+// ── 1. Kim Cương: Giác Cắt Tròn Rực Rỡ (Brilliant Cut 16 Cạnh) ───────────────
 export function createDiamondGemGeometry(): THREE.BufferGeometry {
   const parts: THREE.BufferGeometry[] = [];
 

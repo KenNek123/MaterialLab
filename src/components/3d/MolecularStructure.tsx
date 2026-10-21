@@ -96,6 +96,113 @@ function computeHalfBondMatrices(
   mesh.setMatrixAt(bondIdx * 2 + 1, dummy.matrix);
 }
 
+// Interactive Pulsing Attention Beacon on a selected atom in molecular view
+function PulsingAtomBeacon({
+  position,
+  radius,
+  onClick,
+}: {
+  position: THREE.Vector3;
+  radius: number;
+  onClick: () => void;
+}) {
+  const outerRippleRef = useRef<THREE.Mesh>(null);
+  const innerRingRef = useRef<THREE.Mesh>(null);
+  const glowSphereRef = useRef<THREE.Mesh>(null);
+  const beaconPinRef = useRef<THREE.Group>(null);
+
+  useFrame(({ clock }) => {
+    const t = clock.getElapsedTime();
+    // Sonar pulse wave expanding and fading out
+    const wave = (t * 1.5) % 1;
+    const waveScale = 1.0 + wave * 1.6;
+    const waveAlpha = Math.max(0, (1 - wave) * 0.9);
+
+    if (outerRippleRef.current) {
+      outerRippleRef.current.scale.setScalar(waveScale);
+      (outerRippleRef.current.material as THREE.MeshBasicMaterial).opacity = waveAlpha;
+    }
+
+    if (innerRingRef.current) {
+      // Rapid heartbeat pulse
+      const breathe = 1.0 + Math.sin(t * 5.0) * 0.18;
+      innerRingRef.current.scale.setScalar(breathe);
+      (innerRingRef.current.material as THREE.MeshBasicMaterial).opacity =
+        0.75 + Math.sin(t * 5.0) * 0.25;
+    }
+
+    if (glowSphereRef.current) {
+      // Shimmering wireframe aura
+      const s = 1.08 + Math.sin(t * 3.5) * 0.12;
+      glowSphereRef.current.scale.setScalar(s);
+      (glowSphereRef.current.material as THREE.MeshBasicMaterial).opacity =
+        0.4 + Math.sin(t * 3.5) * 0.2;
+    }
+
+    if (beaconPinRef.current) {
+      // Gentle floating bob for the attention pin
+      beaconPinRef.current.position.y = radius * 1.5 + 0.22 + Math.sin(t * 3.0) * 0.04;
+    }
+  });
+
+  const baseRingR = Math.max(radius * 1.35, 0.24);
+
+  return (
+    <group position={position}>
+      {/* 3D Pulsing Glow Aura */}
+      <mesh ref={glowSphereRef} raycast={() => null}>
+        <sphereGeometry args={[radius * 1.25, 16, 16]} />
+        <meshBasicMaterial color="#38bdf8" wireframe transparent opacity={0.4} />
+      </mesh>
+
+      {/* Billboard Rings & Attention Pin */}
+      <Billboard>
+        {/* Sonar Ripple Ring */}
+        <mesh ref={outerRippleRef} raycast={() => null}>
+          <ringGeometry args={[baseRingR, baseRingR + 0.045, 32]} />
+          <meshBasicMaterial color="#06b6d4" side={THREE.DoubleSide} transparent opacity={0.8} />
+        </mesh>
+
+        {/* Inner Breathing Ring */}
+        <mesh ref={innerRingRef} raycast={() => null}>
+          <ringGeometry args={[baseRingR * 0.8, baseRingR * 0.95, 32]} />
+          <meshBasicMaterial color="#38bdf8" side={THREE.DoubleSide} transparent opacity={0.9} />
+        </mesh>
+
+        {/* Small Golden Glowing Attention Beacon Pin */}
+        <group ref={beaconPinRef}>
+          <mesh raycast={() => null}>
+            <circleGeometry args={[0.045, 16]} />
+            <meshBasicMaterial color="#f59e0b" side={THREE.DoubleSide} />
+          </mesh>
+          <mesh position={[0, -0.06, 0]} raycast={() => null}>
+            <coneGeometry args={[0.03, 0.06, 16]} />
+            <meshBasicMaterial color="#f59e0b" />
+          </mesh>
+        </group>
+      </Billboard>
+
+      {/* Click target sphere covering the beacon */}
+      <mesh
+        onClick={(e) => {
+          e.stopPropagation();
+          onClick();
+        }}
+        onPointerOver={() => {
+          document.body.style.cursor = 'pointer';
+        }}
+        onPointerOut={() => {
+          document.body.style.cursor = 'auto';
+        }}
+        visible={false}
+      >
+        <sphereGeometry args={[radius * 2.2, 8, 8]} />
+        <meshBasicMaterial transparent opacity={0} />
+      </mesh>
+    </group>
+  );
+}
+
 export function MolecularStructure({ material, opacity, scale }: MolecularStructureProps) {
   const groupRef = useRef<THREE.Group>(null);
   const atomMeshRef = useRef<THREE.InstancedMesh>(null);
@@ -105,6 +212,7 @@ export function MolecularStructure({ material, opacity, scale }: MolecularStruct
   const graphicsQuality = useStore((s: StoreState) => s.graphicsQuality);
   const structureLayerCount = useStore((s: StoreState) => s.structureLayerCount);
   const cameraAngle = useStore((s: StoreState) => s.cameraAngle);
+  const activeLayer = useStore((s: StoreState) => s.activeLayer);
   const inspectedAtom = useStore((s: StoreState) => s.inspectedAtom);
   const setInspectedAtom = useStore((s: StoreState) => s.setInspectedAtom);
   const isLow = graphicsQuality === 'low';
@@ -225,7 +333,9 @@ export function MolecularStructure({ material, opacity, scale }: MolecularStruct
     if (!bondMeshRef.current || enrichedBonds.length === 0) return;
     const mesh = bondMeshRef.current;
     mesh.count = enrichedBonds.length * 2;
-    const bondThickness = cameraAngle === 'top' ? 0.056 : isLow ? 0.045 : 0.052;
+    const isCnt = material.id === 'cnt';
+    const baseThickness = isCnt ? 0.022 : isLow ? 0.026 : 0.030;
+    const bondThickness = cameraAngle === 'top' ? baseThickness * 1.15 : baseThickness;
 
     for (let i = 0; i < enrichedBonds.length; i++) {
       const b = enrichedBonds[i];
@@ -235,7 +345,7 @@ export function MolecularStructure({ material, opacity, scale }: MolecularStruct
     }
     mesh.instanceMatrix.needsUpdate = true;
     if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
-  }, [enrichedBonds, cameraAngle, isLow]);
+  }, [enrichedBonds, cameraAngle, isLow, material.id]);
 
   // Materials
   const atomMat = useMemo(() => {
@@ -360,7 +470,9 @@ export function MolecularStructure({ material, opacity, scale }: MolecularStruct
 
     // Sync bond endpoints with vibrating atoms (Zero GC)
     if (bMesh && enrichedBonds.length > 0) {
-      const bondThickness = cameraAngle === 'top' ? 0.056 : 0.052;
+      const isCnt = material.id === 'cnt';
+      const baseThickness = isCnt ? 0.022 : isLow ? 0.026 : 0.030;
+      const bondThickness = cameraAngle === 'top' ? baseThickness * 1.15 : baseThickness;
       for (let i = 0; i < enrichedBonds.length; i++) {
         const b = enrichedBonds[i];
         const pA =
@@ -426,6 +538,25 @@ export function MolecularStructure({ material, opacity, scale }: MolecularStruct
     return inspectedAtom.position;
   }, [inspectedAtom, atoms]);
 
+  // Find central/prominent atom to pulse as an interactive invitation cue in molecular view
+  const beaconAtom = useMemo(() => {
+    if (atoms.length === 0) return null;
+    let bestIdx = 0;
+    let minDistSq = Infinity;
+    for (let i = 0; i < atoms.length; i++) {
+      const dSq = atoms[i].position.lengthSq();
+      if (dSq < minDistSq) {
+        minDistSq = dSq;
+        bestIdx = i;
+      }
+    }
+    return {
+      index: bestIdx,
+      position: atoms[bestIdx].position,
+      radius: atoms[bestIdx].radius || 0.18,
+    };
+  }, [atoms]);
+
   if (atoms.length === 0) return null;
 
   return (
@@ -455,6 +586,15 @@ export function MolecularStructure({ material, opacity, scale }: MolecularStruct
             <meshBasicMaterial color="#a855f7" side={THREE.DoubleSide} transparent opacity={0.6} />
           </mesh>
         </Billboard>
+      )}
+
+      {/* Pulsing Attention Beacon on a selected atom in molecular view to invite user exploration */}
+      {!inspectedAtom && beaconAtom && (activeLayer === 'molecular' || zoomState.molecularOpacity > 0.35) && (
+        <PulsingAtomBeacon
+          position={beaconAtom.position}
+          radius={beaconAtom.radius}
+          onClick={() => inspectAtomAtIndex(beaconAtom.index)}
+        />
       )}
 
       {/* Atom glow halos (high quality only) - ignore raycast */}

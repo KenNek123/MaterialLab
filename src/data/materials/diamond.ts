@@ -3,8 +3,8 @@ import { MaterialData } from '@/store/useStore';
 // ── 1. Kim Cương Tự Nhiên (Carbon sp³) ─────────────────────────────────────
 export const diamondMaterial: MaterialData = {
     id: 'diamond',
-    name: 'Natural Diamond',
-    nameVi: 'Kim Cương Tự Nhiên',
+    name: 'Diamond',
+    nameVi: 'Kim Cương',
     formula: 'C (sp³)',
     category: 'crystal',
     categoryLabel: 'Gốm & Tinh thể',
@@ -41,13 +41,13 @@ export const diamondMaterial: MaterialData = {
       bondLength: 'C–C: 1.54 Å (Liên kết đơn cộng hóa trị cực ngắn và bền vững)',
       bondAngle: '109.5° (Góc tứ diện đều lý tưởng)',
       crystalSystem: 'Lập phương (Cubic Fd-3m)',
-      atomTypes: [{ element: 'C', color: '#93c5fd', radius: 0.32 }],
+      atomTypes: [{ element: 'C', color: '#93c5fd', radius: 0.35 }],
       bonds: {
         type: 'Cộng hóa trị đơn tứ diện σ (lai hóa sp³ bền tuyệt đối)',
         color: '#bfdbfe',
         hybridization: 'Lai hóa sp³ tứ diện 4 phương đối xứng',
         coordinationGeometry: 'Phối trí tứ diện 4 đỉnh đều đặn (CN=4)',
-        bondEnergy: '348 kJ/mol (Cần năng lượng khổng lồ để phá vỡ mạng)',
+        bondEnergy: '348 kJ/mol',
         interlayerForce: 'Mạng không gian 3 chiều đẳng hướng (không có mặt trượt)',
         descriptionVi:
           'Mỗi nguyên tử Carbon lai hóa sp³ sử dụng toàn bộ 4 electron hóa trị để liên kết với 4 nguyên tử Carbon xung quanh tạo thành mạng lưới tứ diện không gian 3D bất khả xâm phạm. Không có electron tự do nên kim cương cách điện hoàn toàn nhưng truyền dao động âm (phonon) dẫn nhiệt siêu nhanh.',

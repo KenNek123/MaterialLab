@@ -3,8 +3,8 @@ import { MaterialData } from '@/store/useStore';
 // ── 2. Than Chì & Graphene (Carbon sp²) ─────────────────────────────────────
 export const graphiteMaterial: MaterialData = {
     id: 'graphite',
-    name: 'Hexagonal Graphite',
-    nameVi: 'Than Chì Lục Giác',
+    name: 'Graphite',
+    nameVi: 'Than Chì',
     formula: 'C (sp²)',
     category: 'crystal',
     categoryLabel: 'Gốm & Tinh thể',
@@ -25,7 +25,7 @@ export const graphiteMaterial: MaterialData = {
         'Màng tản nhiệt carbon siêu mỏng làm mát lưng điện thoại thông minh và laptop',
       ],
       mechanicalStrength: 'Dễ tách lớp bôi trơn theo chiều ngang, nhưng từng lớp bền hơn thép',
-      thermalConductivity: '1500 – 4000 W/(m·K) (Dẫn nhiệt dọc theo mặt phẳng)',
+      thermalConductivity: '1500 – 2000 W/(m·K) (Dọc mặt phẳng trong HOPG / ~300 W/(m·K) tự nhiên)',
       electricalConductivity: '3.0 × 10⁵ S/m (Dẫn điện tốt tương đương kim loại)',
       density: '2.26 g/cm³',
     },
@@ -47,7 +47,7 @@ export const graphiteMaterial: MaterialData = {
         color: '#94a3b8',
         hybridization: 'Lai hóa sp² phẳng tam giác',
         coordinationGeometry: 'Phối trí tam giác phẳng 3 tọa độ (CN=3)',
-        bondEnergy: 'Nội tầng: 470 kJ/mol (cực mạnh); Ngoại tầng: ~15 kJ/mol (rất yếu)',
+        bondEnergy: '470 kJ/mol (nội tầng)',
         interlayerForce: 'Lực hút van der Waals giữa các tầng cho phép bong tách thành graphene',
         descriptionVi:
           'Trong mỗi tầng, các nguyên tử Carbon liên kết cộng hóa trị sp² thành các vòng lục giác tổ ong siêu bền. Electron thứ 4 tạo đám mây π tự do giúp dẫn điện tốt. Giữa các tầng chỉ là lực hút van der Waals yếu ớt, cho phép các lớp than chì dễ dàng trượt lên nhau để lại vệt chữ trên giấy khi ta viết bút chì.',

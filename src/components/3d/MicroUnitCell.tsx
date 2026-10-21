@@ -10,80 +10,174 @@ interface MicroUnitCellProps {
   material: MaterialData;
 }
 
+type UnitCellType = 'none' | 'hex-prism' | '2d-sheet' | 'cubic';
+
+function getUnitCellType(material: MaterialData): UnitCellType {
+  const { structure, id } = material;
+  const t = structure.type;
+
+  // 1. Non-crystalline / Polymers / Disordered / Isolated molecules: NO rigid crystal box cage!
+  if (
+    id === 'glass' ||
+    id === 'aerogel' ||
+    id === 'rubber' ||
+    id === 'teflon' ||
+    id === 'kevlar' ||
+    id === 'buckyball' ||
+    id === 'cnt' ||
+    t === 'teflon' ||
+    t === 'polymer-rubber' ||
+    t === 'aerogel' ||
+    t === 'kevlar' ||
+    t === 'buckyball' ||
+    t === 'cnt'
+  ) {
+    return 'none';
+  }
+
+  // 2. 2D Layered materials: flat sheet boundary
+  if (t === 'graphene' || t === 'mxene') {
+    return '2d-sheet';
+  }
+
+  // 3. Hexagonal & Trigonal 3D systems
+  if (
+    t === 'hcp' ||
+    t === 'tungsten-carbide' ||
+    t === 'corundum' ||
+    t === 'battery' ||
+    t === 'ice' ||
+    t === 'hexagonal'
+  ) {
+    return 'hex-prism';
+  }
+
+  // 4. Cubic Bravais crystal systems (FCC, BCC, Diamond, Rocksalt, Perovskite, B2)
+  return 'cubic';
+}
+
 /**
  * MicroUnitCell - Level 2 (Vi mô / Ô mạng tinh thể cơ sở):
- * Displays crystallography unit cell bounds and corners.
+ * Displays authentic crystallographic unit cell bounds and Bravais symmetry nodes.
+ * Completely hidden for amorphous networks, polymers, and isolated molecules.
+ * Hexagonal prism for hexagonal/trigonal crystals; true cubic cage for cubic systems.
  * Completely ignored by raycaster to prevent interfering with atom clicks.
  */
 export function MicroUnitCell({ material }: MicroUnitCellProps) {
   const groupRef = useRef<THREE.Group>(null);
   const cageRef = useRef<THREE.LineSegments>(null);
   const cornerMeshRef = useRef<THREE.InstancedMesh>(null);
-  const planeRef = useRef<THREE.Mesh>(null);
-  const innerCageRef = useRef<THREE.LineSegments>(null);
 
   const graphicsQuality = useStore((s: StoreState) => s.graphicsQuality);
   const isLow = graphicsQuality === 'low';
 
-  const { structure } = material;
-  const size = 3.6;
-  const isHex =
-    structure.type === 'hexagonal' ||
-    structure.type === 'graphene' ||
-    structure.type === 'mxene' ||
-    structure.type === 'hcp' ||
-    structure.type === 'cnt';
+  const cellType = useMemo(() => getUnitCellType(material), [material]);
 
-  const color =
-    material.category === 'metal'
-      ? '#f59e0b'
-      : material.category === 'tech'
-      ? '#38bdf8'
-      : material.category === 'polymer'
-      ? '#10b981'
-      : material.category === 'nano'
-      ? '#a855f7'
-      : '#38bdf8';
+  const color = useMemo(() => {
+    if (material.category === 'metal') return '#f59e0b';
+    if (material.category === 'tech') return '#38bdf8';
+    if (material.category === 'polymer') return '#10b981';
+    if (material.category === 'nano') return '#a855f7';
+    return '#38bdf8';
+  }, [material.category]);
 
-  // Outer cage geometry
-  const cageGeo = useMemo(() => {
-    if (isHex) {
+  // Determine aspect ratio for hexagonal/trigonal prism
+  const hexDimensions = useMemo(() => {
+    const t = material.structure.type;
+    let r = 1.85;
+    let h = 2.6;
+
+    if (t === 'hcp') {
+      // Titanium c/a ≈ 1.587
+      r = 1.85;
+      h = 2.9;
+    } else if (t === 'tungsten-carbide') {
+      // WC c/a ≈ 0.976
+      r = 1.95;
+      h = 1.9;
+    } else if (t === 'corundum') {
+      // Al2O3 c/a ≈ 2.73
+      r = 1.7;
+      h = 3.3;
+    } else if (t === 'battery') {
+      // LiCoO2 layered trigonal slab
+      r = 1.8;
+      h = 3.0;
+    } else if (t === 'ice') {
+      // Hexagonal Ice Ih
+      r = 1.8;
+      h = 2.9;
+    }
+    return { r, h };
+  }, [material.structure.type]);
+
+  // Unit cell cage geometry based on authentic crystallographic system
+  const { cageGeo, cornerPositions } = useMemo(() => {
+    if (cellType === 'none') {
+      return { cageGeo: null, cornerPositions: [] };
+    }
+
+    if (cellType === 'hex-prism') {
       const shape = new THREE.BufferGeometry();
       const verts: number[] = [];
-      const r = size * 0.6;
-      const h = size * 0.45;
+      const { r, h } = hexDimensions;
+      const halfH = h * 0.5;
+      const corners: [number, number, number][] = [];
+
+      // 6 bottom vertices and 6 top vertices
       for (let i = 0; i < 6; i++) {
         const a0 = (i * Math.PI) / 3;
         const a1 = ((i + 1) * Math.PI) / 3;
-        // Bottom hex
-        verts.push(Math.cos(a0) * r, -h, Math.sin(a0) * r, Math.cos(a1) * r, -h, Math.sin(a1) * r);
-        // Top hex
-        verts.push(Math.cos(a0) * r, h, Math.sin(a0) * r, Math.cos(a1) * r, h, Math.sin(a1) * r);
-        // Verticals
-        verts.push(Math.cos(a0) * r, -h, Math.sin(a0) * r, Math.cos(a0) * r, h, Math.sin(a0) * r);
+        const x0 = Math.cos(a0) * r;
+        const z0 = Math.sin(a0) * r;
+        const x1 = Math.cos(a1) * r;
+        const z1 = Math.sin(a1) * r;
+
+        // Bottom hexagon edge
+        verts.push(x0, -halfH, z0, x1, -halfH, z1);
+        // Top hexagon edge
+        verts.push(x0, halfH, z0, x1, halfH, z1);
+        // Vertical pillar edge
+        verts.push(x0, -halfH, z0, x0, halfH, z0);
+
+        // Store corners
+        corners.push([x0, -halfH, z0]);
+        corners.push([x0, halfH, z0]);
+      }
+
+      // Add center points of basal planes
+      corners.push([0, -halfH, 0]);
+      corners.push([0, halfH, 0]);
+
+      shape.setAttribute('position', new THREE.Float32BufferAttribute(verts, 3));
+      return { cageGeo: shape, cornerPositions: corners };
+    }
+
+    if (cellType === '2d-sheet') {
+      const shape = new THREE.BufferGeometry();
+      const verts: number[] = [];
+      const r = 2.3;
+      const corners: [number, number, number][] = [];
+
+      for (let i = 0; i < 6; i++) {
+        const a0 = (i * Math.PI) / 3;
+        const a1 = ((i + 1) * Math.PI) / 3;
+        const x0 = Math.cos(a0) * r;
+        const z0 = Math.sin(a0) * r;
+        const x1 = Math.cos(a1) * r;
+        const z1 = Math.sin(a1) * r;
+
+        verts.push(x0, 0, z0, x1, 0, z1);
+        corners.push([x0, 0, z0]);
       }
       shape.setAttribute('position', new THREE.Float32BufferAttribute(verts, 3));
-      return shape;
+      return { cageGeo: shape, cornerPositions: corners };
     }
-    return new THREE.EdgesGeometry(new THREE.BoxGeometry(size, size, size));
-  }, [size, isHex]);
 
-  // Inner nested cage for depth
-  const innerCageGeo = useMemo(() => {
-    const box = new THREE.BoxGeometry(size * 0.5, size * 0.5, size * 0.5);
-    return new THREE.EdgesGeometry(box);
-  }, [size]);
-
-  // Miller plane (110) highlight
-  const planeGeo = useMemo(() => {
-    const geo = new THREE.PlaneGeometry(size * Math.SQRT2, size);
-    geo.rotateY(Math.PI / 4);
-    return geo;
-  }, [size]);
-
-  // Corner atom positions
-  const cornerPositions = useMemo(() => {
-    const half = size / 2;
+    // Cubic unit cell
+    const cubeSize = 3.2;
+    const half = cubeSize / 2;
+    const boxGeo = new THREE.EdgesGeometry(new THREE.BoxGeometry(cubeSize, cubeSize, cubeSize));
     const corners: [number, number, number][] = [
       [-half, -half, -half],
       [half, -half, -half],
@@ -94,7 +188,9 @@ export function MicroUnitCell({ material }: MicroUnitCellProps) {
       [-half, half, half],
       [half, half, half],
     ];
-    if (!isHex) {
+
+    // For FCC / BCC crystals, add face centers or body center as Bravais nodes
+    if (material.structure.type === 'fcc' || material.structure.type === 'stainless-steel') {
       corners.push(
         [0, half, 0],
         [0, -half, 0],
@@ -103,39 +199,19 @@ export function MicroUnitCell({ material }: MicroUnitCellProps) {
         [0, 0, half],
         [0, 0, -half]
       );
+    } else if (material.structure.type === 'bcc' || material.structure.type === 'steel' || material.structure.type === 'nitinol') {
+      corners.push([0, 0, 0]); // Body center
     }
-    return corners;
-  }, [size, isHex]);
 
-  // Materials
+    return { cageGeo: boxGeo, cornerPositions: corners };
+  }, [cellType, hexDimensions, material.structure.type]);
+
   const cageMat = useMemo(
     () =>
       new THREE.LineBasicMaterial({
         color,
         transparent: true,
         opacity: 0,
-      }),
-    [color]
-  );
-
-  const innerCageMat = useMemo(
-    () =>
-      new THREE.LineBasicMaterial({
-        color,
-        transparent: true,
-        opacity: 0,
-      }),
-    [color]
-  );
-
-  const planeMat = useMemo(
-    () =>
-      new THREE.MeshBasicMaterial({
-        color,
-        transparent: true,
-        opacity: 0,
-        side: THREE.DoubleSide,
-        blending: THREE.AdditiveBlending,
         depthWrite: false,
       }),
     [color]
@@ -154,7 +230,7 @@ export function MicroUnitCell({ material }: MicroUnitCellProps) {
   );
 
   useEffect(() => {
-    if (!cornerMeshRef.current) return;
+    if (!cornerMeshRef.current || cornerPositions.length === 0) return;
     const mesh = cornerMeshRef.current;
     const dummy = new THREE.Object3D();
     cornerPositions.forEach(([x, y, z], i) => {
@@ -166,11 +242,11 @@ export function MicroUnitCell({ material }: MicroUnitCellProps) {
     mesh.instanceMatrix.needsUpdate = true;
   }, [cornerPositions]);
 
-  useFrame(({ clock }) => {
+  useFrame(() => {
     if (!groupRef.current) return;
     const curOpacity = zoomState.microOpacity;
     const curScale = zoomState.microScale;
-    const isVisible = curOpacity > 0.005;
+    const isVisible = cellType !== 'none' && curOpacity > 0.005;
 
     groupRef.current.visible = isVisible;
     if (!isVisible) return;
@@ -178,44 +254,36 @@ export function MicroUnitCell({ material }: MicroUnitCellProps) {
     groupRef.current.scale.setScalar(curScale);
     groupRef.current.rotation.set(0, 0, 0);
 
-    const t = clock.elapsedTime;
-    const cageOp = curOpacity * 0.85;
-    const planeOp = curOpacity * (isLow ? 0.07 : 0.13);
+    const cageOp = curOpacity * 0.75;
     const cornerOp = curOpacity * 0.55;
 
     if (cageRef.current?.material) {
       (cageRef.current.material as THREE.Material).opacity = cageOp;
-    }
-    if (innerCageRef.current?.material) {
-      (innerCageRef.current.material as THREE.Material).opacity = cageOp * (0.4 + 0.15 * Math.sin(t * 1.8));
-    }
-    if (planeRef.current?.material) {
-      (planeRef.current.material as THREE.Material).opacity = planeOp;
     }
     if (cornerMeshRef.current?.material) {
       (cornerMeshRef.current.material as THREE.Material).opacity = cornerOp;
     }
   });
 
+  if (cellType === 'none' || !cageGeo) {
+    return null;
+  }
+
   return (
     <group ref={groupRef} raycast={() => null}>
       <lineSegments ref={cageRef} raycast={() => null} geometry={cageGeo} material={cageMat} />
 
-      {!isLow && (
-        <lineSegments ref={innerCageRef} raycast={() => null} geometry={innerCageGeo} material={innerCageMat} />
+      {cornerPositions.length > 0 && (
+        <instancedMesh
+          ref={cornerMeshRef}
+          raycast={() => null}
+          args={[undefined, undefined, cornerPositions.length]}
+          material={cornerMat}
+          frustumCulled={false}
+        >
+          <sphereGeometry args={[isLow ? 0.055 : 0.07, 8, 8]} />
+        </instancedMesh>
       )}
-
-      {!isLow && <mesh ref={planeRef} raycast={() => null} geometry={planeGeo} material={planeMat} />}
-
-      <instancedMesh
-        ref={cornerMeshRef}
-        raycast={() => null}
-        args={[undefined, undefined, cornerPositions.length]}
-        material={cornerMat}
-        frustumCulled={false}
-      >
-        <sphereGeometry args={[isLow ? 0.065 : 0.08, 8, 8]} />
-      </instancedMesh>
     </group>
   );
 }
