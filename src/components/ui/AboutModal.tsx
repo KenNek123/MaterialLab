@@ -260,8 +260,12 @@ export default function AboutModal({ isOpen, onClose }: AboutModalProps) {
 
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                       <div className="flex items-start sm:items-center gap-3.5">
-                        <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-blue-600 via-sky-500 to-indigo-600 text-white flex items-center justify-center shadow-lg shadow-blue-600/30 shrink-0">
-                          <GraduationCap size={24} />
+                        <div className="w-12 h-12 rounded-full overflow-hidden shrink-0 shadow-lg shadow-blue-600/30">
+                          <img
+                            src="/avatar.png"
+                            alt="Ảnh đại diện"
+                            className="w-full h-full object-cover"
+                          />
                         </div>
                         <div>
                           <span className="text-[10px] uppercase font-mono tracking-widest text-blue-600 font-extrabold block">
@@ -271,7 +275,8 @@ export default function AboutModal({ isOpen, onClose }: AboutModalProps) {
                             {teacherName}
                           </h3>
                           <p className="text-xs text-slate-500 mt-0.5">
-                            Giảng dạy & Nghiên cứu Khoa học Tinh thể & Vật liệu Số
+                            <p>Đơn vị công tác: Trường THPT Chuyên Thủ Khoa Nghĩa</p>
+                            <p>Số 02 Nguyễn Đình Chiểu, Phường Châu Đốc, Tỉnh An Giang</p>
                           </p>
                         </div>
                       </div>
@@ -312,7 +317,7 @@ export default function AboutModal({ isOpen, onClose }: AboutModalProps) {
                     <div className="mt-4 pt-3.5 border-t border-slate-100 text-xs sm:text-[13px] text-slate-600 leading-relaxed break-words">
                       <p>
                         Dự án <strong>Digital Materials Lab</strong> được xây dựng nhằm mục tiêu hiện đại hóa công tác
-                        giảng dạy và học tập bộ môn Hóa học Tinh thể và Khoa học Vật liệu. Nền tảng kết nối trực quan
+                        giảng dạy và học tập bộ môn Công nghệ. Nền tảng kết nối trực quan
                         thế giới vĩ mô quen thuộc trong đời sống với chiều sâu cấu trúc vi mô của ô mạng cơ sở và liên kết
                         nguyên tử lượng tử 3 chiều.
                       </p>

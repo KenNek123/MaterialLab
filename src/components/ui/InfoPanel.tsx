@@ -46,7 +46,7 @@ export default function InfoPanel() {
           <div className="flex items-center justify-between px-3 py-1.5 rounded-xl bg-blue-500/15 border border-blue-400/30 text-xs text-blue-200">
             <span className="font-bold flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-blue-400 animate-pulse" />
-              So sánh: {matA.nameVi} vs {matB.nameVi}
+              So sánh: {matA.nameVi} với {matB.nameVi}
             </span>
             <button
               onClick={swapCompareMaterials}
